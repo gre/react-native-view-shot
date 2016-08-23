@@ -32,7 +32,7 @@ RNViewShot.takeSnapshot(viewRef, {
 
 Returns a Promise of the image URI.
 
-- **`view`** references to a React Native component.
+- **`view`** is a reference to a React Native component.
 - **`options`** may include:
  - **`width`** / **`height`** *(number)*: the width and height of the image to capture.
  - **`format`** *(string)*: either `png` or `jpg`/`jpeg` or `webm` (Android). Defaults to `png`.
