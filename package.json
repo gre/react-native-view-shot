@@ -11,8 +11,8 @@
     "snapshot",
     "rasterize"
   ],
-  "author": "",
-  "license": "",
+  "author": "Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>",
+  "license": "MIT",
   "peerDependencies": {
     "react-native": ">=0.30.0"
   }
