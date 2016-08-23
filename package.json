@@ -1,0 +1,15 @@
+
+{
+  "name": "react-native-view-shot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "keywords": [
+    "react-native"
+  ],
+  "author": "",
+  "license": "",
+  "peerDependencies": {
+    "react-native": ">=0.30.0"
+  }
+}
