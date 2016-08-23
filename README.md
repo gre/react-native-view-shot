@@ -10,10 +10,9 @@ The image will be stored in a temporary file that will only exist for as long as
 ## Usage
 
 ```js
-import { findNodeHandle } from "react-native";
 import RNViewShot from "react-native-view-shot";
 
-RNViewShot.takeSnapshot(findNodeHandle(aRef), {
+RNViewShot.takeSnapshot(viewRef, {
   format: "jpeg",
   quality: 0.8
 })
