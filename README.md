@@ -1,7 +1,7 @@
 
 # react-native-view-shot
 
-Snapshot a view and save to an image.
+Snapshot a React Native view and save it to an image.
 
 The image will be stored in a temporary file that will only exist for as long as the app is running.
 
