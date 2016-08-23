@@ -5,45 +5,7 @@ Snapshot a React Native view and save it to an image.
 
 The image will be stored in a temporary file that will only exist for as long as the app is running.
 
-## Getting started
-
-```
-npm install --save react-native-view-shot
-```
-
-### Mostly automatic installation
-
-```
-react-native link react-native-view-shot
-```
-
-### Manual installation
-
-#### iOS
-
-1. In XCode, in the project navigator, right click `Libraries` ➜ `Add Files to [your project's name]`
-2. Go to `node_modules` ➜ `react-native-view-shot` and add `RNViewShot.xcodeproj`
-3. In XCode, in the project navigator, select your project. Add `libRNViewShot.a` to your project's `Build Phases` ➜ `Link Binary With Libraries`
-4. Run your project (`Cmd+R`)<
-
-#### Android
-
-1. Open up `android/app/src/main/java/[...]/MainActivity.java`
-  - Add `import com.reactlibrary.RNViewShotPackage;` to the imports at the top of the file
-  - Add `new RNViewShotPackage()` to the list returned by the `getPackages()` method
-2. Append the following lines to `android/settings.gradle`:
-  	```
-  	include ':react-native-view-shot'
-  	project(':react-native-view-shot').projectDir = new File(rootProject.projectDir, 	'../node_modules/react-native-view-shot/android')
-  	```
-3. Insert the following lines inside the dependencies block in `android/app/build.gradle`:
-  	```
-      compile project(':react-native-view-shot')
-  	```
-
-#### Windows
-
-No support yet. Feel free to PR.
+<img src="https://github.com/gre/react-native-view-shot-example/raw/master/docs/recursive.gif" width=300 />
 
 ## Usage
 
@@ -76,6 +38,47 @@ Returns a Promise of the image URI.
  - **`width`** / **`height`** *(number)*: the width and height of the image to capture.
  - **`format`** *(string)*: either `png` or `jpg`/`jpeg` or `webm` (Android). Defaults to `png`.
  - **`quality`** *(number)*: the quality. 0.0 - 1.0 (default). (only available on lossy formats like jpeg)
+
+
+ ## Getting started
+
+ ```
+ npm install --save react-native-view-shot
+ ```
+
+ ### Mostly automatic installation
+
+ ```
+ react-native link react-native-view-shot
+ ```
+
+ ### Manual installation
+
+ #### iOS
+
+ 1. In XCode, in the project navigator, right click `Libraries` ➜ `Add Files to [your project's name]`
+ 2. Go to `node_modules` ➜ `react-native-view-shot` and add `RNViewShot.xcodeproj`
+ 3. In XCode, in the project navigator, select your project. Add `libRNViewShot.a` to your project's `Build Phases` ➜ `Link Binary With Libraries`
+ 4. Run your project (`Cmd+R`)<
+
+ #### Android
+
+ 1. Open up `android/app/src/main/java/[...]/MainActivity.java`
+   - Add `import com.reactlibrary.RNViewShotPackage;` to the imports at the top of the file
+   - Add `new RNViewShotPackage()` to the list returned by the `getPackages()` method
+ 2. Append the following lines to `android/settings.gradle`:
+   	```
+   	include ':react-native-view-shot'
+   	project(':react-native-view-shot').projectDir = new File(rootProject.projectDir, 	'../node_modules/react-native-view-shot/android')
+   	```
+ 3. Insert the following lines inside the dependencies block in `android/app/build.gradle`:
+   	```
+       compile project(':react-native-view-shot')
+   	```
+
+ #### Windows
+
+ No support yet. Feel free to PR.
 
 ## Notes
 
