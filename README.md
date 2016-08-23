@@ -39,45 +39,45 @@ Returns a Promise of the image URI.
  - **`quality`** *(number)*: the quality. 0.0 - 1.0 (default). (only available on lossy formats like jpeg)
 
 
- ## Getting started
+## Getting started
 
- ```
- npm install --save react-native-view-shot
- ```
+```
+npm install --save react-native-view-shot
+```
 
- ### Mostly automatic installation
+### Mostly automatic installation
 
- ```
- react-native link react-native-view-shot
- ```
+```
+react-native link react-native-view-shot
+```
 
- ### Manual installation
+### Manual installation
 
- #### iOS
+#### iOS
 
- 1. In XCode, in the project navigator, right click `Libraries` ➜ `Add Files to [your project's name]`
- 2. Go to `node_modules` ➜ `react-native-view-shot` and add `RNViewShot.xcodeproj`
- 3. In XCode, in the project navigator, select your project. Add `libRNViewShot.a` to your project's `Build Phases` ➜ `Link Binary With Libraries`
- 4. Run your project (`Cmd+R`)<
+1. In XCode, in the project navigator, right click `Libraries` ➜ `Add Files to [your project's name]`
+2. Go to `node_modules` ➜ `react-native-view-shot` and add `RNViewShot.xcodeproj`
+3. In XCode, in the project navigator, select your project. Add `libRNViewShot.a` to your project's `Build Phases` ➜ `Link Binary With Libraries`
+4. Run your project (`Cmd+R`)<
 
- #### Android
+#### Android
 
- 1. Open up `android/app/src/main/java/[...]/MainActivity.java`
-   - Add `import com.reactlibrary.RNViewShotPackage;` to the imports at the top of the file
-   - Add `new RNViewShotPackage()` to the list returned by the `getPackages()` method
- 2. Append the following lines to `android/settings.gradle`:
-   	```
-   	include ':react-native-view-shot'
-   	project(':react-native-view-shot').projectDir = new File(rootProject.projectDir, 	'../node_modules/react-native-view-shot/android')
-   	```
- 3. Insert the following lines inside the dependencies block in `android/app/build.gradle`:
-   	```
-       compile project(':react-native-view-shot')
-   	```
+1. Open up `android/app/src/main/java/[...]/MainActivity.java`
+ - Add `import com.reactlibrary.RNViewShotPackage;` to the imports at the top of the file
+ - Add `new RNViewShotPackage()` to the list returned by the `getPackages()` method
+2. Append the following lines to `android/settings.gradle`:
+ 	```
+ 	include ':react-native-view-shot'
+ 	project(':react-native-view-shot').projectDir = new File(rootProject.projectDir, 	'../node_modules/react-native-view-shot/android')
+ 	```
+3. Insert the following lines inside the dependencies block in `android/app/build.gradle`:
+ 	```
+     compile project(':react-native-view-shot')
+ 	```
 
- #### Windows
+#### Windows
 
- No support yet. Feel free to PR.
+No support yet. Feel free to PR.
 
 ## Notes
 
