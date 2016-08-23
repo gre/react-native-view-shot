@@ -22,7 +22,7 @@ RNViewShot.takeSnapshot(viewRef, {
 );
 ```
 
-## Example
+### Example
 
 [Checkout react-native-view-shot-example](https://github.com/gre/react-native-view-shot-example)
 
