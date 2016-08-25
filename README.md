@@ -36,9 +36,9 @@ Returns a Promise of the image URI.
  - **`format`** *(string)*: either `png` or `jpg`/`jpeg` or `webm` (Android). Defaults to `png`.
  - **`quality`** *(number)*: the quality. 0.0 - 1.0 (default). (only available on lossy formats like jpeg)
  - **`result`** *(string)*, the method you want to use to save the snapshot, one of:
-   - `"file"` (default): save to a temporary file *(that will only exist for as long as the app is running)*.
-   - `"base64"`: encode as base64 and returns the raw string. Use only with small images as this may result of lags (the string is sent over the bridge). *N.B. This is not a data uri, use `data-uri` instead*.
-   - `"data-uri"`: same as `base64` but also includes the [Data URI scheme](https://en.wikipedia.org/wiki/Data_URI_scheme) header.
+    - `"file"` (default): save to a temporary file *(that will only exist for as long as the app is running)*.
+    - `"base64"`: encode as base64 and returns the raw string. Use only with small images as this may result of lags (the string is sent over the bridge). *N.B. This is not a data uri, use `data-uri` instead*.
+    - `"data-uri"`: same as `base64` but also includes the [Data URI scheme](https://en.wikipedia.org/wiki/Data_URI_scheme) header.
 
    . if true, the promise returns the base64 encoded data instead of the uri. Defaults to `false`.
 
