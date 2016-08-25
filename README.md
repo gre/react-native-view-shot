@@ -3,8 +3,6 @@
 
 Snapshot a React Native view and save it to an image.
 
-The image will be stored in a temporary file that will only exist for as long as the app is running.
-
 <img src="https://github.com/gre/react-native-view-shot-example/raw/master/docs/recursive.gif" width=300 />
 
 ## Usage
@@ -37,7 +35,12 @@ Returns a Promise of the image URI.
  - **`width`** / **`height`** *(number)*: the width and height of the image to capture.
  - **`format`** *(string)*: either `png` or `jpg`/`jpeg` or `webm` (Android). Defaults to `png`.
  - **`quality`** *(number)*: the quality. 0.0 - 1.0 (default). (only available on lossy formats like jpeg)
- - **`base64`** *(bool)*: if true, the promise returns the base64 encoded data instead of the uri. Defaults to `false`.
+ - **`result`** *(string)*, the method you want to use to save the snapshot, one of:
+   - `"file"` (default): save to a temporary file *(that will only exist for as long as the app is running)*.
+   - `"base64"`: encode as base64 and returns the raw string. Use only with small images as this may result of lags (the string is sent over the bridge). *N.B. This is not a data uri, use `data-uri` instead*.
+   - `"data-uri"`: same as `base64` but also includes the [Data URI scheme](https://en.wikipedia.org/wiki/Data_URI_scheme) header.
+
+   . if true, the promise returns the base64 encoded data instead of the uri. Defaults to `false`.
 
 
 ## Getting started

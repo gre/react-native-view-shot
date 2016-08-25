@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.util.DisplayMetrics;
+import android.view.View;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -55,17 +56,18 @@ public class RNViewShotModule extends ReactContextBaseJavaModule {
                         ? Bitmap.CompressFormat.WEBP
                         : null;
         if (compressFormat == null) {
-            throw new JSApplicationIllegalArgumentException("Unsupported image format: " + format);
+            promise.reject(ViewShot.ERROR_UNABLE_TO_SNAPSHOT, "Unsupported image format: "+format+". Try one of: png | jpg | jpeg");
+            return;
         }
         double quality = options.hasKey("quality") ? options.getDouble("quality") : 1.0;
         DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
         Integer width = options.hasKey("width") ? (int)(displayMetrics.density * options.getDouble("width")) : null;
         Integer height = options.hasKey("height") ? (int)(displayMetrics.density * options.getDouble("height")) : null;
-        boolean base64 = options.hasKey("base64") ? options.getBoolean("base64") : false;
+        String result = options.hasKey("result") ? options.getString("result") : "file";
         try {
-            File tmpFile = createTempFile(getReactApplicationContext(), format);
+            File tmpFile = "file".equals(result) ? createTempFile(getReactApplicationContext(), format) : null;
             UIManagerModule uiManager = this.reactContext.getNativeModule(UIManagerModule.class);
-            uiManager.addUIBlock(new ViewShot(tag, compressFormat, quality, width, height, tmpFile, base64, promise));
+            uiManager.addUIBlock(new ViewShot(tag, format, compressFormat, quality, width, height, tmpFile, result, promise));
         }
         catch (Exception e) {
             promise.reject(ViewShot.ERROR_UNABLE_TO_SNAPSHOT, "Failed to snapshot view tag "+tag);
