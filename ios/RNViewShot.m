@@ -70,13 +70,20 @@ RCT_EXPORT_METHOD(takeSnapshot:(nonnull NSNumber *)target
                 return;
             }
 
-            // Save to a temp file
             NSError *error = nil;
-            NSString *tempFilePath = RCTTempFilePath(format, &error);
-            if (tempFilePath) {
-                if ([data writeToFile:tempFilePath options:(NSDataWritingOptions)0 error:&error]) {
-                    resolve(tempFilePath);
-                    return;
+            if ([[options objectForKey:@"base64"] boolValue]) {
+                // Return as a base64'd string
+                NSString *dataString = [data base64EncodedStringWithOptions:0];
+                resolve(dataString);
+                return;
+            } else {
+                // Save to a temp file
+                NSString *tempFilePath = RCTTempFilePath(format, &error);
+                if (tempFilePath) {
+                    if ([data writeToFile:tempFilePath options:(NSDataWritingOptions)0 error:&error]) {
+                        resolve(tempFilePath);
+                        return;
+                    }
                 }
             }
 
