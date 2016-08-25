@@ -1,5 +1,5 @@
 
-# react-native-view-shot
+# react-native-view-shot ![](https://img.shields.io/npm/v/react-native-view-shot.svg?maxAge=2592000) ![](https://img.shields.io/badge/react--native-%2030+-05F561.svg)
 
 Snapshot a React Native view and save it to an image.
 
