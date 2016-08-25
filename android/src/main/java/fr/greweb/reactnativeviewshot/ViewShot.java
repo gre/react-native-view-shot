@@ -94,10 +94,11 @@ public class ViewShot implements UIBlock {
         if (w <= 0 || h <= 0) {
             throw new RuntimeException("Impossible to snapshot the view: view is invalid");
         }
+        if (!view.isDrawingCacheEnabled())
+          view.setDrawingCacheEnabled(true);
+
         Bitmap bitmap = view.getDrawingCache();
-        if (bitmap == null)
-            view.setDrawingCacheEnabled(true);
-        bitmap = view.getDrawingCache();
+
         if (width != null && height != null && (width != w || height != h)) {
             bitmap = Bitmap.createScaledBitmap(bitmap, width, height, true);
         }
@@ -105,5 +106,6 @@ public class ViewShot implements UIBlock {
             throw new RuntimeException("Impossible to snapshot the view");
         }
         bitmap.compress(format, (int)(100.0 * quality), os);
+        view.setDrawingCacheEnabled(false);
     }
 }
