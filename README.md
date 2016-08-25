@@ -37,6 +37,7 @@ Returns a Promise of the image URI.
  - **`width`** / **`height`** *(number)*: the width and height of the image to capture.
  - **`format`** *(string)*: either `png` or `jpg`/`jpeg` or `webm` (Android). Defaults to `png`.
  - **`quality`** *(number)*: the quality. 0.0 - 1.0 (default). (only available on lossy formats like jpeg)
+ - **`base64`** *(bool)*: if true, the promise returns the base64 encoded data instead of the uri. Defaults to `false`.
 
 
 ## Getting started

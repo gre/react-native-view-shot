@@ -3,15 +3,18 @@ package fr.greweb.reactnativeviewshot;
 import javax.annotation.Nullable;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.util.Base64;
 import android.view.View;
 
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.UIBlock;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * Snapshot utility class allow to screenshot a view.
@@ -26,6 +29,7 @@ public class ViewShot implements UIBlock {
     private Integer width;
     private Integer height;
     private File output;
+    private boolean base64;
     private Promise promise;
 
     public ViewShot(
@@ -35,6 +39,7 @@ public class ViewShot implements UIBlock {
             @Nullable Integer width,
             @Nullable Integer height,
             File output,
+            boolean base64,
             Promise promise) {
         this.tag = tag;
         this.format = format;
@@ -42,26 +47,35 @@ public class ViewShot implements UIBlock {
         this.width = width;
         this.height = height;
         this.output = output;
+        this.base64 = base64;
         this.promise = promise;
     }
 
     @Override
     public void execute(NativeViewHierarchyManager nativeViewHierarchyManager) {
-        FileOutputStream fos = null;
+        OutputStream os = null;
         View view = nativeViewHierarchyManager.resolveView(tag);
         try {
-            fos = new FileOutputStream(output);
-            captureView(view, fos);
-            String uri = Uri.fromFile(output).toString();
-            promise.resolve(uri);
+            if (base64) {
+                os = new ByteArrayOutputStream();
+                captureView(view, os);
+                byte[] bytes = ((ByteArrayOutputStream) os).toByteArray();
+                String data = Base64.encodeToString(bytes, Base64.NO_WRAP);
+                promise.resolve(data);
+            } else {
+                os = new FileOutputStream(output);
+                captureView(view, os);
+                String uri = Uri.fromFile(output).toString();
+                promise.resolve(uri);
+            }
         }
         catch (Exception e) {
             promise.reject(ERROR_UNABLE_TO_SNAPSHOT, "Failed to snapshot view tag "+tag);
         }
         finally {
-            if (fos != null) {
+            if (os != null) {
                 try {
-                    fos.close();
+                    os.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -74,7 +88,7 @@ public class ViewShot implements UIBlock {
      * @param view the view to capture
      * @return the screenshot or null if it failed.
      */
-    private void captureView (View view, FileOutputStream fos) {
+    private void captureView (View view, OutputStream os) {
         int w = view.getWidth();
         int h = view.getHeight();
         if (w <= 0 || h <= 0) {
@@ -90,6 +104,6 @@ public class ViewShot implements UIBlock {
         if (bitmap == null) {
             throw new RuntimeException("Impossible to snapshot the view");
         }
-        bitmap.compress(format, (int)(100.0 * quality), fos);
+        bitmap.compress(format, (int)(100.0 * quality), os);
     }
 }
