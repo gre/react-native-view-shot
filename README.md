@@ -86,6 +86,7 @@ Snapshots are not guaranteed to be pixel perfect. It also depends on the platfor
 
 - Support of special components like Video / GL views remains untested.
 - It's preferable to **use a background color on the view you rasterize** to avoid transparent pixels and potential weirdness that some border appear around texts.
+- on Android, you need to make sure `collapsable` to `false` if you want to snapshot a **View**. Otherwise that view won't reflect any UI View. ([found by @gaguirre](https://github.com/gre/react-native-view-shot/issues/7#issuecomment-245302844))
 
 ## Thanks
 
