@@ -65,7 +65,7 @@ public class RNViewShotModule extends ReactContextBaseJavaModule {
         Integer height = options.hasKey("height") ? (int)(displayMetrics.density * options.getDouble("height")) : null;
         String result = options.hasKey("result") ? options.getString("result") : "file";
         try {
-            String name = options.hasKey("name") ? options.getString("name") : null;
+            String name = options.hasKey("filename") ? options.getString("filename") : null;
             File tmpFile = "file".equals(result) ? createTempFile(getReactApplicationContext(), format, name) : null;
             UIManagerModule uiManager = this.reactContext.getNativeModule(UIManagerModule.class);
             uiManager.addUIBlock(new ViewShot(tag, format, compressFormat, quality, width, height, tmpFile, result, promise));
