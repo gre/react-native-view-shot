@@ -65,7 +65,8 @@ public class RNViewShotModule extends ReactContextBaseJavaModule {
         Integer height = options.hasKey("height") ? (int)(displayMetrics.density * options.getDouble("height")) : null;
         String result = options.hasKey("result") ? options.getString("result") : "file";
         try {
-            File tmpFile = "file".equals(result) ? createTempFile(getReactApplicationContext(), format) : null;
+            String name = options.hasKey("name") ? options.getString("name") : null;
+            File tmpFile = "file".equals(result) ? createTempFile(getReactApplicationContext(), format, name) : null;
             UIManagerModule uiManager = this.reactContext.getNativeModule(UIManagerModule.class);
             uiManager.addUIBlock(new ViewShot(tag, format, compressFormat, quality, width, height, tmpFile, result, promise));
         }
@@ -118,7 +119,7 @@ public class RNViewShotModule extends ReactContextBaseJavaModule {
      * Create a temporary file in the cache directory on either internal or external storage,
      * whichever is available and has more free space.
      */
-    private File createTempFile(Context context, String ext)
+    private File createTempFile(Context context, String ext, String name)
             throws IOException {
         File externalCacheDir = context.getExternalCacheDir();
         File internalCacheDir = context.getCacheDir();
@@ -136,7 +137,14 @@ public class RNViewShotModule extends ReactContextBaseJavaModule {
                     externalCacheDir : internalCacheDir;
         }
         String suffix = "." + ext;
-        return File.createTempFile(TEMP_FILE_PREFIX, suffix, cacheDir);
+        File tmpFile = File.createTempFile(TEMP_FILE_PREFIX, suffix, cacheDir);
+        if (name != null) {
+            File renamed = new File(cacheDir, name + suffix);
+            tmpFile.renameTo(renamed);
+            return renamed;
+        }
+
+        return tmpFile;
     }
 
 }
