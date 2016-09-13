@@ -73,7 +73,7 @@ react-native link react-native-view-shot
 #### Android
 
 1. Open up `android/app/src/main/java/[...]/MainActivity.java`
- - Add `import com.reactlibrary.RNViewShotPackage;` to the imports at the top of the file
+ - Add `import fr.greweb.reactnativeviewshot.RNViewShotPackage;` to the imports at the top of the file
  - Add `new RNViewShotPackage()` to the list returned by the `getPackages()` method
 2. Append the following lines to `android/settings.gradle`:
  	```
