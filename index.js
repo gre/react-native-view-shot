@@ -16,7 +16,9 @@ export function takeSnapshot(
   }
 ): Promise<string> {
   if (typeof view !== "number") {
-    view = findNodeHandle(view);
+    const node = findNodeHandle(view);
+    if (!node) return Promise.reject(new Error("findNodeHandle failed to resolve view="+String(view)));
+    view = node;
   }
   return RNViewShot.takeSnapshot(view, options);
 }
