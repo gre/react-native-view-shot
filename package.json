@@ -1,6 +1,6 @@
 {
   "name": "react-native-view-shot",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "description": "Snapshot a React Native view and save it to an image",
   "main": "index.js",
   "keywords": [
