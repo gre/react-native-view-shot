@@ -89,6 +89,7 @@ public class ViewShot implements UIBlock {
             }
         }
         catch (Exception e) {
+            e.printStackTrace();
             promise.reject(ERROR_UNABLE_TO_SNAPSHOT, "Failed to capture view snapshot");
         }
         finally {
