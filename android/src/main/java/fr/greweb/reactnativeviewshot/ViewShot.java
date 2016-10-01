@@ -2,6 +2,7 @@ package fr.greweb.reactnativeviewshot;
 
 import javax.annotation.Nullable;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.net.Uri;
 import android.util.Base64;
 import android.view.View;
@@ -103,6 +104,16 @@ public class ViewShot implements UIBlock {
         }
     }
 
+    public static Bitmap loadBitmapFromView(View v)
+    {
+        Bitmap b = Bitmap.createBitmap(v.getWidth(), v.getHeight(), Bitmap.Config.ARGB_8888);
+
+        Canvas c = new Canvas(b);
+        v.layout(0, 0, v.getLayoutParams().width, v.getLayoutParams().height);
+        v.draw(c);
+        return b;
+    }
+
     /**
      * Screenshot a view and return the captured bitmap.
      * @param view the view to capture
@@ -114,10 +125,16 @@ public class ViewShot implements UIBlock {
         if (w <= 0 || h <= 0) {
             throw new RuntimeException("Impossible to snapshot the view: view is invalid");
         }
+        /*
         if (!view.isDrawingCacheEnabled())
           view.setDrawingCacheEnabled(true);
 
         Bitmap bitmap = view.getDrawingCache();
+        */
+        Bitmap bitmap = Bitmap.createBitmap(view.getWidth(), view.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(bitmap);
+        view.layout(0, 0, view.getLayoutParams().width, view.getLayoutParams().height);
+        view.draw(c);
 
         if (width != null && height != null && (width != w || height != h)) {
             bitmap = Bitmap.createScaledBitmap(bitmap, width, height, true);
@@ -126,6 +143,6 @@ public class ViewShot implements UIBlock {
             throw new RuntimeException("Impossible to snapshot the view");
         }
         bitmap.compress(format, (int)(100.0 * quality), os);
-        view.setDrawingCacheEnabled(false);
+        //view.setDrawingCacheEnabled(false);
     }
 }
