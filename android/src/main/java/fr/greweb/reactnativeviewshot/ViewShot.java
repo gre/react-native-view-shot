@@ -67,8 +67,7 @@ public class ViewShot implements UIBlock {
             if ("file".equals(result)) {
                 os = new FileOutputStream(output);
                 captureView(view, os);
-                String uri = Uri.fromFile(output).toString();
-                promise.resolve(uri);
+                promise.resolve(output.getAbsolutePath());
             }
             else if ("base64".equals(result)) {
                 os = new ByteArrayOutputStream();
