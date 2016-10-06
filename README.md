@@ -41,14 +41,14 @@ Returns a Promise of the image URI.
     - `"data-uri"`: same as `base64` but also includes the [Data URI scheme](https://en.wikipedia.org/wiki/Data_URI_scheme) header.
  - **`filename`** *(string)*: the name of the generated file if any (Android only). Defaults to `ReactNative_snapshot_image_${timestamp}`.
 
-## Notes
+## Caveats
 
 Snapshots are not guaranteed to be pixel perfect. It also depends on the platform. Here is some difference we have noticed and how to workaround.
 
 - Support of special components like Video / GL views remains untested.
 - It's preferable to **use a background color on the view you rasterize** to avoid transparent pixels and potential weirdness that some border appear around texts.
 
-### Notes specific to Android implementation
+### specific to Android implementation
 
 - you need to make sure `collapsable` is set to `false` if you want to snapshot a **View**. Otherwise that view won't reflect any UI View. ([found by @gaguirre](https://github.com/gre/react-native-view-shot/issues/7#issuecomment-245302844))
 - if you want to share out the screenshoted file, you will have to copy it somewhere first so it's accessible to an Intent, see comment: https://github.com/gre/react-native-view-shot/issues/11#issuecomment-251080804 .
