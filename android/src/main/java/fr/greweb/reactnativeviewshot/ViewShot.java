@@ -115,10 +115,12 @@ public class ViewShot implements UIBlock {
         if (w <= 0 || h <= 0) {
             throw new RuntimeException("Impossible to snapshot the view: view is invalid");
         }
-        Bitmap bitmap = Bitmap.createBitmap(view.getWidth(), view.getHeight(), Bitmap.Config.ARGB_8888);
-        Canvas c = new Canvas(bitmap);
-        view.layout(0, 0, view.getLayoutParams().width, view.getLayoutParams().height);
-        view.draw(c);
+        // Bitmap bitmap = Bitmap.createBitmap(view.getWidth(), view.getHeight(), Bitmap.Config.ARGB_8888);
+        // Canvas c = new Canvas(bitmap);
+        // view.layout(0, 0, view.getLayoutParams().width, view.getLayoutParams().height);
+        // view.draw(c);
+        view.buildDrawingCache();
+        Bitmap bitmap = Bitmap.createBitmap(view.getDrawingCache());
 
         if (width != null && height != null && (width != w || height != h)) {
             bitmap = Bitmap.createScaledBitmap(bitmap, width, height, true);
