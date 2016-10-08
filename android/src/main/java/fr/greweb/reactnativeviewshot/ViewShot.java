@@ -117,7 +117,6 @@ public class ViewShot implements UIBlock {
         }
         Bitmap bitmap = Bitmap.createBitmap(view.getWidth(), view.getHeight(), Bitmap.Config.ARGB_8888);
         Canvas c = new Canvas(bitmap);
-        view.layout(0, 0, view.getLayoutParams().width, view.getLayoutParams().height);
         view.draw(c);
 
         if (width != null && height != null && (width != w || height != h)) {
