@@ -11,8 +11,7 @@ export function takeSnapshot(
     height ?: number;
     format ?: "png" | "jpg" | "jpeg" | "webm";
     quality ?: number;
-    base64 ?: bool;
-    filename ?: string;
+    result: ?: "file" | "base64" | "data-uri";
   }
 ): Promise<string> {
   if (typeof view !== "number") {
