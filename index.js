@@ -9,6 +9,7 @@ export function takeSnapshot(
   options ?: {
     width ?: number;
     height ?: number;
+    filename ?: string;
     format ?: "png" | "jpg" | "jpeg" | "webm";
     quality ?: number;
     result ?: "file" | "base64" | "data-uri";
