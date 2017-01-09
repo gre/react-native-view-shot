@@ -1,12 +1,12 @@
 
 #import "RNViewShot.h"
 #import <AVFoundation/AVFoundation.h>
-#import "React/RCTLog.h"
-#import "React/UIView+React.h"
-#import "React/RCTUtils.h"
-#import "React/RCTConvert.h"
-#import "React/RCTUIManager.h"
-#import "React/RCTBridge.h"
+#import <React/RCTLog.h>
+#import <React/UIView+React.h>
+#import <React/RCTUtils.h>
+#import <React/RCTConvert.h>
+#import <React/RCTUIManager.h>
+#import <React/RCTBridge.h>
 
 
 @implementation RNViewShot
