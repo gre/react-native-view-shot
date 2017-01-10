@@ -1,9 +1,11 @@
 
-# react-native-view-shot ![](https://img.shields.io/npm/v/react-native-view-shot.svg) ![](https://img.shields.io/badge/react--native-%2030+-05F561.svg)
+# react-native-view-shot ![](https://img.shields.io/npm/v/react-native-view-shot.svg) ![](https://img.shields.io/badge/react--native-%2040+-05F561.svg)
 
 Snapshot a React Native view and save it to an image.
 
 <img src="https://github.com/gre/react-native-view-shot-example/raw/master/docs/recursive.gif" width=300 />
+
+> For React Native version between `0.30.x` and `0.39.x`, you should use `react-native-view-shot@1.5.1`.
 
 ## Usage
 
