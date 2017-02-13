@@ -36,7 +36,7 @@ public class ViewShot implements UIBlock {
     private File output;
     private String result;
     private Promise promise;
-    private Boolean isScrollView;
+    private Boolean snapshotContentContainer;
 
     public ViewShot(
             int tag,
@@ -47,7 +47,7 @@ public class ViewShot implements UIBlock {
             @Nullable Integer height,
             File output,
             String result,
-            Boolean isScrollView,
+            Boolean snapshotContentContainer,
             Promise promise) {
         this.tag = tag;
         this.extension = extension;
@@ -57,7 +57,7 @@ public class ViewShot implements UIBlock {
         this.height = height;
         this.output = output;
         this.result = result;
-        this.isScrollView = isScrollView;
+        this.snapshotContentContainer = snapshotContentContainer;
         this.promise = promise;
     }
 
@@ -124,7 +124,7 @@ public class ViewShot implements UIBlock {
         }
 
         //evaluate real height
-        if (this.isScrollView){
+        if (this.snapshotContentContainer){
             h=0;
             ScrollView scrollView = (ScrollView)view;
             for (int i = 0; i < scrollView.getChildCount(); i++) {
