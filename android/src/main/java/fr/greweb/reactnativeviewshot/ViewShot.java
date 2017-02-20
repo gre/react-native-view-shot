@@ -1,11 +1,14 @@
 package fr.greweb.reactnativeviewshot;
 
 import javax.annotation.Nullable;
+
+import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.net.Uri;
 import android.util.Base64;
 import android.view.View;
+import android.widget.ScrollView;
 
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
@@ -33,6 +36,7 @@ public class ViewShot implements UIBlock {
     private File output;
     private String result;
     private Promise promise;
+    private Boolean snapshotContentContainer;
 
     public ViewShot(
             int tag,
@@ -43,6 +47,7 @@ public class ViewShot implements UIBlock {
             @Nullable Integer height,
             File output,
             String result,
+            Boolean snapshotContentContainer,
             Promise promise) {
         this.tag = tag;
         this.extension = extension;
@@ -52,6 +57,7 @@ public class ViewShot implements UIBlock {
         this.height = height;
         this.output = output;
         this.result = result;
+        this.snapshotContentContainer = snapshotContentContainer;
         this.promise = promise;
     }
 
@@ -112,10 +118,20 @@ public class ViewShot implements UIBlock {
     private void captureView (View view, OutputStream os) {
         int w = view.getWidth();
         int h = view.getHeight();
+
         if (w <= 0 || h <= 0) {
             throw new RuntimeException("Impossible to snapshot the view: view is invalid");
         }
-        Bitmap bitmap = Bitmap.createBitmap(view.getWidth(), view.getHeight(), Bitmap.Config.ARGB_8888);
+
+        //evaluate real height
+        if (this.snapshotContentContainer){
+            h=0;
+            ScrollView scrollView = (ScrollView)view;
+            for (int i = 0; i < scrollView.getChildCount(); i++) {
+                h += scrollView.getChildAt(i).getHeight();
+            }
+        }
+        Bitmap bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         Canvas c = new Canvas(bitmap);
         view.draw(c);
 

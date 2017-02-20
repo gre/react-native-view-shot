@@ -64,11 +64,12 @@ public class RNViewShotModule extends ReactContextBaseJavaModule {
         Integer width = options.hasKey("width") ? (int)(displayMetrics.density * options.getDouble("width")) : null;
         Integer height = options.hasKey("height") ? (int)(displayMetrics.density * options.getDouble("height")) : null;
         String result = options.hasKey("result") ? options.getString("result") : "file";
+        Boolean snapshotContentContainer = options.hasKey("snapshotContentContainer") ? options.getBoolean("snapshotContentContainer") : false;
         try {
             String name = options.hasKey("filename") ? options.getString("filename") : null;
             File tmpFile = "file".equals(result) ? createTempFile(getReactApplicationContext(), format, name) : null;
             UIManagerModule uiManager = this.reactContext.getNativeModule(UIManagerModule.class);
-            uiManager.addUIBlock(new ViewShot(tag, format, compressFormat, quality, width, height, tmpFile, result, promise));
+            uiManager.addUIBlock(new ViewShot(tag, format, compressFormat, quality, width, height, tmpFile, result, snapshotContentContainer, promise));
         }
         catch (Exception e) {
             promise.reject(ViewShot.ERROR_UNABLE_TO_SNAPSHOT, "Failed to snapshot view tag "+tag);
