@@ -10,9 +10,9 @@ Snapshot a React Native view and save it to an image.
 ## Usage
 
 ```js
-import RNViewShot from "react-native-view-shot";
+import { takeSnapshot } from "react-native-view-shot";
 
-RNViewShot.takeSnapshot(viewRef, {
+takeSnapshot(viewRef, {
   format: "jpeg",
   quality: 0.8
 })
@@ -28,7 +28,7 @@ RNViewShot.takeSnapshot(viewRef, {
 
 ## Full API
 
-### `RNViewShot.takeSnapshot(view, options)`
+### `takeSnapshot(view, options)`
 
 Returns a Promise of the image URI.
 
@@ -41,8 +41,26 @@ Returns a Promise of the image URI.
     - `"file"` (default): save to a temporary file *(that will only exist for as long as the app is running)*.
     - `"base64"`: encode as base64 and returns the raw string. Use only with small images as this may result of lags (the string is sent over the bridge). *N.B. This is not a data uri, use `data-uri` instead*.
     - `"data-uri"`: same as `base64` but also includes the [Data URI scheme](https://en.wikipedia.org/wiki/Data_URI_scheme) header.
- - **`filename`** *(string)*: the name of the generated file if any (Android only). Defaults to `ReactNative_snapshot_image_${timestamp}`.
+ - **`path`** *(string)*: The absolute path where the file get generated. See *`dirs` constants* for more information.
  - **`snapshotContentContainer`** *(bool)*: if true and when view is a ScrollView, the "content container" height will be evaluated instead of the container height. (Android only)
+
+### `dirs` constants
+
+By default, takeSnapshot will export in a temporary folder and the snapshot file will be deleted as soon as the app leaves. If you use the `path` option, you make the snapshot file more permanent and at a specific file location. To make file location more 'universal', the library exports some classic directory constants:
+
+```js
+import { takeSnapshot, dirs } from "react-native-view-shot";
+// cross platform dirs:
+const { CacheDir, DocumentDir, MainBundleDir, MovieDir, MusicDir, PictureDir } = dirs;
+// only available Android:
+const { DCIMDir, DownloadDir, RingtoneDir, SDCardDir } = dirs;
+
+takeSnapshot(viewRef, { path: PictureDir+"/foo.png" })
+.then(
+  uri => console.log("Image saved to", uri),
+  error => console.error("Oops, snapshot failed", error)
+);
+```
 
 ## Caveats
 
@@ -54,8 +72,7 @@ Snapshots are not guaranteed to be pixel perfect. It also depends on the platfor
 ### specific to Android implementation
 
 - you need to make sure `collapsable` is set to `false` if you want to snapshot a **View**. Otherwise that view won't reflect any UI View. ([found by @gaguirre](https://github.com/gre/react-native-view-shot/issues/7#issuecomment-245302844))
-- if you want to share out the screenshoted file, you will have to copy it somewhere first so it's accessible to an Intent, see comment: https://github.com/gre/react-native-view-shot/issues/11#issuecomment-251080804 .
--  if you implement a third party library and want to get back a File, you must first resolve the `Uri`. the `file` result returns an `Uri` so it's consistent with iOS and you can give it to `Image.getSize` for instance.
+-  if you implement a third party library and want to get back a File, you must first resolve the `Uri`. (the `file` result returns an `Uri` so it's consistent with iOS and can be given to APIs like `Image.getSize`)
 
 ## Getting started
 
