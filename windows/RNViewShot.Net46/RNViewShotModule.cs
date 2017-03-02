@@ -2,8 +2,8 @@ using Newtonsoft.Json.Linq;
 using ReactNative.Bridge;
 using System;
 using System.Collections.Generic;
-using Windows.ApplicationModel.Core;
-using Windows.UI.Core;
+//using Windows.ApplicationModel.Core;
+//using Windows.UI.Core;
 
 namespace RNViewShot
 {
