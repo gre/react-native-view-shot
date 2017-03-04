@@ -124,7 +124,7 @@ public class ViewShot implements UIBlock {
         }
 
         //evaluate real height
-        if (this.snapshotContentContainer){
+        if (snapshotContentContainer) {
             h=0;
             ScrollView scrollView = (ScrollView)view;
             for (int i = 0; i < scrollView.getChildCount(); i++) {

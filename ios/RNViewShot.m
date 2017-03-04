@@ -20,6 +20,18 @@ RCT_EXPORT_MODULE()
   return self.bridge.uiManager.methodQueue;
 }
 
+- (NSDictionary *)constantsToExport
+{
+  return @{
+           @"CacheDir" : [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) firstObject],
+           @"DocumentDir": [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject],
+           @"MainBundleDir" : [[NSBundle mainBundle] bundlePath],
+           @"MovieDir": [NSSearchPathForDirectoriesInDomains(NSMoviesDirectory, NSUserDomainMask, YES) firstObject],
+           @"MusicDir": [NSSearchPathForDirectoriesInDomains(NSMusicDirectory, NSUserDomainMask, YES) firstObject],
+           @"PictureDir": [NSSearchPathForDirectoriesInDomains(NSPicturesDirectory, NSUserDomainMask, YES) firstObject],
+           };
+}
+
 // forked from RN implementation
 // https://github.com/facebook/react-native/blob/f35b372883a76b5666b016131d59268b42f3c40d/React/Modules/RCTUIManager.m#L1367
 
@@ -75,10 +87,22 @@ RCT_EXPORT_METHOD(takeSnapshot:(nonnull NSNumber *)target
       NSString *res = nil;
       if ([result isEqualToString:@"file"]) {
         // Save to a temp file
-        NSString *tempFilePath = RCTTempFilePath(format, &error);
-        if (tempFilePath) {
-          if ([data writeToFile:tempFilePath options:(NSDataWritingOptions)0 error:&error]) {
-            res = tempFilePath;
+        NSString *path;
+        if (options[@"path"]) {
+          path = options[@"path"];
+          NSString * folder = [path stringByDeletingLastPathComponent];
+          NSFileManager * fm = [NSFileManager defaultManager];
+          if(![fm fileExistsAtPath:folder]) {
+            [fm createDirectoryAtPath:folder withIntermediateDirectories:YES attributes:NULL error:&error];
+            [fm createFileAtPath:path contents:nil attributes:nil];
+          }
+        }
+        else {
+          path = RCTTempFilePath(format, &error);
+        }
+        if (path && !error) {
+          if ([data writeToFile:path options:(NSDataWritingOptions)0 error:&error]) {
+            res = path;
           }
         }
       }
@@ -95,13 +119,13 @@ RCT_EXPORT_METHOD(takeSnapshot:(nonnull NSNumber *)target
         reject(RCTErrorUnspecified, [NSString stringWithFormat:@"Unsupported result: %@. Try one of: file | base64 | data-uri", result], nil);
         return;
       }
-      if (res != nil) {
+      if (res && !error) {
         resolve(res);
         return;
       }
       
       // If we reached here, something went wrong
-      if (error != nil) reject(RCTErrorUnspecified, error.localizedDescription, error);
+      if (error) reject(RCTErrorUnspecified, error.localizedDescription, error);
       else reject(RCTErrorUnspecified, @"viewshot unknown error", nil);
     });
   }];
