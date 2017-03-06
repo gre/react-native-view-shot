@@ -1,6 +1,8 @@
 using Newtonsoft.Json.Linq;
 using ReactNative.Bridge;
+using ReactNative.UIManager;
 using System;
+using System.IO;
 using System.Collections.Generic;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
@@ -12,14 +14,15 @@ namespace RNViewShot
     /// </summary>
     class RNViewShotModule : ReactContextNativeModuleBase
     {
-        private ReactContext reactContext;
+        private const string ErrorUnableToSnapshot = "E_UNABLE_TO_SNAPSHOT";
+        private readonly ReactContext _reactContext;
 
         /// <summary>
         /// Instantiates the <see cref="RNViewShotModule"/>.
         /// </summary>
         public RNViewShotModule(ReactContext reactContext) : base(reactContext) 
         {
-            this.reactContext = reactContext;
+            this._reactContext = reactContext;
         }
 
         /// <summary>
@@ -34,10 +37,9 @@ namespace RNViewShot
         }
 
         [ReactMethod]
-        public void takeSnapshot(int tag, JObject options, IPromise promise) {
-            // Android Equivalent Code
-            //ReactApplicationContext context = getReactApplicationContext();
-            //String format = options.hasKey("format") ? options.getString("format") : "png";
+        public void takeSnapshot(int tag, JObject options, IPromise promise)
+        {
+            string format = options["format"] != null ? options.Value<string>("format") : "png";
             //Bitmap.CompressFormat compressFormat =
             //        format.equals("png")
             //                ? Bitmap.CompressFormat.PNG
@@ -48,31 +50,35 @@ namespace RNViewShot
             //                : null;
             //if (compressFormat == null)
             //{
-            //    promise.reject(ViewShot.ERROR_UNABLE_TO_SNAPSHOT, "Unsupported image format: " + format + ". Try one of: png | jpg | jpeg");
+            //    promise.reject(ErrorUnableToSnapshot, "Unsupported image format: " + format + ". Try one of: png | jpg | jpeg");
             //    return;
             //}
-            //double quality = options.hasKey("quality") ? options.getDouble("quality") : 1.0;
-            //DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
-            //Integer width = options.hasKey("width") ? (int)(displayMetrics.density * options.getDouble("width")) : null;
-            //Integer height = options.hasKey("height") ? (int)(displayMetrics.density * options.getDouble("height")) : null;
-            //String result = options.hasKey("result") ? options.getString("result") : "file";
-            //Boolean snapshotContentContainer = options.hasKey("snapshotContentContainer") ? options.getBoolean("snapshotContentContainer") : false;
+            double quality = options["quality"] != null ? options.Value<double>("quality") : 1.0;
+            int? width = options["width"] != null ? options.Value<int?>("width") : null;
+            int? height = options["height"] != null ? options.Value<int?>("height") : null;
+            string result = options["result"] != null ? options.Value<string>("result") : "file";
+            bool snapshotContentContainer = options["snapshotContentContainer"] != null ? options.Value<bool>("snapshotContentContainer") : false;
+
+            UIManagerModule uiManager = this._reactContext.GetNativeModule<UIManagerModule>();
+            uiManager.AddUIBlock(new ViewShot(tag));
+
             //try
             //{
-            //    String name = options.hasKey("filename") ? options.getString("filename") : null;
-            //    File tmpFile = "file".equals(result) ? createTempFile(getReactApplicationContext(), format, name) : null;
-            //    UIManagerModule uiManager = this.reactContext.getNativeModule(UIManagerModule.class);
-            //    uiManager.addUIBlock(new ViewShot(tag, format, compressFormat, quality, width, height, tmpFile, result, snapshotContentContainer, promise));
+            //    string name = options["filename"] != null ? options.Value<string>("filename") : null;
+            //    //File tmpFile = "file" == result ? createTempFile(this._reactContext, format, name) : null;
+            //    UIManagerModule uiManager = this._reactContext.GetNativeModule<UIManagerModule>();
+            //    //uiManager.addUIBlock(new ViewShot(tag, format, compressFormat, quality, width, height, tmpFile, result, snapshotContentContainer, promise));
             //}
-            //catch (Exception e) {
-            //    promise.reject(ViewShot.ERROR_UNABLE_TO_SNAPSHOT, "Failed to snapshot view tag "+tag);
+            //catch (Exception e)
+            //{
+            //    promise.reject(ErrorUnableToSnapshot, "Failed to snapshot view tag " + tag);
             //}
 
             //Bitmap bitmap = new Bitmap(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
             //Graphics graphics = Graphics.FromImage(bitmap as Image);
             //graphics.CopyFromScreen(0, 0, 0, 0, bitmap.Size);
             //bitmap.Save("c:\\screenshot.jpeg", ImageFormat.Jpeg);
-            promise.Resolve("This is working!");
+            promise.Resolve("Format: " + format + " Quality: " + quality);
         }
     }
 }
