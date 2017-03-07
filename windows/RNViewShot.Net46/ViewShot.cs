@@ -10,12 +10,13 @@ namespace RNViewShot
 {
     public class ViewShot : IUIBlock
     {
-        private const string ErrorUnableToSnapshot = "E_UNABLE_TO_SNAPSHOT";
+        public const string ErrorUnableToSnapshot = "E_UNABLE_TO_SNAPSHOT";
         private int tag;
         private string extension;
         private double quality;
         private int? width;
         private int? height;
+        private string path;
         private string result;
         private IPromise promise;
 
@@ -25,6 +26,7 @@ namespace RNViewShot
             double quality,
             int? width,
             int? height,
+            string path,
             string result,
             IPromise promise)
         {
@@ -33,6 +35,7 @@ namespace RNViewShot
             this.quality = quality;
             this.width = width;
             this.height = height;
+            this.path = path;
             this.result = result;
             this.promise = promise;
         }
@@ -45,60 +48,107 @@ namespace RNViewShot
                 promise.Reject(ErrorUnableToSnapshot, "No view found with reactTag: " + tag);
                 return;
             }
-            int width = (int)view.ActualWidth;
-            int height = (int)view.ActualHeight;
 
-            RenderTargetBitmap renderTargetBitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Default);
-            renderTargetBitmap.Render(view);
+            try
+            {
+                BitmapEncoder image = CaptureView(view);
 
-            BitmapEncoder image;
-            if (extension == "png")
-            {
-                image = new PngBitmapEncoder();
-            }
-            else if (extension == "jpg" || extension == "jpeg")
-            {
-                image = new JpegBitmapEncoder();
-            }
-            else
-            {
-                promise.Reject(ErrorUnableToSnapshot, "Unsupported image format: " + extension + ". Try one of: png | jpg | jpeg");
-                return;
-            }
-
-            // TODO: Allow setting quality
-            image.Frames.Add(BitmapFrame.Create(renderTargetBitmap));
-
-            if ("file" == result)
-            {
-                // TODO: Allow specifying path
-                string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "testing." + extension);
-                using (Stream fileStream = File.Create(path))
+                if ("file" == result)
                 {
-                    image.Save(fileStream);
+                    string filePath = GetFilePath();
+                    Stream stream = File.Create(filePath);
+                    image.Save(stream);
+                    promise.Resolve(filePath);
+                    stream.Close();
+                }
+                else if ("base64" == result)
+                {
+                    MemoryStream stream = new MemoryStream();
+                    image.Save(stream);
+                    byte[] imageBytes = stream.ToArray();
+                    string data = Convert.ToBase64String(imageBytes);
+                    promise.Resolve(data);
+                    stream.Close();
+                }
+                else if ("data-uri" == result)
+                {
+                    MemoryStream stream = new MemoryStream();
+                    image.Save(stream);
+                    byte[] imageBytes = stream.ToArray();
+                    string data = Convert.ToBase64String(imageBytes);
+                    data = "data:image/" + extension + ";base64," + data;
+                    promise.Resolve(data);
+                    stream.Close();
+                }
+                else
+                {
+                    promise.Reject(ErrorUnableToSnapshot, "Unsupported result: " + result + ". Try one of: file | base64 | data-uri");
                 }
             }
-            else if ("base64" == result)
+            catch (Exception ex)
             {
-                MemoryStream stream = new MemoryStream();
-                image.Save(stream);
-                byte[] imageBytes = stream.ToArray();
-                string data = Convert.ToBase64String(imageBytes);
-                promise.Resolve(data);
-
+                Console.WriteLine(ex.ToString());
+                promise.Reject(ErrorUnableToSnapshot, "Failed to capture view snapshot");
             }
-            else if ("data-uri" == result)
+        }
+
+        private BitmapEncoder CaptureView(FrameworkElement view)
+        {
+            int w = (int)view.ActualWidth;
+            int h = (int)view.ActualHeight;
+
+            if (w <= 0 || h <= 0)
             {
-                MemoryStream stream = new MemoryStream();
-                image.Save(stream);
-                byte[] imageBytes = stream.ToArray();
-                string data = Convert.ToBase64String(imageBytes);
-                data = "data:image/" + extension + ";base64," + data;
-                promise.Resolve(data);
+                throw new InvalidOperationException("Impossible to snapshot the view: view is invalid");
+            }
+
+            RenderTargetBitmap targetBitmap = new RenderTargetBitmap(w, h, 96, 96, PixelFormats.Default);
+            targetBitmap.Render(view);
+
+            BitmapSource bitmap;
+            if (width != null && height != null && (width != w || height != h))
+            {
+                double scaleX = (double)width / targetBitmap.PixelWidth;
+                double scaleY = (double)height / targetBitmap.PixelHeight;
+                bitmap = new TransformedBitmap(targetBitmap, new ScaleTransform(scaleX, scaleY));
             }
             else
             {
-                promise.Reject(ErrorUnableToSnapshot, "Unsupported result: " + result + ". Try one of: file | base64 | data-uri");
+                bitmap = targetBitmap;
+            }
+
+            if (bitmap == null)
+            {
+                throw new InvalidOperationException("Impossible to snapshot the view");
+            }
+
+            if (extension == "png")
+            {
+                PngBitmapEncoder image = new PngBitmapEncoder();
+                image.Frames.Add(BitmapFrame.Create(bitmap));
+                return image;
+            }
+            else
+            {
+                JpegBitmapEncoder image = new JpegBitmapEncoder();
+                image.QualityLevel = (int)(100.0 * quality);
+                image.Frames.Add(BitmapFrame.Create(bitmap));
+                return image;
+            }
+        }
+
+        private string GetFilePath()
+        {
+            if (string.IsNullOrEmpty(path)) 
+            {
+                string tmpFilePath = Path.GetTempPath();
+                string fileName = Guid.NewGuid().ToString();
+                fileName = Path.ChangeExtension(fileName, extension);
+                return Path.Combine(tmpFilePath, fileName);
+            }
+            else
+            {
+                return path;
             }
         }
     }

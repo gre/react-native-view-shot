@@ -41,10 +41,17 @@ namespace RNViewShot
             double quality = options["quality"] != null ? options.Value<double>("quality") : 1.0;
             int? width = options["width"] != null ? options.Value<int?>("width") : null;
             int? height = options["height"] != null ? options.Value<int?>("height") : null;
-            string result = options["result"] != null ? options.Value<string>("result") : "file";            
+            string result = options["result"] != null ? options.Value<string>("result") : "file";
+            string path = options["path"] != null ? options.Value<string>("path") : null;
+
+            if (format != "png" && format != "jpg" && format != "jpeg")
+            {
+                promise.Reject(ViewShot.ErrorUnableToSnapshot, "Unsupported image format: " + format + ". Try one of: png | jpg | jpeg");
+                return;
+            }
 
             UIManagerModule uiManager = this._reactContext.GetNativeModule<UIManagerModule>();
-            uiManager.AddUIBlock(new ViewShot(tag, format, quality, width, height, result, promise));
+            uiManager.AddUIBlock(new ViewShot(tag, format, quality, width, height, path, result, promise));
         }
     }
 }
