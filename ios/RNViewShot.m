@@ -5,6 +5,7 @@
 #import <React/UIView+React.h>
 #import <React/RCTUtils.h>
 #import <React/RCTConvert.h>
+#import <React/RCTScrollView.h>
 #import <React/RCTUIManager.h>
 #import <React/RCTBridge.h>
 
@@ -54,13 +55,36 @@ RCT_EXPORT_METHOD(takeSnapshot:(nonnull NSNumber *)target
     CGSize size = [RCTConvert CGSize:options];
     NSString *format = [RCTConvert NSString:options[@"format"] ?: @"png"];
     NSString *result = [RCTConvert NSString:options[@"result"] ?: @"file"];
-    
+    BOOL snapshotContentContainer = [RCTConvert BOOL:options[@"snapshotContentContainer"] ?: @"false"];
+
     // Capture image
-    if (size.width < 0.1 || size.height < 0.1) {
-      size = view.bounds.size;
+    BOOL success;
+    if (snapshotContentContainer) {
+      if (![view isKindOfClass:[RCTScrollView class]]) {
+        reject(RCTErrorUnspecified, [NSString stringWithFormat:@"snapshotContentContainer can only be used on a RCTScrollView. instead got: %@", view], nil);
+        return;
+      }
+      RCTScrollView* rctScrollView = view;
+      UIScrollView* scrollView = rctScrollView.scrollView;
+      CGPoint savedContentOffset = scrollView.contentOffset;
+      CGRect savedFrame = scrollView.frame;
+      scrollView.contentOffset = CGPointZero;
+      scrollView.frame = CGRectMake(0, 0, scrollView.contentSize.width, scrollView.contentSize.height);
+      if (size.width < 0.1 || size.height < 0.1) {
+        size = scrollView.contentSize;
+      }
+      UIGraphicsBeginImageContextWithOptions(size, NO, 0);
+      success = [scrollView drawViewHierarchyInRect:(CGRect){CGPointZero, size} afterScreenUpdates:YES];
+      scrollView.contentOffset = savedContentOffset;
+      scrollView.frame = savedFrame;
     }
-    UIGraphicsBeginImageContextWithOptions(size, NO, 0);
-    BOOL success = [view drawViewHierarchyInRect:(CGRect){CGPointZero, size} afterScreenUpdates:YES];
+    else {
+      if (size.width < 0.1 || size.height < 0.1) {
+        size = view.bounds.size;
+      }
+      UIGraphicsBeginImageContextWithOptions(size, NO, 0);
+      success = [view drawViewHierarchyInRect:(CGRect){CGPointZero, size} afterScreenUpdates:YES];
+    }
     UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     
