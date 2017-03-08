@@ -95,7 +95,10 @@ react-native link react-native-view-shot
 
 #### Windows
 
-No support yet. Feel free to PR.
+1. In Visual Studio, in the solution explorer, right click on your project solution then select `Add` ➜ `ExisitingProject`
+2. Go to `node_modules` ➜ `react-native-view-shot` and add `RNViewShot.csproj` (UWP) or optionally `RNViewShot.Net46.csproj` (WPF)
+3. In Visual Studio, in the solution explorer, right click on your project then select `Add` ➜ `Reference`
+4. Under the projects tab select `RNViewShot` (UWP) or `RNViewShot.Net46` (WPF)
 
 
 ## Thanks
