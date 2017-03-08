@@ -1,6 +1,7 @@
 ﻿using ReactNative.Bridge;
 using ReactNative.UIManager;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Media;
@@ -87,7 +88,7 @@ namespace RNViewShot
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                Debug.WriteLine(ex.ToString());
                 promise.Reject(ErrorUnableToSnapshot, "Failed to capture view snapshot");
             }
         }

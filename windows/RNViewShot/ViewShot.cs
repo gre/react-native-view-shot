@@ -1,6 +1,7 @@
 ﻿using ReactNative.Bridge;
 using ReactNative.UIManager;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
@@ -9,7 +10,6 @@ using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.UI.Xaml;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 
 namespace RNViewShot
@@ -59,10 +59,10 @@ namespace RNViewShot
             {
                 if ("file" == result)
                 {
-                    using (InMemoryRandomAccessStream ras = new InMemoryRandomAccessStream())
+                    using (var ras = new InMemoryRandomAccessStream())
                     {
                         await CaptureView(view, ras);
-                        StorageFile file = await GetStorageFile();
+                        var file = await GetStorageFile();
                         using (var fileStream = await file.OpenAsync(FileAccessMode.ReadWrite))
                         {
                             await RandomAccessStream.CopyAndCloseAsync(ras.GetInputStreamAt(0), fileStream.GetOutputStreamAt(0));
@@ -72,10 +72,10 @@ namespace RNViewShot
                 }
                 else if ("base64" == result)
                 {
-                    using (InMemoryRandomAccessStream ras = new InMemoryRandomAccessStream())
+                    using (var ras = new InMemoryRandomAccessStream())
                     {
                         await CaptureView(view, ras);
-                        byte[] imageBytes = new byte[ras.Size];
+                        var imageBytes = new byte[ras.Size];
                         await ras.AsStream().ReadAsync(imageBytes, 0, imageBytes.Length);
                         string data = Convert.ToBase64String(imageBytes);
                         promise.Resolve(data);
@@ -83,10 +83,10 @@ namespace RNViewShot
                 }
                 else if ("data-uri" == result)
                 {
-                    using (InMemoryRandomAccessStream ras = new InMemoryRandomAccessStream())
+                    using (var ras = new InMemoryRandomAccessStream())
                     {
                         await CaptureView(view, ras);
-                        byte[] imageBytes = new byte[ras.Size];
+                        var imageBytes = new byte[ras.Size];
                         await ras.AsStream().ReadAsync(imageBytes, 0, imageBytes.Length);
                         string data = Convert.ToBase64String(imageBytes);
                         data = "data:image/" + extension + ";base64," + data;
@@ -100,7 +100,7 @@ namespace RNViewShot
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                Debug.WriteLine(ex.ToString());
                 promise.Reject(ErrorUnableToSnapshot, "Failed to capture view snapshot");
             }
         }
@@ -162,17 +162,9 @@ namespace RNViewShot
 
         private async Task<StorageFile> GetStorageFile()
         {
-            StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
-            if (string.IsNullOrEmpty(path))
-            {
-                string fileName = Guid.NewGuid().ToString();
-                fileName = Path.ChangeExtension(fileName, extension);
-                return await storageFolder.CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
-            }
-            else
-            {
-                return await storageFolder.CreateFileAsync(path, CreationCollisionOption.ReplaceExisting);
-            }
+            var storageFolder = ApplicationData.Current.LocalFolder;
+            var fileName = string.IsNullOrEmpty(path) ? path : Path.ChangeExtension(Guid.NewGuid().ToString(), extension);                
+            return await storageFolder.CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
         }
     }
 }

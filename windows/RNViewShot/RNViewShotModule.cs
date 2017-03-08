@@ -51,7 +51,8 @@ namespace RNViewShot
             }
 
             UIManagerModule uiManager = this._reactContext.GetNativeModule<UIManagerModule>();
-            uiManager.AddUIBlock(new ViewShot(tag, format, quality, width, height, path, result, promise));
+            var viewShot = new ViewShot(tag, format, quality, width, height, path, result, promise);
+            uiManager.AddUIBlock(viewShot);
         }
     }
 }
