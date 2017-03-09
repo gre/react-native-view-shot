@@ -69,11 +69,14 @@ Model tested: iPhone 6 (iOS), Nexus 5 (Android).
 | System             | iOS                | Android           |
 |--------------------|--------------------|-------------------|
 | View,Text,Image,.. | YES                | YES               |
-| WebView            | YES                | YES, but from a `<View collapsable={false}>` parent |
-| gl-react v2        | YES                | NO (empty)        |
+| WebView            | YES                | YES<sup>1</sup>   |
+| gl-react v2        | YES                | NO<sup>2</sup>    |
 | react-native-video | NO                 | NO                |
 | react-native-maps  | YES                | [NO](https://github.com/gre/react-native-view-shot/issues/36) |
 
+>
+1. Only supported by wrapping a `<View collapsable={false}>` parent and snapshotting it.
+2. It returns an empty image (not a failure Promise).
 
 ## Caveats
 
