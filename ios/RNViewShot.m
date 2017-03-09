@@ -94,16 +94,22 @@ RCT_EXPORT_METHOD(takeSnapshot:(nonnull NSNumber *)target
     }
     UIGraphicsBeginImageContextWithOptions(size, NO, 0);
     success = [rendered drawViewHierarchyInRect:(CGRect){CGPointZero, size} afterScreenUpdates:YES];
+    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    
     if (snapshotContentContainer) {
       // Restore scroll & frame
       scrollView.contentOffset = savedContentOffset;
       scrollView.frame = savedFrame;
     }
-    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
     
-    if (!success || !image) {
-      reject(RCTErrorUnspecified, @"Failed to capture view snapshot", nil);
+    if (!success) {
+      reject(RCTErrorUnspecified, @"The view cannot be captured. drawViewHierarchyInRect was not successful. This is a potential technical or security limitation.", nil);
+      return;
+    }
+
+    if (!image) {
+      reject(RCTErrorUnspecified, @"Failed to capture view snapshot. UIGraphicsGetImageFromCurrentImageContext() returned nil!", nil);
       return;
     }
     
