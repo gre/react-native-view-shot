@@ -69,8 +69,8 @@ Model tested: iPhone 6 (iOS), Nexus 5 (Android).
 | System             | iOS                | Android           |
 |--------------------|--------------------|-------------------|
 | View,Text,Image,.. | YES                | YES               |
-| WebView            | YES                | YES: with a `<View collapsable={false}>` parent |
-| gl-react           | YES                | NO (empty)        |
+| WebView            | YES                | YES, but from a `<View collapsable={false}>` parent |
+| gl-react v2        | YES                | NO (empty)        |
 | react-native-video | NO                 | NO                |
 | react-native-maps  | YES                | [NO](https://github.com/gre/react-native-view-shot/issues/36) |
 
@@ -84,7 +84,7 @@ Snapshots are not guaranteed to be pixel perfect. It also depends on the platfor
 
 ### specific to Android implementation
 
-- you need to make sure `collapsable` is set to `false` if you want to snapshot a **View**. Otherwise that view won't reflect any UI View. ([found by @gaguirre](https://github.com/gre/react-native-view-shot/issues/7#issuecomment-245302844))
+- you need to make sure `collapsable` is set to `false` if you want to snapshot a **View**. Some content might even need to be wrapped into such `<View collapsable={false}>` to actually make them snapshotable! Otherwise that view won't reflect any UI View. ([found by @gaguirre](https://github.com/gre/react-native-view-shot/issues/7#issuecomment-245302844))
 -  if you implement a third party library and want to get back a File, you must first resolve the `Uri`. (the `file` result returns an `Uri` so it's consistent with iOS and can be given to APIs like `Image.getSize`)
 
 ## Getting started
