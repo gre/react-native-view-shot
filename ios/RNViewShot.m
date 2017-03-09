@@ -59,31 +59,45 @@ RCT_EXPORT_METHOD(takeSnapshot:(nonnull NSNumber *)target
 
     // Capture image
     BOOL success;
+    
+    UIView* rendered;
+    UIScrollView* scrollView;
     if (snapshotContentContainer) {
       if (![view isKindOfClass:[RCTScrollView class]]) {
         reject(RCTErrorUnspecified, [NSString stringWithFormat:@"snapshotContentContainer can only be used on a RCTScrollView. instead got: %@", view], nil);
         return;
       }
       RCTScrollView* rctScrollView = view;
-      UIScrollView* scrollView = rctScrollView.scrollView;
-      CGPoint savedContentOffset = scrollView.contentOffset;
-      CGRect savedFrame = scrollView.frame;
-      scrollView.contentOffset = CGPointZero;
-      scrollView.frame = CGRectMake(0, 0, scrollView.contentSize.width, scrollView.contentSize.height);
-      if (size.width < 0.1 || size.height < 0.1) {
-        size = scrollView.contentSize;
-      }
-      UIGraphicsBeginImageContextWithOptions(size, NO, 0);
-      success = [scrollView drawViewHierarchyInRect:(CGRect){CGPointZero, size} afterScreenUpdates:YES];
-      scrollView.contentOffset = savedContentOffset;
-      scrollView.frame = savedFrame;
+      scrollView = rctScrollView.scrollView;
+      rendered = scrollView;
     }
     else {
-      if (size.width < 0.1 || size.height < 0.1) {
-        size = view.bounds.size;
-      }
-      UIGraphicsBeginImageContextWithOptions(size, NO, 0);
-      success = [view drawViewHierarchyInRect:(CGRect){CGPointZero, size} afterScreenUpdates:YES];
+      rendered = view;
+    }
+    
+    if (size.width < 0.1 || size.height < 0.1) {
+      size = snapshotContentContainer ? scrollView.contentSize : view.bounds.size;
+    }
+    if (size.width < 0.1 || size.height < 0.1) {
+      reject(RCTErrorUnspecified, [NSString stringWithFormat:@"The content size must not be zero or negative. Got: (%g, %g)", size.width, size.height], nil);
+      return;
+    }
+    
+    CGPoint savedContentOffset;
+    CGRect savedFrame;
+    if (snapshotContentContainer) {
+      // Save scroll & frame and set it temporarily to the full content size
+      savedContentOffset = scrollView.contentOffset;
+      savedFrame = scrollView.frame;
+      scrollView.contentOffset = CGPointZero;
+      scrollView.frame = CGRectMake(0, 0, scrollView.contentSize.width, scrollView.contentSize.height);
+    }
+    UIGraphicsBeginImageContextWithOptions(size, NO, 0);
+    success = [rendered drawViewHierarchyInRect:(CGRect){CGPointZero, size} afterScreenUpdates:YES];
+    if (snapshotContentContainer) {
+      // Restore scroll & frame
+      scrollView.contentOffset = savedContentOffset;
+      scrollView.frame = savedFrame;
     }
     UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
