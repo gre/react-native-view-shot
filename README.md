@@ -62,11 +62,24 @@ takeSnapshot(viewRef, { path: PictureDir+"/foo.png" })
 );
 ```
 
+## Supported views
+
+Model tested: iPhone 6 (iOS), Nexus 5 (Android).
+
+| System             | iOS                | Android           |
+|--------------------|--------------------|-------------------|
+| View,Text,Image,.. | YES                | YES               |
+| WebView            | YES                | NO (crash!)       |
+| gl-react           | YES                | NO (empty)        |
+| react-native-video | NO                 | NO                |
+| react-native-maps  | YES                | [NO](https://github.com/gre/react-native-view-shot/issues/36) |
+
+
 ## Caveats
 
 Snapshots are not guaranteed to be pixel perfect. It also depends on the platform. Here is some difference we have noticed and how to workaround.
 
-- Support of special components like Video / GL views remains untested.
+- Support of special components like Video / GL views is not guaranteed to work. In case of failure, the `takeSnapshot` promise gets rejected (the library won't crash).
 - It's preferable to **use a background color on the view you rasterize** to avoid transparent pixels and potential weirdness that some border appear around texts.
 
 ### specific to Android implementation
@@ -112,8 +125,7 @@ react-native link react-native-view-shot
 
 #### Windows
 
-No support yet. Feel free to PR.
-
+Stay tuned, https://github.com/gre/react-native-view-shot/pull/45 will be merged soon!
 
 ## Thanks
 
