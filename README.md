@@ -69,7 +69,7 @@ Model tested: iPhone 6 (iOS), Nexus 5 (Android).
 | System             | iOS                | Android           |
 |--------------------|--------------------|-------------------|
 | View,Text,Image,.. | YES                | YES               |
-| WebView            | YES                | NO (crash!)       |
+| WebView            | YES                | YES: with a `<View collapsable={false}>` parent |
 | gl-react           | YES                | NO (empty)        |
 | react-native-video | NO                 | NO                |
 | react-native-maps  | YES                | [NO](https://github.com/gre/react-native-view-shot/issues/36) |
