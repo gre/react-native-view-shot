@@ -10,9 +10,9 @@ Snapshot a React Native view and save it to an image.
 ## Usage
 
 ```js
-import RNViewShot from "react-native-view-shot";
+import { takeSnapshot } from "react-native-view-shot";
 
-RNViewShot.takeSnapshot(viewRef, {
+takeSnapshot(viewRef, {
   format: "jpeg",
   quality: 0.8
 })
@@ -28,34 +28,68 @@ RNViewShot.takeSnapshot(viewRef, {
 
 ## Full API
 
-### `RNViewShot.takeSnapshot(view, options)`
+### `takeSnapshot(view, options)`
 
 Returns a Promise of the image URI.
 
 - **`view`** is a reference to a React Native component.
 - **`options`** may include:
- - **`width`** / **`height`** *(number)*: the width and height of the image to capture.
+ - **`width`** / **`height`** *(number)*: the width and height of the final image (resized from the View bound. don't provide it if you want the original pixel size).
  - **`format`** *(string)*: either `png` or `jpg`/`jpeg` or `webm` (Android). Defaults to `png`.
  - **`quality`** *(number)*: the quality. 0.0 - 1.0 (default). (only available on lossy formats like jpeg)
  - **`result`** *(string)*, the method you want to use to save the snapshot, one of:
     - `"file"` (default): save to a temporary file *(that will only exist for as long as the app is running)*.
     - `"base64"`: encode as base64 and returns the raw string. Use only with small images as this may result of lags (the string is sent over the bridge). *N.B. This is not a data uri, use `data-uri` instead*.
     - `"data-uri"`: same as `base64` but also includes the [Data URI scheme](https://en.wikipedia.org/wiki/Data_URI_scheme) header.
- - **`filename`** *(string)*: the name of the generated file if any (Android only). Defaults to `ReactNative_snapshot_image_${timestamp}`.
- - **`snapshotContentContainer`** *(bool)*: if true and when view is a ScrollView, the "content container" height will be evaluated instead of the container height. (Android only)
+ - **`path`** *(string)*: The absolute path where the file get generated. See *`dirs` constants* for more information.
+ - **`snapshotContentContainer`** *(bool)*: if true and when view is a ScrollView, the "content container" height will be evaluated instead of the container height.
+
+### `dirs` constants
+
+By default, takeSnapshot will export in a temporary folder and the snapshot file will be deleted as soon as the app leaves. If you use the `path` option, you make the snapshot file more permanent and at a specific file location. To make file location more 'universal', the library exports some classic directory constants:
+
+```js
+import { takeSnapshot, dirs } from "react-native-view-shot";
+// cross platform dirs:
+const { CacheDir, DocumentDir, MainBundleDir, MovieDir, MusicDir, PictureDir } = dirs;
+// only available Android:
+const { DCIMDir, DownloadDir, RingtoneDir, SDCardDir } = dirs;
+
+takeSnapshot(viewRef, { path: PictureDir+"/foo.png" })
+.then(
+  uri => console.log("Image saved to", uri),
+  error => console.error("Oops, snapshot failed", error)
+);
+```
+
+## Supported views
+
+Model tested: iPhone 6 (iOS), Nexus 5 (Android).
+
+| System             | iOS                | Android           | Windows           |
+|--------------------|--------------------|-------------------|-------------------|
+| View,Text,Image,.. | YES                | YES               | YES               |                    
+| WebView            | YES                | YES<sup>1</sup>   | YES               |
+| gl-react v2        | YES                | NO<sup>2</sup>    | NO<sup>3</sup>    |
+| react-native-video | NO                 | NO                | NO
+| react-native-maps  | YES                | [NO](https://github.com/gre/react-native-view-shot/issues/36) | NO<sup>3</sup>
+
+>
+1. Only supported by wrapping a `<View collapsable={false}>` parent and snapshotting it.
+2. It returns an empty image (not a failure Promise).
+3. Component itself lacks platform support.
 
 ## Caveats
 
 Snapshots are not guaranteed to be pixel perfect. It also depends on the platform. Here is some difference we have noticed and how to workaround.
 
-- Support of special components like Video / GL views remains untested.
+- Support of special components like Video / GL views is not guaranteed to work. In case of failure, the `takeSnapshot` promise gets rejected (the library won't crash).
 - It's preferable to **use a background color on the view you rasterize** to avoid transparent pixels and potential weirdness that some border appear around texts.
 
 ### specific to Android implementation
 
-- you need to make sure `collapsable` is set to `false` if you want to snapshot a **View**. Otherwise that view won't reflect any UI View. ([found by @gaguirre](https://github.com/gre/react-native-view-shot/issues/7#issuecomment-245302844))
-- if you want to share out the screenshoted file, you will have to copy it somewhere first so it's accessible to an Intent, see comment: https://github.com/gre/react-native-view-shot/issues/11#issuecomment-251080804 .
--  if you implement a third party library and want to get back a File, you must first resolve the `Uri`. the `file` result returns an `Uri` so it's consistent with iOS and you can give it to `Image.getSize` for instance.
+- you need to make sure `collapsable` is set to `false` if you want to snapshot a **View**. Some content might even need to be wrapped into such `<View collapsable={false}>` to actually make them snapshotable! Otherwise that view won't reflect any UI View. ([found by @gaguirre](https://github.com/gre/react-native-view-shot/issues/7#issuecomment-245302844))
+-  if you implement a third party library and want to get back a File, you must first resolve the `Uri`. (the `file` result returns an `Uri` so it's consistent with iOS and can be given to APIs like `Image.getSize`)
 
 ## Getting started
 
@@ -99,7 +133,6 @@ react-native link react-native-view-shot
 2. Go to `node_modules` ➜ `react-native-view-shot` and add `RNViewShot.csproj` (UWP) or optionally `RNViewShot.Net46.csproj` (WPF)
 3. In Visual Studio, in the solution explorer, right click on your Application project then select `Add` ➜ `Reference`
 4. Under the projects tab select `RNViewShot` (UWP) or `RNViewShot.Net46` (WPF)
-
 
 ## Thanks
 
