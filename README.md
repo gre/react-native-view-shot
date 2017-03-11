@@ -1,11 +1,11 @@
 
 # react-native-view-shot ![](https://img.shields.io/npm/v/react-native-view-shot.svg) ![](https://img.shields.io/badge/react--native-%2040+-05F561.svg)
 
-Snapshot a React Native view and save it to an image.
+Capture a React Native view to an image.
 
 <img src="https://github.com/gre/react-native-view-shot-example/raw/master/docs/recursive.gif" width=300 />
 
-> For React Native version between `0.30.x` and `0.39.x`, you should use `react-native-view-shot@1.5.1`.
+> iOS: For React Native version between `0.30.x` and `0.39.x`, you should use `react-native-view-shot@1.5.1`.
 
 ## Usage
 
@@ -62,7 +62,7 @@ takeSnapshot(viewRef, { path: PictureDir+"/foo.png" })
 );
 ```
 
-## Supported views
+## Interoperability Table
 
 Model tested: iPhone 6 (iOS), Nexus 5 (Android).
 
@@ -138,3 +138,4 @@ react-native link react-native-view-shot
 
 - To initial iOS work done by @jsierles in https://github.com/jsierles/react-native-view-snapshot
 - To React Native implementation of takeSnapshot in iOS by @nicklockwood
+- To Windows implementation by @ryanlntn
