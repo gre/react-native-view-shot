@@ -66,17 +66,18 @@ takeSnapshot(viewRef, { path: PictureDir+"/foo.png" })
 
 Model tested: iPhone 6 (iOS), Nexus 5 (Android).
 
-| System             | iOS                | Android           |
-|--------------------|--------------------|-------------------|
-| View,Text,Image,.. | YES                | YES               |
-| WebView            | YES                | YES<sup>1</sup>   |
-| gl-react v2        | YES                | NO<sup>2</sup>    |
-| react-native-video | NO                 | NO                |
-| react-native-maps  | YES                | [NO](https://github.com/gre/react-native-view-shot/issues/36) |
+| System             | iOS                | Android           | Windows           |
+|--------------------|--------------------|-------------------|-------------------|
+| View,Text,Image,.. | YES                | YES               | YES               |                    
+| WebView            | YES                | YES<sup>1</sup>   | YES               |
+| gl-react v2        | YES                | NO<sup>2</sup>    | NO<sup>3</sup>    |
+| react-native-video | NO                 | NO                | NO
+| react-native-maps  | YES                | [NO](https://github.com/gre/react-native-view-shot/issues/36) | NO<sup>3</sup>
 
 >
 1. Only supported by wrapping a `<View collapsable={false}>` parent and snapshotting it.
 2. It returns an empty image (not a failure Promise).
+3. Component itself lacks platform support.
 
 ## Caveats
 
@@ -128,7 +129,10 @@ react-native link react-native-view-shot
 
 #### Windows
 
-Stay tuned, https://github.com/gre/react-native-view-shot/pull/45 will be merged soon!
+1. In Visual Studio, in the solution explorer, right click on your solution then select `Add` ➜ `ExisitingProject`
+2. Go to `node_modules` ➜ `react-native-view-shot` and add `RNViewShot.csproj` (UWP) or optionally `RNViewShot.Net46.csproj` (WPF)
+3. In Visual Studio, in the solution explorer, right click on your Application project then select `Add` ➜ `Reference`
+4. Under the projects tab select `RNViewShot` (UWP) or `RNViewShot.Net46` (WPF)
 
 ## Thanks
 
