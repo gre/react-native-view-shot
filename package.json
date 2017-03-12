@@ -13,6 +13,10 @@
   ],
   "author": "Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gre/react-native-view-shot.git"
+  },
   "peerDependencies": {
     "react-native": "*"
   }
