@@ -48,7 +48,7 @@ Returns a Promise of the image URI.
 
 By default, takeSnapshot will export in a temporary folder and the snapshot file will be deleted as soon as the app leaves. If you use the `path` option, you make the snapshot file more permanent and at a specific file location. To make file location more 'universal', the library exports some classic directory constants:
 
-> If you use `dirs`, you own the file and manage its lifecycle: it won't get cleaned so be careful not leaking files on user's phone.
+> If you use the `path` option, you own the file and manage its lifecycle: it won't get cleaned so be careful not leaking files on user's phone.
 
 ```js
 import { takeSnapshot, dirs } from "react-native-view-shot";
