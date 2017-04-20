@@ -74,13 +74,13 @@ Model tested: iPhone 6 (iOS), Nexus 5 (Android).
 | WebView            | YES                | YES<sup>1</sup>   | YES               |
 | gl-react v2        | YES                | NO<sup>2</sup>    | NO<sup>3</sup>    |
 | react-native-video | NO                 | NO                | NO
-| react-native-maps  | YES                | NO<sup>3</sup> | NO<sup>4</sup>
+| react-native-maps  | YES                | NO<sup>4</sup> | NO<sup>3</sup>
 
 >
 1. Only supported by wrapping a `<View collapsable={false}>` parent and snapshotting it.
 2. It returns an empty image (not a failure Promise).
-3. But you can just use the react-native-maps snapshot function: https://github.com/airbnb/react-native-maps#take-snapshot-of-map
-4. Component itself lacks platform support.
+3. Component itself lacks platform support.
+4. But you can just use the react-native-maps snapshot function: https://github.com/airbnb/react-native-maps#take-snapshot-of-map
 
 ## Caveats
 
