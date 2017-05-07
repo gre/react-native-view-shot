@@ -7,6 +7,9 @@ import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.DisplayMetrics;
 import android.view.View;
+//add 
+import android.content.Intent;
+import android.net.Uri;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
