@@ -41,14 +41,17 @@ Returns a Promise of the image URI.
     - `"file"` (default): save to a temporary file *(that will only exist for as long as the app is running)*.
     - `"base64"`: encode as base64 and returns the raw string. Use only with small images as this may result of lags (the string is sent over the bridge). *N.B. This is not a data uri, use `data-uri` instead*.
     - `"data-uri"`: same as `base64` but also includes the [Data URI scheme](https://en.wikipedia.org/wiki/Data_URI_scheme) header.
- - **`path`** *(string)*: The absolute path where the file get generated. See *`dirs` constants* for more information.
+ - **`path`** *(string)*: The absolute path where the file get generated. **Read below before using it!** 
  - **`snapshotContentContainer`** *(bool)*: if true and when view is a ScrollView, the "content container" height will be evaluated instead of the container height.
 
-### `dirs` constants
+### `path` option and `dirs` constants
 
-By default, takeSnapshot will export in a temporary folder and the snapshot file will be deleted as soon as the app leaves. If you use the `path` option, you make the snapshot file more permanent and at a specific file location. To make file location more 'universal', the library exports some classic directory constants:
+**Disclaimer: advanced usecase only!**
 
-> If you use the `path` option, you own the file and manage its lifecycle: it won't get cleaned so be careful not leaking files on user's phone.
+By default, takeSnapshot will export in a temporary folder and the snapshot file will be deleted as soon as the app leaves.
+But if you use the `path` option, you make the snapshot file more permanent and at a specific file location. it is up to you to manage the image file lifecycle, the library won't clean it for you (which might result of leaking files on user's phone if you are not careful). There is also no guarantee the file will be successfully saved: you can reach permissions problem, this also is platform specific.
+
+If you still want to do this, we expose a few somewhat universal "constants" to ease the work.
 
 ```js
 import { takeSnapshot, dirs } from "react-native-view-shot";
