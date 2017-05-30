@@ -78,7 +78,7 @@ public class RNViewShotModule extends ReactContextBaseJavaModule {
             if ("file".equals(result)) {
                 if (options.hasKey("path")) {
                     file = new File(options.getString("path"));
-                    file.mkdirs();
+                    file.getParentFile().mkdirs();
                     file.createNewFile();
                 }
                 else {
