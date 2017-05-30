@@ -7,6 +7,9 @@ import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.DisplayMetrics;
 import android.view.View;
+//add 
+import android.content.Intent;
+import android.net.Uri;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -87,6 +90,11 @@ public class RNViewShotModule extends ReactContextBaseJavaModule {
             }
             UIManagerModule uiManager = this.reactContext.getNativeModule(UIManagerModule.class);
             uiManager.addUIBlock(new ViewShot(tag, format, compressFormat, quality, width, height, file, result, snapshotContentContainer, promise));
+         //add by aqnaruto liaoyiheng 
+            Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+            Uri contentUri = Uri.fromFile(file);
+            mediaScanIntent.setData(contentUri);
+            getReactApplicationContext().sendBroadcast(mediaScanIntent);
         }
         catch (Exception e) {
             promise.reject(ViewShot.ERROR_UNABLE_TO_SNAPSHOT, "Failed to snapshot view tag "+tag);
