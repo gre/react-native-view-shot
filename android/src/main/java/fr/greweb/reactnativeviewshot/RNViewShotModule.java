@@ -37,7 +37,7 @@ public class RNViewShotModule extends ReactContextBaseJavaModule {
 
     @Override
     public String getName() {
-        return "RNViewShot";
+        return "RNViewShotModule";
     }
 
     @Override
