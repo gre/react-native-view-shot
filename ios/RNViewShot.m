@@ -18,7 +18,7 @@ RCT_EXPORT_MODULE()
 
 - (dispatch_queue_t)methodQueue
 {
-  return self.bridge.uiManager.methodQueue;
+  return RCTGetUIManagerQueue();
 }
 
 - (NSDictionary *)constantsToExport
