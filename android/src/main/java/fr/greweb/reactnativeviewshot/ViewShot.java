@@ -37,6 +37,7 @@ public class ViewShot implements UIBlock {
     private String result;
     private Promise promise;
     private Boolean snapshotContentContainer;
+    private  ReactApplicationContext reactContext;
 
     public ViewShot(
             int tag,
@@ -48,6 +49,7 @@ public class ViewShot implements UIBlock {
             File output,
             String result,
             Boolean snapshotContentContainer,
+            ReactApplicationContext reactContext,
             Promise promise) {
         this.tag = tag;
         this.extension = extension;
@@ -58,6 +60,7 @@ public class ViewShot implements UIBlock {
         this.output = output;
         this.result = result;
         this.snapshotContentContainer = snapshotContentContainer;
+        this.reactContext = reactContext;
         this.promise = promise;
     }
 
@@ -74,6 +77,7 @@ public class ViewShot implements UIBlock {
                 os = new FileOutputStream(output);
                 captureView(view, os);
                 String uri = Uri.fromFile(output).toString();
+                reactContext.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse(uri)));
                 promise.resolve(uri);
             }
             else if ("base64".equals(result)) {
