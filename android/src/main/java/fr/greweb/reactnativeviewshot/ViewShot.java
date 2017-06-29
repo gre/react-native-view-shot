@@ -3,6 +3,7 @@ package fr.greweb.reactnativeviewshot;
 import javax.annotation.Nullable;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.net.Uri;
@@ -11,6 +12,7 @@ import android.view.View;
 import android.widget.ScrollView;
 
 import com.facebook.react.bridge.Promise;
+import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.UIBlock;
 
