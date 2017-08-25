@@ -42,7 +42,7 @@ RCT_EXPORT_METHOD(takeSnapshot:(nonnull NSNumber *)target
                   reject:(RCTPromiseRejectBlock)reject)
 {
   [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
-    
+
     // Get view
     UIView *view;
     view = viewRegistry[target];
@@ -50,16 +50,16 @@ RCT_EXPORT_METHOD(takeSnapshot:(nonnull NSNumber *)target
       reject(RCTErrorUnspecified, [NSString stringWithFormat:@"No view found with reactTag: %@", target], nil);
       return;
     }
-    
+
     // Get options
     CGSize size = [RCTConvert CGSize:options];
     NSString *format = [RCTConvert NSString:options[@"format"] ?: @"png"];
-    NSString *result = [RCTConvert NSString:options[@"result"] ?: @"file"];
+    NSString *result = [RCTConvert NSString:options[@"result"] ?: @"tmpfile"];
     BOOL snapshotContentContainer = [RCTConvert BOOL:options[@"snapshotContentContainer"] ?: @"false"];
 
     // Capture image
     BOOL success;
-    
+
     UIView* rendered;
     UIScrollView* scrollView;
     if (snapshotContentContainer) {
@@ -74,7 +74,7 @@ RCT_EXPORT_METHOD(takeSnapshot:(nonnull NSNumber *)target
     else {
       rendered = view;
     }
-    
+
     if (size.width < 0.1 || size.height < 0.1) {
       size = snapshotContentContainer ? scrollView.contentSize : view.bounds.size;
     }
@@ -82,7 +82,7 @@ RCT_EXPORT_METHOD(takeSnapshot:(nonnull NSNumber *)target
       reject(RCTErrorUnspecified, [NSString stringWithFormat:@"The content size must not be zero or negative. Got: (%g, %g)", size.width, size.height], nil);
       return;
     }
-    
+
     CGPoint savedContentOffset;
     CGRect savedFrame;
     if (snapshotContentContainer) {
@@ -96,13 +96,13 @@ RCT_EXPORT_METHOD(takeSnapshot:(nonnull NSNumber *)target
     success = [rendered drawViewHierarchyInRect:(CGRect){CGPointZero, size} afterScreenUpdates:YES];
     UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
-    
+
     if (snapshotContentContainer) {
       // Restore scroll & frame
       scrollView.contentOffset = savedContentOffset;
       scrollView.frame = savedFrame;
     }
-    
+
     if (!success) {
       reject(RCTErrorUnspecified, @"The view cannot be captured. drawViewHierarchyInRect was not successful. This is a potential technical or security limitation.", nil);
       return;
@@ -112,10 +112,10 @@ RCT_EXPORT_METHOD(takeSnapshot:(nonnull NSNumber *)target
       reject(RCTErrorUnspecified, @"Failed to capture view snapshot. UIGraphicsGetImageFromCurrentImageContext() returned nil!", nil);
       return;
     }
-    
+
     // Convert image to data (on a background thread)
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-      
+
       NSData *data;
       if ([format isEqualToString:@"png"]) {
         data = UIImagePNGRepresentation(image);
@@ -126,13 +126,13 @@ RCT_EXPORT_METHOD(takeSnapshot:(nonnull NSNumber *)target
         reject(RCTErrorUnspecified, [NSString stringWithFormat:@"Unsupported image format: %@. Try one of: png | jpg | jpeg", format], nil);
         return;
       }
-      
+
       NSError *error = nil;
       NSString *res = nil;
-      if ([result isEqualToString:@"file"]) {
+      if ([result isEqualToString:@"file"] || [result isEqualToString:@"tmpfile"] ) {
         // Save to a temp file
         NSString *path;
-        if (options[@"path"]) {
+        if (options[@"path"] && [result isEqualToString:@"file"]) {
           path = options[@"path"];
           NSString * folder = [path stringByDeletingLastPathComponent];
           NSFileManager * fm = [NSFileManager defaultManager];
@@ -167,7 +167,7 @@ RCT_EXPORT_METHOD(takeSnapshot:(nonnull NSNumber *)target
         resolve(res);
         return;
       }
-      
+
       // If we reached here, something went wrong
       if (error) reject(RCTErrorUnspecified, error.localizedDescription, error);
       else reject(RCTErrorUnspecified, @"viewshot unknown error", nil);

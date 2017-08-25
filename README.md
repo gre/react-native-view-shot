@@ -34,38 +34,24 @@ Returns a Promise of the image URI.
 
 - **`view`** is a reference to a React Native component.
 - **`options`** may include:
- - **`width`** / **`height`** *(number)*: the width and height of the final image (resized from the View bound. don't provide it if you want the original pixel size).
- - **`format`** *(string)*: either `png` or `jpg`/`jpeg` or `webm` (Android). Defaults to `png`.
- - **`quality`** *(number)*: the quality. 0.0 - 1.0 (default). (only available on lossy formats like jpeg)
- - **`result`** *(string)*, the method you want to use to save the snapshot, one of:
+  - **`width`** / **`height`** *(number)*: the width and height of the final image (resized from the View bound. don't provide it if you want the original pixel size).
+  - **`format`** *(string)*: either `png` or `jpg`/`jpeg` or `webm` (Android). Defaults to `png`.
+  - **`quality`** *(number)*: the quality. 0.0 - 1.0 (default). (only available on lossy formats like jpeg)
+  - **`result`** *(string)*, the method you want to use to save the snapshot, one of:
     - `"file"` (default): save to a temporary file *(that will only exist for as long as the app is running)*.
     - `"base64"`: encode as base64 and returns the raw string. Use only with small images as this may result of lags (the string is sent over the bridge). *N.B. This is not a data uri, use `data-uri` instead*.
     - `"data-uri"`: same as `base64` but also includes the [Data URI scheme](https://en.wikipedia.org/wiki/Data_URI_scheme) header.
- - **`path`** *(string)*: The absolute path where the file get generated. **Read below before using it!** 
  - **`snapshotContentContainer`** *(bool)*: if true and when view is a ScrollView, the "content container" height will be evaluated instead of the container height.
 
-### `path` option and `dirs` constants
+### DEPRECATED `path` option and `dirs` constants
 
-**IMPORTANT: We might actually drop the path feature because of its complexity in the current codebase (and bugs that are not fixed), please consider using react-native-view-shot with https://github.com/itinance/react-native-fs to solve this.**
+> A feature used to allow to set an arbitrary file path. This has become tricky to maintain because all the edge cases and use-cases of file management so we have decided to drop it, making this library focusing more on solving snapshotting and not file system.
 
-By default, takeSnapshot will export in a temporary folder and the snapshot file will be deleted as soon as the app leaves.
-But if you use the `path` option, you make the snapshot file more permanent and at a specific file location. it is up to you to manage the image file lifecycle, the library won't clean it for you (which might result of leaking files on user's phone if you are not careful). There is also no guarantee the file will be successfully saved: you can reach permissions problem, this also is platform specific.
+To migrate from this old feature, you have a few solutions:
 
-If you still want to do this, we expose a few somewhat universal "constants" to ease the work.
-
-```js
-import { takeSnapshot, dirs } from "react-native-view-shot";
-// cross platform dirs:
-const { CacheDir, DocumentDir, MainBundleDir, MovieDir, MusicDir, PictureDir } = dirs;
-// only available Android:
-const { DCIMDir, DownloadDir, RingtoneDir, SDCardDir } = dirs;
-
-takeSnapshot(viewRef, { path: PictureDir+"/foo.png" })
-.then(
-  uri => console.log("Image saved to", uri),
-  error => console.error("Oops, snapshot failed", error)
-);
-```
+- If you want to save the snapshotted image result to the CameraRoll, just use https://facebook.github.io/react-native/docs/cameraroll.html#savetocameraroll
+- If you want to save it to an arbitrary file path, use something like https://github.com/itinance/react-native-fs
+- For any more advanced needs, you can write your own (or find another) native module that would solve your use-case.
 
 ## Interoperability Table
 

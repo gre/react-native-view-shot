@@ -79,7 +79,7 @@ public class ViewShot implements UIBlock {
             return;
         }
         try {
-            if ("file".equals(result)) {
+            if ("file".equals(result) || "tmpfile".equals(result)) {
                 os = new FileOutputStream(output);
                 captureView(view, os);
                 String uri = Uri.fromFile(output).toString();
