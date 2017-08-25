@@ -5,15 +5,84 @@ Capture a React Native view to an image.
 
 <img src="https://github.com/gre/react-native-view-shot-example/raw/master/docs/recursive.gif" width=300 />
 
-> iOS: For React Native version between `0.30.x` and `0.39.x`, you should use `react-native-view-shot@1.5.1`.
+## Install
 
-## Usage
+```bash
+yarn add react-native-view-shot
+react-native link react-native-view-shot
+```
+
+## Recommended High Level API
 
 ```js
-import { takeSnapshot } from "react-native-view-shot";
+import { ViewShot } from "react-native-view-shot";
 
-takeSnapshot(viewRef, {
-  format: "jpeg",
+class ExampleCaptureOnMountManually extends Component {
+  componentDidMount () {
+    this.refs.viewShot.capture().then(uri => {
+      console.log("do something with ", uri);
+    });
+  }
+  render() {
+    return (
+      <ViewShot ref="viewShot" options={{ format: "jpg", quality: 0.9 }}>
+        <Text>...Something to rasterize...</Text>
+      </ViewShot>
+    );
+  }
+}
+
+// alternative
+class ExampleCaptureOnMountSimpler extends Component {
+  onCapture = uri => {
+    console.log("do something with ", uri);
+  }
+  render() {
+    return (
+      <ViewShot onCapture={this.onCapture} captureMode="mount">
+        <Text>...Something to rasterize...</Text>
+      </ViewShot>
+    );
+  }
+}
+
+// waiting an image
+class ExampleWaitingCapture extends Component {
+  onImageLoad = () => {
+    this.refs.viewShot.capture().then(uri => {
+      console.log("do something with ", uri);
+    })
+  };
+  render() {
+    return (
+      <ViewShot ref="viewShot">
+        <Text>...Something to rasterize...</Text>
+        <Image ... onLoad={this.onImageLoad} />
+      </ViewShot>
+    );
+  }
+}
+```
+
+**Props:**
+
+- **`children`**: the actual content to rasterize.
+- **`options`**: the same options as in `captureRef` method.
+- **`captureMode`** (string):
+  - if not defined (default). the capture is not automatic and you need to use the ref and call `capture()` yourself.
+  - `"mount"`. Capture the view once at mount. (It is important to understand image loading won't be waited, in such case you want to use `"none"` with `viewShotRef.capture()` after `Image#onLoad`.)
+  - `"continuous"` EXPERIMENTAL, this will capture A LOT of images continuously. For very specific use-cases.
+  - `"update"` EXPERIMENTAL, this will capture images each time React redraw (on did update). For very specific use-cases.
+- **`onCapture`**: when a `captureMode` is defined, this callback will be called with the capture result.
+- **`onCaptureFailure`**: when a `captureMode` is defined, this callback will be called when a capture fails.
+
+## `captureRef(view, options)` lower level imperative API
+
+```js
+import { captureRef } from "react-native-view-shot";
+
+captureRef(viewRef, {
+  format: "jpg",
   quality: 0.8
 })
 .then(
@@ -22,38 +91,32 @@ takeSnapshot(viewRef, {
 );
 ```
 
-### Example
-
-[Checkout react-native-view-shot-example](https://github.com/gre/react-native-view-shot-example)
-
-## Full API
-
-### `takeSnapshot(view, options)`
-
 Returns a Promise of the image URI.
 
 - **`view`** is a reference to a React Native component.
 - **`options`** may include:
   - **`width`** / **`height`** *(number)*: the width and height of the final image (resized from the View bound. don't provide it if you want the original pixel size).
-  - **`format`** *(string)*: either `png` or `jpg`/`jpeg` or `webm` (Android). Defaults to `png`.
-  - **`quality`** *(number)*: the quality. 0.0 - 1.0 (default). (only available on lossy formats like jpeg)
+  - **`format`** *(string)*: either `png` or `jpg` or `webm` (Android). Defaults to `png`.
+  - **`quality`** *(number)*: the quality. 0.0 - 1.0 (default). (only available on lossy formats like jpg)
   - **`result`** *(string)*, the method you want to use to save the snapshot, one of:
-    - `"file"` (default): save to a temporary file *(that will only exist for as long as the app is running)*.
+    - `"tmpfile"` (default): save to a temporary file *(that will only exist for as long as the app is running)*.
     - `"base64"`: encode as base64 and returns the raw string. Use only with small images as this may result of lags (the string is sent over the bridge). *N.B. This is not a data uri, use `data-uri` instead*.
     - `"data-uri"`: same as `base64` but also includes the [Data URI scheme](https://en.wikipedia.org/wiki/Data_URI_scheme) header.
  - **`snapshotContentContainer`** *(bool)*: if true and when view is a ScrollView, the "content container" height will be evaluated instead of the container height.
 
-### DEPRECATED `path` option and `dirs` constants
+## `releaseCapture(uri)`
 
-> A feature used to allow to set an arbitrary file path. This has become tricky to maintain because all the edge cases and use-cases of file management so we have decided to drop it, making this library focusing more on solving snapshotting and not file system.
+This method release a previously captured `uri`. For tmpfile it will clean them out, for other result types it just won't do anything.
 
-To migrate from this old feature, you have a few solutions:
+NB: the tmpfile captures are automatically cleaned out after the app closes, so you might not have to worry about this unless advanced usecases. The `ViewShot` component will use it each time you capture more than once (useful for continuous capture to not leak files).
 
-- If you want to save the snapshotted image result to the CameraRoll, just use https://facebook.github.io/react-native/docs/cameraroll.html#savetocameraroll
-- If you want to save it to an arbitrary file path, use something like https://github.com/itinance/react-native-fs
-- For any more advanced needs, you can write your own (or find another) native module that would solve your use-case.
+### Advanced Examples
+
+[Checkout react-native-view-shot-example](https://github.com/gre/react-native-view-shot-example)
 
 ## Interoperability Table
+
+> Snapshots are not guaranteed to be pixel perfect. It also depends on the platform. Here is some difference we have noticed and how to workaround.
 
 Model tested: iPhone 6 (iOS), Nexus 5 (Android).
 
@@ -71,60 +134,44 @@ Model tested: iPhone 6 (iOS), Nexus 5 (Android).
 3. Component itself lacks platform support.
 4. But you can just use the react-native-maps snapshot function: https://github.com/airbnb/react-native-maps#take-snapshot-of-map
 
-## Caveats
+## Troubleshooting / FAQ
 
-Snapshots are not guaranteed to be pixel perfect. It also depends on the platform. Here is some difference we have noticed and how to workaround.
+### Saving to a file?
 
-- Support of special components like Video / GL views is not guaranteed to work. In case of failure, the `takeSnapshot` promise gets rejected (the library won't crash).
+- If you want to save the snapshotted image result to the CameraRoll, just use https://facebook.github.io/react-native/docs/cameraroll.html#savetocameraroll
+- If you want to save it to an arbitrary file path, use something like https://github.com/itinance/react-native-fs
+- For any more advanced needs, you can write your own (or find another) native module that would solve your use-case.
+
+### The snapshot is rejected with an error?
+
+- Support of special components like Video / GL views is not guaranteed to work. In case of failure, the `captureRef` promise gets rejected (the library won't crash).
+
+### get a black or blank result or still have an error with simple views?
+
+Check the **Interoperability Table** above. Some special components are unfortunately not supported. If you have a View that contains one of an unsupported component, the whole snapshot might be compromised as well.
+
+### black background instead of transparency / weird border appear around texts?
+
 - It's preferable to **use a background color on the view you rasterize** to avoid transparent pixels and potential weirdness that some border appear around texts.
 
-### specific to Android implementation
+### on Android, getting "Trying to resolve view with tag '{tagID}' which doesn't exist"
 
-- you need to make sure `collapsable` is set to `false` if you want to snapshot a **View**. Some content might even need to be wrapped into such `<View collapsable={false}>` to actually make them snapshotable! Otherwise that view won't reflect any UI View. ([found by @gaguirre](https://github.com/gre/react-native-view-shot/issues/7#issuecomment-245302844))
--  if you implement a third party library and want to get back a File, you must first resolve the `Uri`. (the `file` result returns an `Uri` so it's consistent with iOS and can be given to APIs like `Image.getSize`)
+> you need to make sure `collapsable` is set to `false` if you want to snapshot a **View**. Some content might even need to be wrapped into such `<View collapsable={false}>` to actually make them snapshotable! Otherwise that view won't reflect any UI View. ([found by @gaguirre](https://github.com/gre/react-native-view-shot/issues/7#issuecomment-245302844))
 
-## Getting started
+Alternatively, you can use the `ViewShot` component that will have `collapsable={false}` set to solve this problem.
 
-```
-npm install --save react-native-view-shot
-```
+### Getting "The content size must not be zero or negative."
 
-### Mostly automatic installation
+> Make sure you don't snapshot instantly, you need to wait at least there is a first `onLayout` event, or after a timeout, otherwise the View might not be ready yet. (It should also be safe to just wait Image `onLoad` if you have one). If you still have the problem, make sure your view actually have a width and height > 0.
 
-```
-react-native link react-native-view-shot
-```
+Alternatively, you can use the `ViewShot` component that will wait the first `onLayout`.
 
-### Manual installation
+### Snapshotted image does not match my width and height but is twice/3-times bigger
 
-#### iOS
+This is because the snapshot image result is in real pixel size where the width/height defined in a React Native style are defined in "point" unit. You might want to set width and height option to force a resize. (might affect image quality)
 
-1. In XCode, in the project navigator, right click `Libraries` ➜ `Add Files to [your project's name]`
-2. Go to `node_modules` ➜ `react-native-view-shot` and add `RNViewShot.xcodeproj`
-3. In XCode, in the project navigator, select your project. Add `libRNViewShot.a` to your project's `Build Phases` ➜ `Link Binary With Libraries`
-4. Run your project (`Cmd+R`)<
 
-#### Android
-
-1. Open up `android/app/src/main/java/[...]/MainActivity.java`
- - Add `import fr.greweb.reactnativeviewshot.RNViewShotPackage;` to the imports at the top of the file
- - Add `new RNViewShotPackage()` to the list returned by the `getPackages()` method
-2. Append the following lines to `android/settings.gradle`:
- 	```
- 	include ':react-native-view-shot'
- 	project(':react-native-view-shot').projectDir = new File(rootProject.projectDir, 	'../node_modules/react-native-view-shot/android')
- 	```
-3. Insert the following lines inside the dependencies block in `android/app/build.gradle`:
- 	```
-     compile project(':react-native-view-shot')
- 	```
-
-#### Windows
-
-1. In Visual Studio, in the solution explorer, right click on your solution then select `Add` ➜ `ExisitingProject`
-2. Go to `node_modules` ➜ `react-native-view-shot` and add `RNViewShot.csproj` (UWP) or optionally `RNViewShot.Net46.csproj` (WPF)
-3. In Visual Studio, in the solution explorer, right click on your Application project then select `Add` ➜ `Reference`
-4. Under the projects tab select `RNViewShot` (UWP) or `RNViewShot.Net46` (WPF)
+---
 
 ## Thanks
 

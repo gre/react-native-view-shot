@@ -1,4 +1,3 @@
-
 #import "RNViewShot.h"
 #import <AVFoundation/AVFoundation.h>
 #import <React/RCTLog.h>
@@ -8,7 +7,6 @@
 #import <React/RCTScrollView.h>
 #import <React/RCTUIManager.h>
 #import <React/RCTBridge.h>
-
 
 @implementation RNViewShot
 
@@ -21,22 +19,20 @@ RCT_EXPORT_MODULE()
   return RCTGetUIManagerQueue();
 }
 
-- (NSDictionary *)constantsToExport
+
+RCT_EXPORT_METHOD(releaseCapture:(nonnull NSString *)uri)
 {
-  return @{
-           @"CacheDir" : [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) firstObject],
-           @"DocumentDir": [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject],
-           @"MainBundleDir" : [[NSBundle mainBundle] bundlePath],
-           @"MovieDir": [NSSearchPathForDirectoriesInDomains(NSMoviesDirectory, NSUserDomainMask, YES) firstObject],
-           @"MusicDir": [NSSearchPathForDirectoriesInDomains(NSMusicDirectory, NSUserDomainMask, YES) firstObject],
-           @"PictureDir": [NSSearchPathForDirectoriesInDomains(NSPicturesDirectory, NSUserDomainMask, YES) firstObject],
-           };
+  NSString *directory = [NSTemporaryDirectory() stringByAppendingPathComponent:@"ReactNative"];
+  // Ensure it's a valid file in the tmp directory
+  if ([uri hasPrefix:directory] && ![uri isEqualToString:directory]) {
+    NSFileManager *fileManager = [NSFileManager new];
+    if ([fileManager fileExistsAtPath:uri]) {
+      [fileManager removeItemAtPath:uri error:NULL];
+    }
+  }
 }
 
-// forked from RN implementation
-// https://github.com/facebook/react-native/blob/f35b372883a76b5666b016131d59268b42f3c40d/React/Modules/RCTUIManager.m#L1367
-
-RCT_EXPORT_METHOD(takeSnapshot:(nonnull NSNumber *)target
+RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
                   withOptions:(NSDictionary *)options
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
@@ -53,9 +49,9 @@ RCT_EXPORT_METHOD(takeSnapshot:(nonnull NSNumber *)target
 
     // Get options
     CGSize size = [RCTConvert CGSize:options];
-    NSString *format = [RCTConvert NSString:options[@"format"] ?: @"png"];
-    NSString *result = [RCTConvert NSString:options[@"result"] ?: @"tmpfile"];
-    BOOL snapshotContentContainer = [RCTConvert BOOL:options[@"snapshotContentContainer"] ?: @"false"];
+    NSString *format = [RCTConvert NSString:options[@"format"]];
+    NSString *result = [RCTConvert NSString:options[@"result"]];
+    BOOL snapshotContentContainer = [RCTConvert BOOL:options[@"snapshotContentContainer"]];
 
     // Capture image
     BOOL success;
@@ -117,40 +113,17 @@ RCT_EXPORT_METHOD(takeSnapshot:(nonnull NSNumber *)target
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 
       NSData *data;
-      if ([format isEqualToString:@"png"]) {
-        data = UIImagePNGRepresentation(image);
-      } else if ([format isEqualToString:@"jpeg"] || [format isEqualToString:@"jpg"]) {
-        CGFloat quality = [RCTConvert CGFloat:options[@"quality"] ?: @1];
+      if ([format isEqualToString:@"jpg"]) {
+        CGFloat quality = [RCTConvert CGFloat:options[@"quality"]];
         data = UIImageJPEGRepresentation(image, quality);
-      } else {
-        reject(RCTErrorUnspecified, [NSString stringWithFormat:@"Unsupported image format: %@. Try one of: png | jpg | jpeg", format], nil);
-        return;
+      }
+      else {
+        data = UIImagePNGRepresentation(image);
       }
 
       NSError *error = nil;
       NSString *res = nil;
-      if ([result isEqualToString:@"file"] || [result isEqualToString:@"tmpfile"] ) {
-        // Save to a temp file
-        NSString *path;
-        if (options[@"path"] && [result isEqualToString:@"file"]) {
-          path = options[@"path"];
-          NSString * folder = [path stringByDeletingLastPathComponent];
-          NSFileManager * fm = [NSFileManager defaultManager];
-          if(![fm fileExistsAtPath:folder]) {
-            [fm createDirectoryAtPath:folder withIntermediateDirectories:YES attributes:NULL error:&error];
-            [fm createFileAtPath:path contents:nil attributes:nil];
-          }
-        }
-        else {
-          path = RCTTempFilePath(format, &error);
-        }
-        if (path && !error) {
-          if ([data writeToFile:path options:(NSDataWritingOptions)0 error:&error]) {
-            res = path;
-          }
-        }
-      }
-      else if ([result isEqualToString:@"base64"]) {
+      if ([result isEqualToString:@"base64"]) {
         // Return as a base64 raw string
         res = [data base64EncodedStringWithOptions: NSDataBase64Encoding64CharacterLineLength];
       }
@@ -160,9 +133,15 @@ RCT_EXPORT_METHOD(takeSnapshot:(nonnull NSNumber *)target
         res = [NSString stringWithFormat:@"data:image/%@;base64,%@", format, base64];
       }
       else {
-        reject(RCTErrorUnspecified, [NSString stringWithFormat:@"Unsupported result: %@. Try one of: file | base64 | data-uri", result], nil);
-        return;
+        // Save to a temp file
+        NSString *path = RCTTempFilePath(format, &error);
+        if (path && !error) {
+          if ([data writeToFile:path options:(NSDataWritingOptions)0 error:&error]) {
+            res = path;
+          }
+        }
       }
+
       if (res && !error) {
         resolve(res);
         return;

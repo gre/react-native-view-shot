@@ -79,11 +79,10 @@ public class ViewShot implements UIBlock {
             return;
         }
         try {
-            if ("file".equals(result) || "tmpfile".equals(result)) {
+            if ("tmpfile".equals(result)) {
                 os = new FileOutputStream(output);
                 captureView(view, os);
                 String uri = Uri.fromFile(output).toString();
-                reactContext.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse(uri)));
                 promise.resolve(uri);
             }
             else if ("base64".equals(result)) {
@@ -100,9 +99,6 @@ public class ViewShot implements UIBlock {
                 String data = Base64.encodeToString(bytes, Base64.NO_WRAP);
                 data = "data:image/"+extension+";base64," + data;
                 promise.resolve(data);
-            }
-            else {
-                promise.reject(ERROR_UNABLE_TO_SNAPSHOT, "Unsupported result: "+result+". Try one of: file | base64 | data-uri");
             }
         }
         catch (Exception e) {

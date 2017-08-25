@@ -3,6 +3,7 @@ package fr.greweb.reactnativeviewshot;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.DisplayMetrics;
@@ -23,6 +24,7 @@ import com.facebook.react.uimanager.UIManagerModule;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,7 +44,7 @@ public class RNViewShotModule extends ReactContextBaseJavaModule {
 
     @Override
     public Map<String, Object> getConstants() {
-        return getSystemFolders(this.getReactApplicationContext());
+        return Collections.emptyMap();
     }
 
     @Override
@@ -52,41 +54,35 @@ public class RNViewShotModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void takeSnapshot(int tag, ReadableMap options, Promise promise) {
-        ReactApplicationContext context = getReactApplicationContext();
-        String format = options.hasKey("format") ? options.getString("format") : "png";
-        Bitmap.CompressFormat compressFormat =
-                format.equals("png")
-                        ? Bitmap.CompressFormat.PNG
-                        : format.equals("jpg")||format.equals("jpeg")
-                        ? Bitmap.CompressFormat.JPEG
-                        : format.equals("webm")
-                        ? Bitmap.CompressFormat.WEBP
-                        : null;
-        if (compressFormat == null) {
-            promise.reject(ViewShot.ERROR_UNABLE_TO_SNAPSHOT, "Unsupported image format: "+format+". Try one of: png | jpg | jpeg");
-            return;
+    public void releaseCapture(String uri) {
+        File file = new File(Uri.parse(uri).getPath());
+        if (!file.exists()) return;
+        File parent = file.getParentFile();
+        if (parent.equals(reactContext.getExternalCacheDir()) || parent.equals(reactContext.getCacheDir())) {
+            file.delete();
         }
-        double quality = options.hasKey("quality") ? options.getDouble("quality") : 1.0;
+    }
+
+    @ReactMethod
+    public void captureRef(int tag, ReadableMap options, Promise promise) {
+        ReactApplicationContext context = getReactApplicationContext();
+        String format = options.getString("format");
+        Bitmap.CompressFormat compressFormat =
+          format.equals("jpg")
+          ? Bitmap.CompressFormat.JPEG
+          : format.equals("webm")
+          ? Bitmap.CompressFormat.WEBP
+          : Bitmap.CompressFormat.PNG;
+        double quality = options.getDouble("quality");
         DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
         Integer width = options.hasKey("width") ? (int)(displayMetrics.density * options.getDouble("width")) : null;
         Integer height = options.hasKey("height") ? (int)(displayMetrics.density * options.getDouble("height")) : null;
-        String result = options.hasKey("result") ? options.getString("result") : "tmpfile";
-        Boolean snapshotContentContainer = options.hasKey("snapshotContentContainer") ? options.getBoolean("snapshotContentContainer") : false;
+        String result = options.getString("result");
+        Boolean snapshotContentContainer = options.getBoolean("snapshotContentContainer");
         try {
             File file = null;
-            if ("file".equals(result)) {
-                if (options.hasKey("path")) {
-                    file = new File(options.getString("path"));
-                    file.getParentFile().mkdirs();
-                    file.createNewFile();
-                }
-                else {
-                    file = createTempFile(getReactApplicationContext(), format);
-                }
-            }
-            else if ("tmpfile".equals(result)) {
-                file = createTempFile(getReactApplicationContext(), format);
+            if ("tmpfile".equals(result)) {
+              file = createTempFile(getReactApplicationContext(), format);
             }
             UIManagerModule uiManager = this.reactContext.getNativeModule(UIManagerModule.class);
             uiManager.addUIBlock(new ViewShot(tag, format, compressFormat, quality, width, height, file, result, snapshotContentContainer,reactContext, promise));
@@ -134,25 +130,6 @@ public class RNViewShotModule extends ReactContextBaseJavaModule {
                 }
             }
         }
-    }
-
-    static private Map<String, Object> getSystemFolders(ReactApplicationContext ctx) {
-        Map<String, Object> res = new HashMap<>();
-        res.put("CacheDir", ctx.getCacheDir().getAbsolutePath());
-        res.put("DCIMDir", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath());
-        res.put("DocumentDir", ctx.getFilesDir().getAbsolutePath());
-        res.put("DownloadDir", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath());
-        res.put("MainBundleDir", ctx.getApplicationInfo().dataDir);
-        res.put("MovieDir", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getAbsolutePath());
-        res.put("MusicDir", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getAbsolutePath());
-        res.put("PictureDir", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getAbsolutePath());
-        res.put("RingtoneDir", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_RINGTONES).getAbsolutePath());
-        String state;
-        state = Environment.getExternalStorageState();
-        if (state.equals(Environment.MEDIA_MOUNTED)) {
-            res.put("SDCardDir", Environment.getExternalStorageDirectory().getAbsolutePath());
-        }
-        return res;
     }
 
     /**

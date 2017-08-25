@@ -35,7 +35,12 @@ namespace RNViewShot
         }
 
         [ReactMethod]
-        public void takeSnapshot(int tag, JObject options, IPromise promise)
+        public void releaseCapture (string uri) {
+          // TODO implement me
+        }
+
+        [ReactMethod]
+        public void captureRef(int tag, JObject options, IPromise promise)
         {
             string format = options["format"] != null ? options.Value<string>("format") : "png";
             double quality = options["quality"] != null ? options.Value<double>("quality") : 1.0;
