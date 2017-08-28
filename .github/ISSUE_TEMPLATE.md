@@ -1,21 +1,16 @@
-### *feature request*?
+### feature request
 
-# -- OR --
+<!-- ---? OR ?--- -->
 
-### *bug report*?
+### bug report <!-- Please provide enough information. issues missing information will get closed -->
 
-<!-- IMPORTANT, provide version and platform information. issues with missing information will be closed. -->
-
-**Version:**
+#### Version & Platform
 
 ```bash
-npm ls react-native react-native-view-shot
+npm ls react-native react-native-view-shot #<- PASTE CMD RESULT IN HERE
 ```
 
-**Platform:**
-
-iOS? Android?
-
+**Platform:** iOS? Android?
 
 #### Expected behavior
 
