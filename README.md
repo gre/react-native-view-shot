@@ -15,7 +15,7 @@ react-native link react-native-view-shot
 ## Recommended High Level API
 
 ```js
-import { ViewShot } from "react-native-view-shot";
+import ViewShot from "react-native-view-shot";
 
 class ExampleCaptureOnMountManually extends Component {
   componentDidMount () {
