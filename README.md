@@ -3,7 +3,7 @@
 
 Capture a React Native view to an image.
 
-<img src="https://github.com/gre/react-native-view-shot-example/raw/master/docs/recursive.gif" width=300 />
+<img src="./example/docs/recursive.gif" width=300 />
 
 ## Install
 
@@ -112,7 +112,7 @@ NB: the tmpfile captures are automatically cleaned out after the app closes, so 
 
 ### Advanced Examples
 
-[Checkout react-native-view-shot-example](https://github.com/gre/react-native-view-shot-example)
+[Checkout react-native-view-shot-example](example)
 
 ## Interoperability Table
 
