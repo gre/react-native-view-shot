@@ -85,11 +85,16 @@ public class RNViewShotModule extends ReactContextBaseJavaModule {
               file = createTempFile(getReactApplicationContext(), format);
             }
             UIManagerModule uiManager = this.reactContext.getNativeModule(UIManagerModule.class);
-            uiManager.addUIBlock(new ViewShot(tag, format, compressFormat, quality, width, height, file, result, snapshotContentContainer,reactContext, promise));
+            uiManager.addUIBlock(new ViewShot(tag, format, compressFormat, quality, width, height, file, result, snapshotContentContainer,reactContext, getCurrentActivity(), promise));
         }
         catch (Exception e) {
             promise.reject(ViewShot.ERROR_UNABLE_TO_SNAPSHOT, "Failed to snapshot view tag "+tag);
         }
+    }
+
+    @ReactMethod
+    public void captureScreenshot(ReadableMap options, Promise promise) {
+        captureRef(-1, options, promise);
     }
 
     private static final String TEMP_FILE_PREFIX = "ReactNative-snapshot-image";
