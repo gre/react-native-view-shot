@@ -19,6 +19,12 @@ RCT_EXPORT_MODULE()
   return RCTGetUIManagerQueue();
 }
 
+RCT_EXPORT_METHOD(captureScreenshot: (NSDictionary *)options
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) 
+{
+  [captureRef -1, options, resolve, reject];
+}
 
 RCT_EXPORT_METHOD(releaseCapture:(nonnull NSString *)uri)
 {
@@ -41,7 +47,14 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
 
     // Get view
     UIView *view;
-    view = viewRegistry[target];
+
+    if (target == -1) {
+      UIWindow *window = [[UIApplication sharedApplication] keyWindow];
+      view = window.rootViewController.view;
+    } else {
+      view = viewRegistry[target];
+    }
+
     if (!view) {
       reject(RCTErrorUnspecified, [NSString stringWithFormat:@"No view found with reactTag: %@", target], nil);
       return;
@@ -88,7 +101,17 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
       scrollView.contentOffset = CGPointZero;
       scrollView.frame = CGRectMake(0, 0, scrollView.contentSize.width, scrollView.contentSize.height);
     }
-    UIGraphicsBeginImageContextWithOptions(size, NO, 0);
+
+    if (target == -1) {
+      if ([[UIScreen mainScreen] respondsToSelector:@selector(scale)]) {
+        UIGraphicsBeginImageContextWithOptions(currentView.window.bounds.size, NO, [UIScreen mainScreen].scale);
+      } else {
+        UIGraphicsBeginImageContext(currentView.window.bounds.size);
+      }
+    } else {
+      UIGraphicsBeginImageContextWithOptions(size, NO, 0);
+    }
+    
     success = [rendered drawViewHierarchyInRect:(CGRect){CGPointZero, size} afterScreenUpdates:YES];
     UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
