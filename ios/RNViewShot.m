@@ -19,11 +19,11 @@ RCT_EXPORT_MODULE()
   return RCTGetUIManagerQueue();
 }
 
-RCT_EXPORT_METHOD(captureScreenshot: (NSDictionary *)options
+RCT_EXPORT_METHOD(captureScreen: (NSDictionary *)options
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject) 
 {
-  [captureRef -1, options, resolve, reject];
+  [self captureRef: [NSNumber numberWithInt:-1] withOptions:options resolve:resolve reject:reject];
 }
 
 RCT_EXPORT_METHOD(releaseCapture:(nonnull NSString *)uri)
@@ -48,7 +48,7 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
     // Get view
     UIView *view;
 
-    if (target == -1) {
+    if ((int)target == -1) {
       UIWindow *window = [[UIApplication sharedApplication] keyWindow];
       view = window.rootViewController.view;
     } else {
@@ -102,11 +102,11 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
       scrollView.frame = CGRectMake(0, 0, scrollView.contentSize.width, scrollView.contentSize.height);
     }
 
-    if (target == -1) {
+    if ((int)target == -1) {
       if ([[UIScreen mainScreen] respondsToSelector:@selector(scale)]) {
-        UIGraphicsBeginImageContextWithOptions(currentView.window.bounds.size, NO, [UIScreen mainScreen].scale);
+        UIGraphicsBeginImageContextWithOptions(view.window.bounds.size, NO, [UIScreen mainScreen].scale);
       } else {
-        UIGraphicsBeginImageContext(currentView.window.bounds.size);
+        UIGraphicsBeginImageContext(view.window.bounds.size);
       }
     } else {
       UIGraphicsBeginImageContextWithOptions(size, NO, 0);
