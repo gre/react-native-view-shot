@@ -12,7 +12,7 @@ import {
   WebView
 } from "react-native";
 import omit from "lodash/omit";
-import { captureRef } from "react-native-view-shot";
+import { captureRef, captureScreen } from "react-native-view-shot";
 import { Surface } from "gl-react-native";
 import GL from "gl-react";
 import MapView from "react-native-maps";
@@ -52,6 +52,43 @@ export default class App extends Component {
       snapshotContentContainer: false
     }
   };
+
+  captureScreenshot = () =>
+    captureScreen(this.state.value)
+      .then(
+        res =>
+          this.state.value.result !== "tmpfile"
+          ? res
+          : new Promise((success, failure) =>
+          // just a test to ensure res can be used in Image.getSize
+          Image.getSize(
+            res,
+            (width, height) => (
+              console.log(res, width, height), success(res)
+            ),
+            failure
+          )
+        )
+      )
+      .then(res =>
+        this.setState({
+          error: null,
+          res,
+          previewSource: {
+            uri:
+              this.state.value.result === "base64"
+                ? "data:image/" + this.state.value.format + ";base64," + res
+                : res
+          }
+        })
+      )
+      .catch(
+        error => (
+          console.warn(error),
+          this.setState({ error, res: null, previewSource: null })
+        )
+      );
+    
 
   snapshot = refname => () =>
     captureRef(this.refs[refname], this.state.value)
@@ -147,6 +184,7 @@ export default class App extends Component {
             <Btn label="📷 MapView" onPress={this.snapshot("mapview")} />
             <Btn label="📷 WebView" onPress={this.snapshot("webview")} />
             <Btn label="📷 Video" onPress={this.snapshot("video")} />
+            <Btn label="📷 Native Screenshot" onPress={this.captureScreenshot}/>
             <Btn
               label="📷 Empty View (should crash)"
               onPress={this.snapshot("empty")}

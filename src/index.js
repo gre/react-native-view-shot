@@ -124,7 +124,7 @@ export function captureScreen(
         errors.map(e => `- ${e}`).join("\n")
     );
   }
-  return RNViewShot.captureScreenshot(options);
+  return RNViewShot.captureScreen(options);
 }
 
 type Props = {
