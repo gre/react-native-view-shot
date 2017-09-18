@@ -114,7 +114,7 @@ export function releaseCapture(uri: string): void {
   }
 }
 
-export function captureScreenshot(
+export function captureScreen(
   optionsObject?: Options
 ): Promise<string> {
   const { options, errors } = validateOptions(optionsObject);

@@ -93,7 +93,7 @@ public class RNViewShotModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void captureScreenshot(ReadableMap options, Promise promise) {
+    public void captureScreen(ReadableMap options, Promise promise) {
         captureRef(-1, options, promise);
     }
 
