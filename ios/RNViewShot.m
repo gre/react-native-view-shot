@@ -47,12 +47,12 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
 
     // Get view
     UIView *view;
-
-    if ((int)target == -1) {
+    view = viewRegistry[target];
+    BOOL nativeCapture = false;
+    if (!view) {
       UIWindow *window = [[UIApplication sharedApplication] keyWindow];
       view = window.rootViewController.view;
-    } else {
-      view = viewRegistry[target];
+      nativeCapture = true;
     }
 
     if (!view) {
@@ -102,7 +102,7 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
       scrollView.frame = CGRectMake(0, 0, scrollView.contentSize.width, scrollView.contentSize.height);
     }
 
-    if ((int)target == -1) {
+    if (nativeCapture) {
       if ([[UIScreen mainScreen] respondsToSelector:@selector(scale)]) {
         UIGraphicsBeginImageContextWithOptions(view.window.bounds.size, NO, [UIScreen mainScreen].scale);
       } else {
