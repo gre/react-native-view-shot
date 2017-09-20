@@ -114,6 +114,19 @@ export function releaseCapture(uri: string): void {
   }
 }
 
+export function captureScreen(
+  optionsObject?: Options
+): Promise<string> {
+  const { options, errors } = validateOptions(optionsObject);
+  if (__DEV__ && errors.length > 0) {
+    console.warn(
+      "react-native-view-shot: bad options:\n" +
+        errors.map(e => `- ${e}`).join("\n")
+    );
+  }
+  return RNViewShot.captureScreen(options);
+}
+
 type Props = {
   options?: Object,
   captureMode?: "mount" | "continuous" | "update",

@@ -44,6 +44,7 @@ public class ViewShot implements UIBlock {
     private Promise promise;
     private Boolean snapshotContentContainer;
     private  ReactApplicationContext reactContext;
+    private Activity currentActivity;
 
     public ViewShot(
             int tag,
@@ -56,6 +57,7 @@ public class ViewShot implements UIBlock {
             String result,
             Boolean snapshotContentContainer,
             ReactApplicationContext reactContext,
+            Activity currentActivity,
             Promise promise) {
         this.tag = tag;
         this.extension = extension;
@@ -67,13 +69,21 @@ public class ViewShot implements UIBlock {
         this.result = result;
         this.snapshotContentContainer = snapshotContentContainer;
         this.reactContext = reactContext;
+        this.currentActivity = currentActivity;
         this.promise = promise;
     }
 
     @Override
     public void execute(NativeViewHierarchyManager nativeViewHierarchyManager) {
         OutputStream os = null;
-        View view = nativeViewHierarchyManager.resolveView(tag);
+        View view = null;
+
+        if (tag == -1) {
+            view = currentActivity.getWindow().getDecorView().findViewById(android.R.id.content);
+        } else {
+            view = nativeViewHierarchyManager.resolveView(tag);
+        }
+
         if (view == null) {
             promise.reject(ERROR_UNABLE_TO_SNAPSHOT, "No view found with reactTag: "+tag);
             return;

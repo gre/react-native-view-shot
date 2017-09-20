@@ -110,6 +110,27 @@ This method release a previously captured `uri`. For tmpfile it will clean them 
 
 NB: the tmpfile captures are automatically cleaned out after the app closes, so you might not have to worry about this unless advanced usecases. The `ViewShot` component will use it each time you capture more than once (useful for continuous capture to not leak files).
 
+## `captureScreen()` Android and iOS Only
+
+```js
+import { captureScreen } from "react-native-view-shot";
+
+captureScreen({
+  format: "jpg",
+  quality: 0.8
+})
+.then(
+  uri => console.log("Image saved to", uri),
+  error => console.error("Oops, snapshot failed", error)
+);
+```
+
+This method will capture the contents of the currently displayed screen as a native hardware screenshot. It does not require a ref input, as it does not work at the view level. This means that ScrollViews will not be captured in their entirety - only the portions currently visible to the user. 
+
+Returns a Promise of the image URI.
+
+- **`options`**: the same options as in `captureRef` method.
+
 ### Advanced Examples
 
 [Checkout react-native-view-shot-example](example)

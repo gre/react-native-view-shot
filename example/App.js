@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import SvgUri from "react-native-svg-uri";
 import omit from "lodash/omit";
-import { captureRef } from "react-native-view-shot";
+import { captureRef, captureScreen } from "react-native-view-shot";
 import { Surface } from "gl-react-native";
 import GL from "gl-react";
 import MapView from "react-native-maps";
@@ -53,9 +53,9 @@ export default class App extends Component {
       snapshotContentContainer: false
     }
   };
-
+  
   snapshot = refname => () =>
-    captureRef(this.refs[refname], this.state.value)
+    (refname ? captureRef(this.refs[refname], this.state.value) : captureScreen(this.state.value))
       .then(
         res =>
           this.state.value.result !== "tmpfile"
@@ -149,6 +149,7 @@ export default class App extends Component {
             <Btn label="📷 MapView" onPress={this.snapshot("mapview")} />
             <Btn label="📷 WebView" onPress={this.snapshot("webview")} />
             <Btn label="📷 Video" onPress={this.snapshot("video")} />
+            <Btn label="📷 Native Screenshot" onPress={this.snapshot()}/>
             <Btn
               label="📷 Empty View (should crash)"
               onPress={this.snapshot("empty")}
