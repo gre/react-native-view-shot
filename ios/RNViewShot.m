@@ -102,15 +102,7 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
       scrollView.frame = CGRectMake(0, 0, scrollView.contentSize.width, scrollView.contentSize.height);
     }
 
-    if ([target intValue] == -1) {
-      if ([[UIScreen mainScreen] respondsToSelector:@selector(scale)]) {
-        UIGraphicsBeginImageContextWithOptions(view.window.bounds.size, NO, [UIScreen mainScreen].scale);
-      } else {
-        UIGraphicsBeginImageContext(view.window.bounds.size);
-      }
-    } else {
-      UIGraphicsBeginImageContextWithOptions(size, NO, 0);
-    }
+    UIGraphicsBeginImageContextWithOptions(size, NO, 0);
     
     success = [rendered drawViewHierarchyInRect:(CGRect){CGPointZero, size} afterScreenUpdates:YES];
     UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
