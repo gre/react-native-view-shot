@@ -24,6 +24,7 @@
 		3443D6D31F50128500F6FCCF /* libAirMaps.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3443D6A71F50127500F6FCCF /* libAirMaps.a */; };
 		344AB2C61F67C677004BFF0C /* libRNViewShot.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 344AB2C51F67C669004BFF0C /* libRNViewShot.a */; };
 		5E9157361DD0AC6A00FF2AA8 /* libRCTAnimation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5E9157331DD0AC6500FF2AA8 /* libRCTAnimation.a */; };
+		6D05450BB2084B588F39D2E2 /* libRNSVG.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AD1B20B979EC412D9AD1D350 /* libRNSVG.a */; };
 		832341BD1AAA6AB300B99B32 /* libRCTText.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 832341B51AAA6A8300B99B32 /* libRCTText.a */; };
 		FFB5240497874A379A3614AC /* libRCTVideo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 79F086C5FD034CB6AFA5417A /* libRCTVideo.a */; };
 /* End PBXBuildFile section */
@@ -140,6 +141,20 @@
 			proxyType = 2;
 			remoteGlobalIDString = 134814201AA4EA6300B7C361;
 			remoteInfo = RNViewShot;
+		};
+		347EF4261F725F46007E7FE1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7C29ABEADDD84684943D1816 /* RNSVG.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 0CF68AC11AF0540F00FF9E5C;
+			remoteInfo = RNSVG;
+		};
+		347EF4281F725F46007E7FE1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7C29ABEADDD84684943D1816 /* RNSVG.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 347EF4001F725F45007E7FE1;
+			remoteInfo = "RNSVG-tvOS";
 		};
 		34A342221E7058A300CE35DB /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -293,7 +308,9 @@
 		5E91572D1DD0AC6500FF2AA8 /* RCTAnimation.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RCTAnimation.xcodeproj; path = "../node_modules/react-native/Libraries/NativeAnimation/RCTAnimation.xcodeproj"; sourceTree = "<group>"; };
 		78C398B01ACF4ADC00677621 /* RCTLinking.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RCTLinking.xcodeproj; path = "../node_modules/react-native/Libraries/LinkingIOS/RCTLinking.xcodeproj"; sourceTree = "<group>"; };
 		79F086C5FD034CB6AFA5417A /* libRCTVideo.a */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = archive.ar; path = libRCTVideo.a; sourceTree = "<group>"; };
+		7C29ABEADDD84684943D1816 /* RNSVG.xcodeproj */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = "wrapper.pb-project"; name = RNSVG.xcodeproj; path = "../node_modules/react-native-svg/ios/RNSVG.xcodeproj"; sourceTree = "<group>"; };
 		832341B01AAA6A8300B99B32 /* RCTText.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RCTText.xcodeproj; path = "../node_modules/react-native/Libraries/Text/RCTText.xcodeproj"; sourceTree = "<group>"; };
+		AD1B20B979EC412D9AD1D350 /* libRNSVG.a */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = archive.ar; path = libRNSVG.a; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -316,6 +333,7 @@
 				00C302EA1ABCBA2D00DB3ED1 /* libRCTVibration.a in Frameworks */,
 				139FDEF61B0652A700C62182 /* libRCTWebSocket.a in Frameworks */,
 				FFB5240497874A379A3614AC /* libRCTVideo.a in Frameworks */,
+				6D05450BB2084B588F39D2E2 /* libRNSVG.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -439,6 +457,15 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		347EF4011F725F46007E7FE1 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				347EF4271F725F46007E7FE1 /* libRNSVG.a */,
+				347EF4291F725F46007E7FE1 /* libRNSVG-tvOS.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		34A3420F1E7058A200CE35DB /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -484,6 +511,7 @@
 				146833FF1AC3E56700842450 /* React.xcodeproj */,
 				344AB2C01F67C669004BFF0C /* RNViewShot.xcodeproj */,
 				42CEF4A0F3964F7CB178AAED /* RCTVideo.xcodeproj */,
+				7C29ABEADDD84684943D1816 /* RNSVG.xcodeproj */,
 			);
 			name = Libraries;
 			sourceTree = "<group>";
@@ -621,6 +649,10 @@
 					ProjectRef = 341265AD1E702473006123DA /* RNGL.xcodeproj */;
 				},
 				{
+					ProductGroup = 347EF4011F725F46007E7FE1 /* Products */;
+					ProjectRef = 7C29ABEADDD84684943D1816 /* RNSVG.xcodeproj */;
+				},
+				{
 					ProductGroup = 344AB2C11F67C669004BFF0C /* Products */;
 					ProjectRef = 344AB2C01F67C669004BFF0C /* RNViewShot.xcodeproj */;
 				},
@@ -743,6 +775,20 @@
 			fileType = archive.ar;
 			path = libRNViewShot.a;
 			remoteRef = 344AB2C41F67C669004BFF0C /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		347EF4271F725F46007E7FE1 /* libRNSVG.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libRNSVG.a;
+			remoteRef = 347EF4261F725F46007E7FE1 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		347EF4291F725F46007E7FE1 /* libRNSVG-tvOS.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libRNSVG-tvOS.a";
+			remoteRef = 347EF4281F725F46007E7FE1 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		34A342231E7058A300CE35DB /* libRCTVideo.a */ = {
@@ -935,8 +981,16 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_TEAM = LYJDLXDTQ5;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/../node_modules/react-native-svg/ios/**",
+				);
 				INFOPLIST_FILE = ViewShotExample/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/ViewShotExample\"",
+				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -954,8 +1008,16 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = LYJDLXDTQ5;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/../node_modules/react-native-svg/ios/**",
+				);
 				INFOPLIST_FILE = ViewShotExample/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/ViewShotExample\"",
+				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
