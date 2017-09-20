@@ -125,8 +125,9 @@ Model tested: iPhone 6 (iOS), Nexus 5 (Android).
 | View,Text,Image,.. | YES                | YES               | YES               |                    
 | WebView            | YES                | YES<sup>1</sup>   | YES               |
 | gl-react v2        | YES                | NO<sup>2</sup>    | NO<sup>3</sup>    |
-| react-native-video | NO                 | NO                | NO
-| react-native-maps  | YES                | NO<sup>4</sup> | NO<sup>3</sup>
+| react-native-video | NO                 | NO                | NO                |
+| react-native-maps  | YES                | NO<sup>4</sup>    | NO<sup>3</sup>    |
+| react-native-svg   | YES                | YES               | maybe?            |
 
 >
 1. Only supported by wrapping a `<View collapsable={false}>` parent and snapshotting it.
