@@ -63,7 +63,27 @@ class ExampleWaitingCapture extends Component {
   }
 }
 ```
+## With ScrollView
+```js
+import ViewShot from "react-native-view-shot";
 
+class ExampleCaptureOfScrollView extends Component {
+  componentDidMount () {
+    this.refs.viewShot.capture().then(uri => {
+      console.log("do something with ", uri);
+    });
+  }
+  render() {
+    return (
+        <ScrollView>
+            <ViewShot ref="viewShot" options={{ format: "jpg", quality: 0.9 }}>
+                    ... All content of the ScrollView ...
+            </ViewShot>                       
+        </ScrollView>
+    );
+  }
+}
+```
 **Props:**
 
 - **`children`**: the actual content to rasterize.
