@@ -31,6 +31,21 @@ class ExampleCaptureOnMountManually extends Component {
     );
   }
 }
+// ScrollView
+class ExampleCaptureScrollViewContent extends Component {
+  onCapture = uri => {
+    console.log("do something with ", uri);
+  }
+  render() {
+    return (
+      <ScrollView>
+        <ViewShot onCapture={this.onCapture} captureMode="mount">
+          <Text>...The Scroll View Content Goes Here...</Text>
+        </ViewShot>
+      </ScrollView>
+    );
+  }
+}
 
 // alternative
 class ExampleCaptureOnMountSimpler extends Component {
@@ -59,27 +74,6 @@ class ExampleWaitingCapture extends Component {
         <Text>...Something to rasterize...</Text>
         <Image ... onLoad={this.onImageLoad} />
       </ViewShot>
-    );
-  }
-}
-```
-## With ScrollView
-```js
-import ViewShot from "react-native-view-shot";
-
-class ExampleCaptureOfScrollView extends Component {
-  componentDidMount () {
-    this.refs.viewShot.capture().then(uri => {
-      console.log("do something with ", uri);
-    });
-  }
-  render() {
-    return (
-        <ScrollView>
-            <ViewShot ref="viewShot" options={{ format: "jpg", quality: 0.9 }}>
-                    ... All content of the ScrollView ...
-            </ViewShot>                       
-        </ScrollView>
     );
   }
 }
