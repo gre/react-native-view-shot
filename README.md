@@ -31,6 +31,21 @@ class ExampleCaptureOnMountManually extends Component {
     );
   }
 }
+// ScrollView
+class ExampleCaptureScrollViewContent extends Component {
+  onCapture = uri => {
+    console.log("do something with ", uri);
+  }
+  render() {
+    return (
+      <ScrollView>
+        <ViewShot onCapture={this.onCapture} captureMode="mount">
+          <Text>...The Scroll View Content Goes Here...</Text>
+        </ViewShot>
+      </ScrollView>
+    );
+  }
+}
 
 // alternative
 class ExampleCaptureOnMountSimpler extends Component {
@@ -63,7 +78,6 @@ class ExampleWaitingCapture extends Component {
   }
 }
 ```
-
 **Props:**
 
 - **`children`**: the actual content to rasterize.
