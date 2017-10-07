@@ -6,6 +6,9 @@
 #import <React/RCTConvert.h>
 #import <React/RCTScrollView.h>
 #import <React/RCTUIManager.h>
+#if __has_include(<React/RCTUIManagerUtils.h>)
+#import <React/RCTUIManagerUtils.h>
+#endif
 #import <React/RCTBridge.h>
 
 @implementation RNViewShot
