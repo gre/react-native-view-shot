@@ -106,7 +106,8 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
     }
 
     UIGraphicsBeginImageContextWithOptions(size, NO, 0);
-    
+    //把当前的全部画面导入到栈顶context中并进行渲染
+    [view.layer renderInContext:UIGraphicsGetCurrentContext()];
     success = [rendered drawViewHierarchyInRect:(CGRect){CGPointZero, size} afterScreenUpdates:YES];
     UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
