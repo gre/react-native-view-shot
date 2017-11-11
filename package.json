@@ -3,6 +3,7 @@
   "version": "2.1.1",
   "description": "Capture a React Native view to an image",
   "main": "src/index.js",
+  "types": "src/index.d.ts",
   "keywords": [
     "react-native",
     "screenshot",
