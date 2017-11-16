@@ -132,8 +132,8 @@ type Props = {
   captureMode?: "mount" | "continuous" | "update",
   children: React.Element<*>,
   onLayout?: (e: *) => void,
-  onCapture: (uri: string) => void,
-  onCaptureFailure: (e: Error) => void
+  onCapture?: (uri: string) => void,
+  onCaptureFailure?: (e: Error) => void
 };
 
 function checkCompatibleProps(props: Props) {
