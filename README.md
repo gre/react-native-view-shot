@@ -119,6 +119,7 @@ Returns a Promise of the image URI.
     - `"tmpfile"` (default): save to a temporary file *(that will only exist for as long as the app is running)*.
     - `"base64"`: encode as base64 and returns the raw string. Use only with small images as this may result of lags (the string is sent over the bridge). *N.B. This is not a data uri, use `data-uri` instead*.
     - `"data-uri"`: same as `base64` but also includes the [Data URI scheme](https://en.wikipedia.org/wiki/Data_URI_scheme) header.
+  - **`scaleRealPixelSize`** *(bool)*: if true the captured image size will be scaled so that the real pixel size will match the input width/height.
   - **`snapshotContentContainer`** *(bool)*: if true and when view is a ScrollView, the "content container" height will be evaluated instead of the container height.
 
 ## `releaseCapture(uri)`
@@ -207,7 +208,7 @@ Alternatively, you can use the `ViewShot` component that will wait the first `on
 
 ### Snapshotted image does not match my width and height but is twice/3-times bigger
 
-This is because the snapshot image result is in real pixel size where the width/height defined in a React Native style are defined in "point" unit. You might want to set width and height option to force a resize. (might affect image quality)
+This is because the snapshot image result is in real pixel size where the width/height defined in a React Native style are defined in "point" unit. You might want to set width and height option to force a resize (might affect image quality). Use the `options` property `scaleRealPixelSize` to resize the image result to the input `width`/`height` properties.
 
 
 ---
