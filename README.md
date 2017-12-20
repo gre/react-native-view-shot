@@ -166,6 +166,7 @@ Model tested: iPhone 6 (iOS), Nexus 5 (Android).
 | react-native-video | NO                 | NO                | NO                |
 | react-native-maps  | YES                | NO<sup>4</sup>    | NO<sup>3</sup>    |
 | react-native-svg   | YES                | YES               | maybe?            |
+| react-native-camera   | NO                | YES               | NO <sup>3</sup>        |
 
 >
 1. Only supported by wrapping a `<View collapsable={false}>` parent and snapshotting it.
