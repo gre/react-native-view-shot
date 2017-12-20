@@ -1,6 +1,6 @@
 //@flow
 import React, { Component } from "react";
-import { View, NativeModules, Platform, findNodeHandle } from "react-native";
+import { View, NativeModules, Platform, PixelRatio, findNodeHandle } from "react-native";
 const { RNViewShot } = NativeModules;
 
 const neverEndingPromise = new Promise(() => {});
@@ -11,6 +11,7 @@ type Options = {
   format: "png" | "jpg" | "webm",
   quality: number,
   result: "tmpfile" | "base64" | "data-uri",
+  scaleRealPixelSize: boolean,
   snapshotContentContainer: boolean
 };
 
@@ -82,6 +83,22 @@ function validateOptions(
   return { options, errors };
 }
 
+//scale real pixel size dimensions to input height/width using PixelRatio
+function scaleDimensions(options?: Object
+): Object {
+  if ("scaleRealPixelSize" in options &&
+    options.scaleRealPixelSize &&
+    (typeof options.scaleRealPixelSize === "boolean")
+  ) {
+    if(options.width) {
+      options.width = options.width / PixelRatio.get();
+    }
+    if(options.height) {
+      options.height = options.height / PixelRatio.get();
+    }
+  }
+}
+
 export function captureRef(
   view: number | ReactElement<*>,
   optionsObject?: Object
@@ -95,6 +112,7 @@ export function captureRef(
     view = node;
   }
   const { options, errors } = validateOptions(optionsObject);
+  scaleDimensions(options);
   if (__DEV__ && errors.length > 0) {
     console.warn(
       "react-native-view-shot: bad options:\n" +
