@@ -259,7 +259,7 @@ export default class ViewShot extends Component {
   render() {
     const { children } = this.props;
     return (
-      <View ref={this.onRef} collapsable={false} onLayout={this.onLayout}>
+      <View ref={this.onRef} collapsable={false} onLayout={this.onLayout} style={this.props.style}>
         {children}
       </View>
     );
