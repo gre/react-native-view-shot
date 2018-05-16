@@ -32,7 +32,7 @@ npm-debug.log
 android/build/
 android/.gradle/
 android/.idea/
-android/android.iml
+android/*.iml
 android/gradle/
 android/gradlew
 android/gradlew.bat
