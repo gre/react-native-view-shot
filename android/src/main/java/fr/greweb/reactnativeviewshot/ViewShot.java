@@ -1,9 +1,6 @@
 package fr.greweb.reactnativeviewshot;
 
-import javax.annotation.Nullable;
-
 import android.app.Activity;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.net.Uri;
@@ -11,6 +8,7 @@ import android.util.Base64;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.widget.ScrollView;
 
 import com.facebook.react.bridge.Promise;
@@ -26,10 +24,15 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 /**
  * Snapshot utility class allow to screenshot a view.
  */
 public class ViewShot implements UIBlock {
+
+
+    static final String TAG = ViewShot.class.getSimpleName();
 
     static final String ERROR_UNABLE_TO_SNAPSHOT = "E_UNABLE_TO_SNAPSHOT";
 
@@ -77,7 +80,6 @@ public class ViewShot implements UIBlock {
     public void execute(NativeViewHierarchyManager nativeViewHierarchyManager) {
         OutputStream os = null;
         View view = null;
-
         if (tag == -1) {
             view = currentActivity.getWindow().getDecorView().findViewById(android.R.id.content);
         } else {
@@ -178,9 +180,14 @@ public class ViewShot implements UIBlock {
 
         for (View child : childrenList) {
             if(child instanceof TextureView) {
+
+                int[] pos = getViewLocationInViewGroup(child, (ViewGroup) view);
+
                 ((TextureView) child).setOpaque(false);
                 childBitmapBuffer = ((TextureView) child).getBitmap(child.getWidth(), child.getHeight());
-                c.drawBitmap(childBitmapBuffer, child.getLeft() + ((ViewGroup)child.getParent()).getLeft() +  child.getPaddingLeft(), child.getTop() + ((ViewGroup)child.getParent()).getTop() + child.getPaddingTop(), null);
+                c.drawBitmap(childBitmapBuffer, pos[0] + child.getPaddingLeft(), pos[1] + child.getPaddingTop(), null);
+//                        child.getLeft() + ((ViewGroup)child.getParent()).getLeft() +  child.getPaddingLeft(),
+//                        child.getTop() + ((ViewGroup)child.getParent()).getTop() + child.getPaddingTop(), null);
             }
         }
 
@@ -192,4 +199,40 @@ public class ViewShot implements UIBlock {
         }
         bitmap.compress(format, (int)(100.0 * quality), os);
     }
+
+    /**
+     * Get the position of view in other parent View
+     * @param view View
+     * @param viewGroup  parent or ancestral
+     * @return  position of view in viewGroup
+     */
+    private static int[] getViewLocationInViewGroup(View view, ViewGroup viewGroup) {
+        if (view == null || viewGroup == null) {
+            return null;
+        }
+
+        int[] position = new int[2];
+        position[0] = position[1] = 0;
+
+        for (ViewParent viewParent = view.getParent();
+             viewParent != null && viewParent instanceof View;
+             viewParent = view.getParent()) {
+
+            // 当前View在当前父View的位置
+            position[0] += view.getLeft();
+            position[1] += view.getTop();
+
+            view = (View) viewParent;
+
+            // 获取父View的scroll
+            position[0] -= view.getScrollX();
+            position[1] -= view.getScrollY();
+
+            if (view == viewGroup) {
+                return position;
+            }
+        }
+        return  null;
+    }
 }
+
