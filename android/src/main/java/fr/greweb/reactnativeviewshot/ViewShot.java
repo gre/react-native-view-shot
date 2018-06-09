@@ -187,8 +187,8 @@ public class ViewShot implements UIBlock {
                     if (parentElem == view) {
                         break;
                     }
-                    parentLeft += parentElem.getLeft();
-                    parentTop += parentElem.getTop();
+                    left += parentElem.getLeft();
+                    top += parentElem.getTop();
                     parentElem = (View)parentElem.getParent();
                 }
                 c.drawBitmap(childBitmapBuffer, left + child.getPaddingLeft(),  top + child.getPaddingTop(), null);
