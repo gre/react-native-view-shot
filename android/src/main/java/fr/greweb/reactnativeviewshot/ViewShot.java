@@ -180,7 +180,18 @@ public class ViewShot implements UIBlock {
             if(child instanceof TextureView) {
                 ((TextureView) child).setOpaque(false);
                 childBitmapBuffer = ((TextureView) child).getBitmap(child.getWidth(), child.getHeight());
-                c.drawBitmap(childBitmapBuffer, child.getLeft() + ((ViewGroup)child.getParent()).getLeft() +  child.getPaddingLeft(), child.getTop() + ((ViewGroup)child.getParent()).getTop() + child.getPaddingTop(), null);
+                int left = child.getLeft();
+                int top = child.getTop();
+                View parentElem = (View)child.getParent();
+                while (parentElem != null) {
+                    if (parentElem == view) {
+                        break;
+                    }
+                    left += parentElem.getLeft();
+                    top += parentElem.getTop();
+                    parentElem = (View)parentElem.getParent();
+                }
+                c.drawBitmap(childBitmapBuffer, left + child.getPaddingLeft(),  top + child.getPaddingTop(), null);
             }
         }
 
