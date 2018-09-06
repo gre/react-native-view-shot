@@ -75,8 +75,7 @@ public class ViewShot implements UIBlock {
 
     @Override
     public void execute(NativeViewHierarchyManager nativeViewHierarchyManager) {
-        OutputStream os = null;
-        View view = null;
+        final View view;
 
         if (tag == -1) {
             view = currentActivity.getWindow().getDecorView().findViewById(android.R.id.content);
@@ -90,39 +89,26 @@ public class ViewShot implements UIBlock {
         }
         try {
             if ("tmpfile".equals(result)) {
-                os = new FileOutputStream(output);
-                captureView(view, os);
-                String uri = Uri.fromFile(output).toString();
+                captureView(view, new FileOutputStream(output));
+                final String uri = Uri.fromFile(output).toString();
                 promise.resolve(uri);
-            }
-            else if ("base64".equals(result)) {
-                os = new ByteArrayOutputStream();
+            } else if ("base64".equals(result)) {
+                final ByteArrayOutputStream os = new ByteArrayOutputStream();
                 captureView(view, os);
-                byte[] bytes = ((ByteArrayOutputStream) os).toByteArray();
-                String data = Base64.encodeToString(bytes, Base64.NO_WRAP);
+                final byte[] bytes = os.toByteArray();
+                final String data = Base64.encodeToString(bytes, Base64.NO_WRAP);
                 promise.resolve(data);
-            }
-            else if ("data-uri".equals(result)) {
-                os = new ByteArrayOutputStream();
+            } else if ("data-uri".equals(result)) {
+                final ByteArrayOutputStream os = new ByteArrayOutputStream();
                 captureView(view, os);
-                byte[] bytes = ((ByteArrayOutputStream) os).toByteArray();
+                final byte[] bytes = os.toByteArray();
                 String data = Base64.encodeToString(bytes, Base64.NO_WRAP);
                 data = "data:image/"+extension+";base64," + data;
                 promise.resolve(data);
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             promise.reject(ERROR_UNABLE_TO_SNAPSHOT, "Failed to capture view snapshot");
-        }
-        finally {
-            if (os != null) {
-                try {
-                    os.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
         }
     }
 
@@ -152,7 +138,15 @@ public class ViewShot implements UIBlock {
      * @param view the view to capture
      * @return the screenshot or null if it failed.
      */
-    private void captureView (View view, OutputStream os) {
+    private void captureView(View view, OutputStream os) throws IOException {
+        try {
+            captureViewImpl(view, os);
+        } finally {
+            os.close();
+        }
+    }
+
+    private void captureViewImpl(View view, OutputStream os) {
         int w = view.getWidth();
         int h = view.getHeight();
 
