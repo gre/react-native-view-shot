@@ -33,18 +33,18 @@ public class ViewShot implements UIBlock {
 
     static final String ERROR_UNABLE_TO_SNAPSHOT = "E_UNABLE_TO_SNAPSHOT";
 
-    private int tag;
-    private String extension;
-    private Bitmap.CompressFormat format;
-    private double quality;
-    private Integer width;
-    private Integer height;
-    private File output;
-    private String result;
-    private Promise promise;
-    private Boolean snapshotContentContainer;
-    private  ReactApplicationContext reactContext;
-    private Activity currentActivity;
+    private final int tag;
+    private final String extension;
+    private final Bitmap.CompressFormat format;
+    private final double quality;
+    private final Integer width;
+    private final Integer height;
+    private final File output;
+    private final String result;
+    private final Promise promise;
+    private final Boolean snapshotContentContainer;
+    private final ReactApplicationContext reactContext;
+    private final Activity currentActivity;
 
     public ViewShot(
             int tag,
