@@ -143,6 +143,9 @@ public class RNViewShotModule extends ReactContextBaseJavaModule {
     private File createTempFile(Context context, String ext)
             throws IOException {
         File cacheDir = context.getCacheDir();
+        if (cacheDir == null) {
+            throw new IOException("No cache directory available");
+        }
         String suffix = "." + ext;
         File tmpFile = File.createTempFile(TEMP_FILE_PREFIX, suffix, cacheDir);
         return tmpFile;
