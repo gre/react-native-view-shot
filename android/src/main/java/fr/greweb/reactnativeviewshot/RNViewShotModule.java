@@ -83,9 +83,7 @@ public class RNViewShotModule extends ReactContextBaseJavaModule {
         Boolean snapshotContentContainer = options.getBoolean("snapshotContentContainer");
         try {
             File file = null;
-            if ("tmpfile".equals(result)) {
-              file = createTempFile(getReactApplicationContext(), format);
-            }
+            file = createTempFile(getReactApplicationContext(), format);
             UIManagerModule uiManager = this.reactContext.getNativeModule(UIManagerModule.class);
             uiManager.addUIBlock(new ViewShot(tag, format, compressFormat, quality, width, height, file, result, snapshotContentContainer,reactContext, getCurrentActivity(), promise));
         }
@@ -140,25 +138,13 @@ public class RNViewShotModule extends ReactContextBaseJavaModule {
     }
 
     /**
-     * Create a temporary file in the cache directory on either internal or external storage,
-     * whichever is available and has more free space.
+     * Create a temporary file in the internal cache directory.
      */
     private File createTempFile(Context context, String ext)
             throws IOException {
-        File externalCacheDir = context.getExternalCacheDir();
-        File internalCacheDir = context.getCacheDir();
-        File cacheDir;
-        if (externalCacheDir == null && internalCacheDir == null) {
+        File cacheDir = context.getCacheDir();
+        if (cacheDir == null) {
             throw new IOException("No cache directory available");
-        }
-        if (externalCacheDir == null) {
-            cacheDir = internalCacheDir;
-        }
-        else if (internalCacheDir == null) {
-            cacheDir = externalCacheDir;
-        } else {
-            cacheDir = externalCacheDir.getFreeSpace() > internalCacheDir.getFreeSpace() ?
-                    externalCacheDir : internalCacheDir;
         }
         String suffix = "." + ext;
         File tmpFile = File.createTempFile(TEMP_FILE_PREFIX, suffix, cacheDir);
