@@ -108,7 +108,7 @@ public class ViewShot implements UIBlock {
                 byte[] bytes = ((ByteArrayOutputStream) os).toByteArray();
                 String data = Base64.encodeToString(bytes, Base64.NO_WRAP);
                 // correct the extension if JPG
-                if (extension != null && extension.equals("jpg")) {
+                if ("jpg".equals(extension)) {
                     extension = "jpeg";
                 }
                 data = "data:image/"+extension+";base64," + data;
