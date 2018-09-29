@@ -10,6 +10,7 @@
 
 declare module 'react-native-view-shot' {
     import { Component, ReactInstance } from 'react'
+    import { StyleObj } from 'react-native/Libraries/StyleSheet/StyleSheetTypes'
 
     export interface CaptureOptions {
         /**
@@ -66,6 +67,10 @@ declare module 'react-native-view-shot' {
          * @param {Error} error
          */
         onCaptureFailure?(error: Error): void;
+        /**
+         * style prop as StyleObj
+         */
+        style?: StyleObj;
     }
 
     export default class ViewShot extends Component<ViewShotProperties> {
