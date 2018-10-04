@@ -148,7 +148,8 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
       else if ([result isEqualToString:@"data-uri"]) {
         // Return as a base64 data uri string
         NSString *base64 = [data base64EncodedStringWithOptions: NSDataBase64Encoding64CharacterLineLength];
-        res = [NSString stringWithFormat:@"data:image/%@;base64,%@", format, base64];
+        NSString *imageFormat = ([format isEqualToString:@"jpg"]) ? @"jpeg" : format;
+        res = [NSString stringWithFormat:@"data:image/%@;base64,%@", imageFormat, base64];
       }
       else {
         // Save to a temp file
