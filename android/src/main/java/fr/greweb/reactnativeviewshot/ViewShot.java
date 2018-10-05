@@ -104,10 +104,11 @@ public class ViewShot implements UIBlock {
                 final byte[] bytes = os.toByteArray();
                 String data = Base64.encodeToString(bytes, Base64.NO_WRAP);
                 // correct the extension if JPG
+                String imageFormat = extension;
                 if ("jpg".equals(extension)) {
-                    extension = "jpeg";
+                    imageFormat = "jpeg";
                 }
-                data = "data:image/"+extension+";base64," + data;
+                data = "data:image/"+imageFormat+";base64," + data;
                 promise.resolve(data);
             }
         } catch (Exception e) {
