@@ -29,11 +29,18 @@ npm-debug.log
 
 # android
 #
-android/build/
-android/.gradle/
-android/.idea/
-android/*.iml
-android/gradle/
+.vscode/
+.settings/
+android/bin
+android/gradle/wrapper
 android/gradlew
 android/gradlew.bat
 android/local.properties
+*.iml
+.gradle
+/local.properties
+.idea/
+captures/
+.externalNativeBuild
+.project
+
