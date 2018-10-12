@@ -174,6 +174,81 @@ Model tested: iPhone 6 (iOS), Nexus 5 (Android).
 3. Component itself lacks platform support.
 4. But you can just use the react-native-maps snapshot function: https://github.com/airbnb/react-native-maps#take-snapshot-of-map
 
+## Performance Optimization
+
+During profiling captured several things that influence on performance:
+1) (de-)allocation of memory for bitmap
+2) (de-)allocation of memory for Base64 output buffer
+3) compression of bitmap to different image formats: PNG, JPG
+
+To solve that in code introduced several new approaches:
+- reusable images, that reduce load on GC;
+- reusable arrays/buffers that also reduce load on GC;
+- RAW image format for avoiding expensive compression;
+- ZIP deflate compression for RAW data, that works faster in compare to `Bitmap.compress`
+
+more details and code snippet are below.
+
+### RAW Images
+
+Introduced a new image format RAW. it correspond a ARGB array of pixels.
+
+Advantages:
+- no compression, so its supper quick. Screenshot taking is less than 16ms;
+
+RAW format supported for `zip-base64`, `base64` and `tmpfile` result types.
+
+RAW file on disk saved in format: `${width}:${height}|${base64}` string.
+
+### zip-base64
+
+In compare to BASE64 result string this format fast try to apply zip/deflate compression on screenshot results
+and only after that convert results to base64 string. In combination zip-base64 + raw we got a super fast
+approach for capturing screen views and deliver them to the react side.
+
+### How to work with zip-base64 and RAW format?
+
+```js
+const fs = require('fs')
+const zlib = require('zlib')
+const PNG = require('pngjs').PNG
+const Buffer = require('buffer').Buffer
+
+const format = Platform.OS === 'android' ? 'raw' : 'png'
+const result = Platform.OS === 'android' ? 'zip-base64' : 'base64'
+
+captureRef(this.ref, { result, format }).then(data => {
+    // expected pattern 'width:height|', example: '1080:1731|'
+    const resolution = /^(\d+):(\d+)\|/g.exec(data)
+    const width = (resolution || ['', 0, 0])[1]
+    const height = (resolution || ['', 0, 0])[2]
+    const base64 = data.substr((resolution || [''])[0].length || 0)
+
+    // convert from base64 to Buffer
+    const buffer = Buffer.from(base64, 'base64')
+    // un-compress data
+    const inflated = zlib.inflateSync(buffer)
+    // compose PNG
+    const png = new PNG({ width, height })
+    png.data = inflated
+    const pngData = PNG.sync.write(png)
+    // save composed PNG
+    fs.writeFileSync(output, pngData)
+})
+```
+
+Keep in mind that packaging PNG data is a CPU consuming operation as a `zlib.inflate`.
+
+Hint: use `process.fork()` approach for converting raw data into PNGs.
+
+> Note: code is tested in large commercial project.
+
+> Note #2: Don't forget to add packages into your project:
+> ```js
+> yarn add pngjs
+> yarn add zlib
+> ```
+
 ## Troubleshooting / FAQ
 
 ### Saving to a file?
