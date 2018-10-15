@@ -1,41 +1,48 @@
 buildscript {
-    repositories {
-        jcenter()
-    }
-
-    dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.0'
+    /* In case of submodule usage, do not try to apply own repositories and plugins,
+        root project is responsible for that. */
+    if (rootProject.buildDir == project.buildDir) {
+        repositories {
+            google()
+            jcenter()
+        }
+        dependencies {
+            classpath 'com.android.tools.build:gradle:2.3.0'
+        }
     }
 }
 
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 26
-    buildToolsVersion "26.0.1"
+    compileSdkVersion 27
+    buildToolsVersion "28.0.3"
 
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 26
+        targetSdkVersion 27
+
         versionCode 1
         versionName "1.0"
     }
+
     lintOptions {
         abortOnError false
     }
 }
 
-allprojects {
-    repositories {
-        mavenLocal()
-        jcenter()
-        maven {
-            // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
-            url "$rootDir/../node_modules/react-native/android"
-        }
+repositories {
+    google()
+    jcenter()
+    mavenLocal()
+    maven {
+        // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
+        url "$rootDir/../node_modules/react-native/android"
     }
 }
 
 dependencies {
-    compile 'com.facebook.react:react-native:+'
+    implementation 'com.android.support:support-v4:27.+'
+
+    api 'com.facebook.react:react-native:+'
 }
