@@ -37,3 +37,17 @@ allprojects {
         }
     }
 }
+
+
+subprojects {
+    configurations.all {
+        resolutionStrategy {
+            eachDependency { details ->
+                /* Override by group name */
+                switch (details.requested.group) {
+                    case 'com.android.support': details.useVersion '27.+'; break
+                }
+            }
+        }
+    }
+}
