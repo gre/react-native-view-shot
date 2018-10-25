@@ -2,23 +2,52 @@
 
 buildscript {
     repositories {
+        google()
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.3'
+        classpath 'com.android.tools.build:gradle:3.1.4'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
 }
 
+// This will apply compileSdkVersion and buildToolsVersion to any android modules
+subprojects { subproject ->
+    afterEvaluate { project ->
+        if (!project.name.equalsIgnoreCase("app") && project.hasProperty("android")) {
+            android {
+                compileSdkVersion 27
+                buildToolsVersion '28.0.3'
+            }
+        }
+    }
+}
+
+
 allprojects {
     repositories {
         mavenLocal()
+        google()
         jcenter()
         maven {
             // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
             url "$rootDir/../node_modules/react-native/android"
+        }
+    }
+}
+
+
+subprojects {
+    configurations.all {
+        resolutionStrategy {
+            eachDependency { details ->
+                /* Override by group name */
+                switch (details.requested.group) {
+                    case 'com.android.support': details.useVersion '27.+'; break
+                }
+            }
         }
     }
 }

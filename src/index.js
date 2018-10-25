@@ -8,9 +8,9 @@ const neverEndingPromise = new Promise(() => {});
 type Options = {
   width?: number,
   height?: number,
-  format: "png" | "jpg" | "webm",
+  format: "png" | "jpg" | "webm" | "raw",
   quality: number,
-  result: "tmpfile" | "base64" | "data-uri",
+  result: "tmpfile" | "base64" | "data-uri" | "zip-base64",
   snapshotContentContainer: boolean
 };
 
@@ -21,10 +21,12 @@ if (!RNViewShot) {
 }
 
 const acceptedFormats = ["png", "jpg"].concat(
-  Platform.OS === "android" ? ["webm"] : []
+  Platform.OS === "android" ? ["webm", "raw"] : []
 );
 
-const acceptedResults = ["tmpfile", "base64", "data-uri"];
+const acceptedResults = ["tmpfile", "base64", "data-uri"].concat(
+  Platform.OS === "android" ? ["zip-base64"] : []
+);
 
 const defaultOptions = {
   format: "png",
@@ -70,13 +72,13 @@ function validateOptions(
   if (acceptedFormats.indexOf(options.format) === -1) {
     options.format = defaultOptions.format;
     errors.push(
-      "option format is not in valid formats: " + acceptedFormats.join(" | ")
+      "option format '" + options.format + "' is not in valid formats: " + acceptedFormats.join(" | ")
     );
   }
   if (acceptedResults.indexOf(options.result) === -1) {
     options.result = defaultOptions.result;
     errors.push(
-      "option result is not in valid formats: " + acceptedResults.join(" | ")
+      "option result '" + options.result  + "' is not in valid formats: " + acceptedResults.join(" | ")
     );
   }
   return { options, errors };
