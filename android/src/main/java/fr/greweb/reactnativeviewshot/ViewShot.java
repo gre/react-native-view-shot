@@ -4,8 +4,10 @@ import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.net.Uri;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
@@ -14,6 +16,7 @@ import android.util.Base64;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.widget.ScrollView;
 
 import com.facebook.react.bridge.Promise;
@@ -328,6 +331,8 @@ public class ViewShot implements UIBlock {
         for (final View child : childrenList) {
             // skip any child that we don't know how to process
             if (!(child instanceof TextureView)) continue;
+            // skip all invisible to user child views
+            if (child.getVisibility() != View.VISIBLE) continue;
 
             final TextureView tvChild = (TextureView) child;
             tvChild.setOpaque(false);
@@ -338,12 +343,16 @@ public class ViewShot implements UIBlock {
             final int childWidth = child.getWidth();
             final int childHeight = child.getHeight();
             final Rect source = new Rect(0, 0, childWidth, childHeight);
-            final Rect destination = new Rect(left, top, left + childWidth, top + childHeight);
+            final RectF destination = new RectF(left, top, left + childWidth, top + childHeight);
 
             // get re-usable bitmap
             final Bitmap childBitmapBuffer = tvChild.getBitmap(getBitmapForScreenshot(child.getWidth(), child.getHeight()));
+
+            c.save();
+            c.setMatrix(concatMatrix(view, child));
             // due to re-use of bitmaps for screenshot, we can get bitmap that is bigger in size than requested
             c.drawBitmap(childBitmapBuffer, source, destination, null);
+            c.restore();
             recycleBitmap(childBitmapBuffer);
         }
 
@@ -369,6 +378,23 @@ public class ViewShot implements UIBlock {
         recycleBitmap(bitmap);
 
         return resolution; // return image width and height
+    }
+
+    /** Concat all the transformation matrix's from child to parent. */
+    @NonNull
+    private Matrix concatMatrix(@NonNull final View view, @NonNull final View child){
+        final Matrix transform = new Matrix();
+
+        View iterator = child;
+        do {
+
+            final Matrix m = iterator.getMatrix();
+            transform.preConcat(m);
+
+            iterator = (View)iterator.getParent();
+        } while( iterator != view );
+
+        return transform;
     }
 
     @NonNull
