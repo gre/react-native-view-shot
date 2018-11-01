@@ -263,7 +263,7 @@ export default class App extends Component {
         <View ref="empty" collapsable={false} />
         <View style={styles.experimental} ref="complex" collapsable={false}>
           <Text style={styles.experimentalTitle}>Experimental Stuff</Text>
-          <View ref="transformParent" collapsable={false}>
+          <View ref="transformParent" collapsable={false} style={{flex: 1, flexDirection: 'row'}}>
               <View ref="transformInner" collapsable={false} style={styles.experimentalTransform}>
                 <Text ref="transform" >Transform</Text>
                 <ART.Surface ref="surface" width={20} height={20}>
@@ -276,6 +276,17 @@ export default class App extends Component {
                             fill="blue"
                             stroke="black"
                             strokeWidth={0}
+                            >
+                    </ART.Shape>
+                </ART.Surface>
+              </View>
+              <View ref="right" style={styles.experimentalTransformV2}>
+                <ART.Surface ref="surface2" width={20} height={20}>
+                    <ART.Shape
+                            x={0}
+                            y={10}
+                            d='M2.876,10.6499757 L16.375,18.3966817 C16.715,18.5915989 17.011,18.4606545 17.125,18.3956822 C17.237,18.3307098 17.499,18.1367923 17.499,17.746958 L17.499,2.25254636 C17.499,1.86271212 17.237,1.66879457 17.125,1.6038222 C17.011,1.53884983 16.715,1.4079055 16.375,1.60282262 L2.876,9.34952866 C2.537,9.54544536 2.5,9.86930765 2.5,10.000252 C2.5,10.1301967 2.537,10.4550586 2.876,10.6499757 M16.749,20 C16.364,20 15.98,19.8990429 15.629,19.6971288 L2.13,11.9504227 L2.129,11.9504227 C1.422,11.5445953 1,10.8149056 1,10.000252 C1,9.18459879 1.422,8.45590864 2.129,8.04908162 L15.629,0.302375584 C16.332,-0.10245228 17.173,-0.10045313 17.876,0.306373884 C18.579,0.713200898 18.999,1.44089148 18.999,2.25254636 L18.999,17.746958 C18.999,18.5586129 18.579,19.2863035 17.876,19.6931305 C17.523,19.8970438 17.136,20 16.749,20'
+                            fill="red"
                             >
                     </ART.Shape>
                 </ART.Surface>
@@ -351,7 +362,12 @@ const styles = StyleSheet.create({
     margin: 10
   },
   experimentalTransform: {
-    transform: [{ rotate: '180deg' }]
+    transform: [{ rotate: '180deg' }],
+    backgroundColor: 'powderblue',
+  },
+  experimentalTransformV2: {
+//    transform: [{ rotate: '180deg' }],
+    backgroundColor: 'skyblue',
   },
   p1: {
     marginBottom: 10,
