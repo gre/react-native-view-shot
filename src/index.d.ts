@@ -75,6 +75,7 @@ declare module 'react-native-view-shot' {
     }
 
     export default class ViewShot extends Component<ViewShotProperties> {
+        capture?(): Promise<string>;
     }
 
     /**
