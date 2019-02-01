@@ -3,6 +3,10 @@ import React, { Component } from "react";
 import { View, NativeModules, Platform, findNodeHandle } from "react-native";
 const { RNViewShot } = NativeModules;
 
+import type { Element, ElementRef } from 'react';
+import type { ViewStyleProp } from 'StyleSheet';
+import type { LayoutEvent } from 'CoreEventTypes';
+
 const neverEndingPromise = new Promise(() => {});
 
 type Options = {
@@ -85,7 +89,7 @@ function validateOptions(
 }
 
 export function captureRef(
-  view: number | ReactElement<*>,
+  view: number | ?View,
   optionsObject?: Object
 ): Promise<string> {
   if (typeof view !== "number") {
@@ -132,10 +136,11 @@ export function captureScreen(
 type Props = {
   options?: Object,
   captureMode?: "mount" | "continuous" | "update",
-  children: React.Element<*>,
+  children: Element<*>,
   onLayout?: (e: *) => void,
   onCapture?: (uri: string) => void,
-  onCaptureFailure?: (e: Error) => void
+  onCaptureFailure?: (e: Error) => void,
+  style?: ViewStyleProp
 };
 
 function checkCompatibleProps(props: Props) {
@@ -160,17 +165,16 @@ function checkCompatibleProps(props: Props) {
   }
 }
 
-export default class ViewShot extends Component {
+export default class ViewShot extends Component<Props> {
   static captureRef = captureRef;
   static releaseCapture = releaseCapture;
-  props: Props;
   root: ?View;
 
   _raf: *;
   lastCapturedURI: ?string;
 
   resolveFirstLayout: (layout: Object) => void;
-  firstLayoutPromise = new Promise(resolve => {
+  firstLayoutPromise = new Promise<void>(resolve => {
     this.resolveFirstLayout = resolve;
   });
 
@@ -223,11 +227,11 @@ export default class ViewShot extends Component {
     }
   };
 
-  onRef = (ref: View) => {
+  onRef = (ref: ElementRef<*>) => {
     this.root = ref;
   };
 
-  onLayout = (e: { nativeEvent: { layout: Object } }) => {
+  onLayout = (e: LayoutEvent) => {
     const { onLayout } = this.props;
     this.resolveFirstLayout(e.nativeEvent.layout);
     if (onLayout) onLayout(e);
