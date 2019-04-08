@@ -106,7 +106,11 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
     }
 
     UIGraphicsBeginImageContextWithOptions(size, NO, 0);
-    
+    if (snapshotContentContainer) {
+      [scrollView.layer renderInContext:UIGraphicsGetCurrentContext()];
+    } else {
+      [rendered.layer renderInContext:UIGraphicsGetCurrentContext()];
+    }
     success = [rendered drawViewHierarchyInRect:(CGRect){CGPointZero, size} afterScreenUpdates:YES];
     UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
