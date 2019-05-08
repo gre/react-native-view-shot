@@ -3,7 +3,7 @@ import React, { Component } from "react";
 import { View, NativeModules, Platform, findNodeHandle } from "react-native";
 const { RNViewShot } = NativeModules;
 
-import type { Element, ElementRef } from 'react';
+import type { Element, ElementRef, ElementType, Ref } from 'react';
 import type { ViewStyleProp } from 'StyleSheet';
 import type { LayoutEvent } from 'CoreEventTypes';
 
@@ -88,10 +88,13 @@ function validateOptions(
   return { options, errors };
 }
 
-export function captureRef(
-  view: number | ?View,
+export function captureRef<T: ElementType>(
+  view: number | ?View | Ref<T>,
   optionsObject?: Object
 ): Promise<string> {
+  if (view && typeof view === "object" && "current" in view && view.current) { // React.RefObject
+    view = view.current;
+  }
   if (typeof view !== "number") {
     const node = findNodeHandle(view);
     if (!node)

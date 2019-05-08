@@ -9,7 +9,7 @@
  */
 
 declare module 'react-native-view-shot' {
-    import { Component, ReactInstance } from 'react'
+    import { Component, ReactInstance, RefObject } from 'react'
     import { ViewStyle } from 'react-native'
 
     export interface CaptureOptions {
@@ -81,11 +81,11 @@ declare module 'react-native-view-shot' {
     /**
      * lower level imperative API
      *
-     * @param {React.ReactInstance} viewRef
+     * @param {React.ReactInstance | RefObject} viewRef
      * @param {"react-native-view-shot".CaptureOptions} options
      * @return {Promise<string>} Returns a Promise of the image URI.
      */
-    export function captureRef(viewRef: ReactInstance, options?: CaptureOptions): Promise<string>
+    export function captureRef<T>(viewRef: ReactInstance | RefObject<T>, options?: CaptureOptions): Promise<string>
 
     /**
      * This method release a previously captured uri. For tmpfile it will clean them out, for other result types it
