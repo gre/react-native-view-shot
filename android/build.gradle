@@ -11,7 +11,7 @@ buildscript {
             jcenter()
         }
         dependencies {
-            classpath 'com.android.tools.build:gradle:2.3.0'
+            classpath 'com.android.tools.build:gradle:3.4.1'
         }
     }
 }
@@ -19,12 +19,12 @@ buildscript {
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion safeExtGet('compileSdkVersion', 27)
+    compileSdkVersion safeExtGet('compileSdkVersion', 28)
     buildToolsVersion safeExtGet('buildToolsVersion', '28.0.3')
 
     defaultConfig {
         minSdkVersion safeExtGet('minSdkVersion', 16)
-        targetSdkVersion safeExtGet('targetSdkVersion', 27)
+        targetSdkVersion safeExtGet('targetSdkVersion', 28)
 
         versionCode 1
         versionName "1.0"

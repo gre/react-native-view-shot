@@ -171,6 +171,10 @@ function checkCompatibleProps(props: Props) {
 export default class ViewShot extends Component<Props> {
   static captureRef = captureRef;
   static releaseCapture = releaseCapture;
+  constructor(props) {
+    super(props)
+    this.state={}
+  }
   root: ?View;
 
   _raf: *;
@@ -249,10 +253,13 @@ export default class ViewShot extends Component<Props> {
     }
   }
 
-  componentWillReceiveProps(nextProps: Props) {
-    if (nextProps.captureMode !== this.props.captureMode) {
-      this.syncCaptureLoop(nextProps.captureMode);
+  static getDerivedStateFromProps(props, state) {
+    if(props.captureMode !== undefined) {
+      if (nextProps.captureMode !== this.props.captureMode) {
+        this.syncCaptureLoop(nextProps.captureMode);
+      }
     }
+    return null;
   }
 
   componentDidUpdate() {
