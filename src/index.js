@@ -255,8 +255,8 @@ export default class ViewShot extends Component<Props> {
 
   static getDerivedStateFromProps(props, state) {
     if(props.captureMode !== undefined) {
-      if (nextProps.captureMode !== this.props.captureMode) {
-        this.syncCaptureLoop(nextProps.captureMode);
+      if (props.captureMode !== this.props.captureMode) {
+        this.syncCaptureLoop(props.captureMode);
       }
     }
     return null;
