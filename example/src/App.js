@@ -4,6 +4,7 @@ import { SafeAreaView, StatusBar, View, Text, TouchableOpacity, StyleSheet } fro
 import { createStackNavigator, createAppContainer } from 'react-navigation';
 import FullScreen from './Full';
 import ViewshootScreen from './Viewshoot';
+import TransparencyScreen from './Transparency';
 
 class HomeScreen extends React.Component {
   static navigationOptions = {
@@ -45,6 +46,9 @@ const screens = {
   },
   Viewshoot: {
     screen: ViewshootScreen,
+  },
+  Transparency: {
+    screen: TransparencyScreen,
   },
 };
 
