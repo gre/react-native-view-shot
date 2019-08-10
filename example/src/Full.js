@@ -234,7 +234,7 @@ const App = () => {
               <Picker
                 style={styles.input}
                 selectedValue={config.result}
-                onValueChange={result => setConfig({ ...config, result })}
+                onValueChange={r => setConfig({ ...config, result: r })}
               >
                 <Picker.Item label="tmpfile" value="tmpfile" />
                 <Picker.Item label="base64" value="base64" />
