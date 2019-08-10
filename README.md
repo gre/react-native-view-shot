@@ -1,4 +1,3 @@
-
 # react-native-view-shot ![](https://img.shields.io/npm/v/react-native-view-shot.svg) ![](https://img.shields.io/badge/react--native-%2040+-05F561.svg)
 
 Capture a React Native view to an image.
@@ -9,10 +8,21 @@ Capture a React Native view to an image.
 
 ```bash
 yarn add react-native-view-shot
-react-native link react-native-view-shot
 ```
 
 Make sure react-native-view-shot is correctly linked in XCode (might require a manual installation, refer to [React Native doc](https://facebook.github.io/react-native/docs/linking-libraries-ios.html)).
+
+**Before React Native 0.60.x you would have to:**
+
+```bash
+react-native link react-native-view-shot
+```
+
+**Since 0.60.x, [autolink](https://github.com/react-native-community/cli/blob/master/docs/autolinking.md) should just work**, On iOS, you might have to:
+
+```bash
+cd ios && pod install && cd ..
+```
 
 ## Recommended High Level API
 
@@ -81,6 +91,7 @@ class ExampleCaptureScrollViewContent extends Component {
   }
 }
 ```
+
 **Props:**
 
 - **`children`**: the actual content to rasterize.
@@ -101,8 +112,7 @@ import { captureRef } from "react-native-view-shot";
 captureRef(viewRef, {
   format: "jpg",
   quality: 0.8
-})
-.then(
+}).then(
   uri => console.log("Image saved to", uri),
   error => console.error("Oops, snapshot failed", error)
 );
@@ -112,14 +122,14 @@ Returns a Promise of the image URI.
 
 - **`view`** is a reference to a React Native component.
 - **`options`** may include:
-  - **`width`** / **`height`** *(number)*: the width and height of the final image (resized from the View bound. don't provide it if you want the original pixel size).
-  - **`format`** *(string)*: either `png` or `jpg` or `webm` (Android). Defaults to `png`.
-  - **`quality`** *(number)*: the quality. 0.0 - 1.0 (default). (only available on lossy formats like jpg)
-  - **`result`** *(string)*, the method you want to use to save the snapshot, one of:
-    - `"tmpfile"` (default): save to a temporary file *(that will only exist for as long as the app is running)*.
-    - `"base64"`: encode as base64 and returns the raw string. Use only with small images as this may result of lags (the string is sent over the bridge). *N.B. This is not a data uri, use `data-uri` instead*.
+  - **`width`** / **`height`** _(number)_: the width and height of the final image (resized from the View bound. don't provide it if you want the original pixel size).
+  - **`format`** _(string)_: either `png` or `jpg` or `webm` (Android). Defaults to `png`.
+  - **`quality`** _(number)_: the quality. 0.0 - 1.0 (default). (only available on lossy formats like jpg)
+  - **`result`** _(string)_, the method you want to use to save the snapshot, one of:
+    - `"tmpfile"` (default): save to a temporary file _(that will only exist for as long as the app is running)_.
+    - `"base64"`: encode as base64 and returns the raw string. Use only with small images as this may result of lags (the string is sent over the bridge). _N.B. This is not a data uri, use `data-uri` instead_.
     - `"data-uri"`: same as `base64` but also includes the [Data URI scheme](https://en.wikipedia.org/wiki/Data_URI_scheme) header.
-  - **`snapshotContentContainer`** *(bool)*: if true and when view is a ScrollView, the "content container" height will be evaluated instead of the container height.
+  - **`snapshotContentContainer`** _(bool)_: if true and when view is a ScrollView, the "content container" height will be evaluated instead of the container height.
 
 ## `releaseCapture(uri)`
 
@@ -135,14 +145,13 @@ import { captureScreen } from "react-native-view-shot";
 captureScreen({
   format: "jpg",
   quality: 0.8
-})
-.then(
+}).then(
   uri => console.log("Image saved to", uri),
   error => console.error("Oops, snapshot failed", error)
 );
 ```
 
-This method will capture the contents of the currently displayed screen as a native hardware screenshot. It does not require a ref input, as it does not work at the view level. This means that ScrollViews will not be captured in their entirety - only the portions currently visible to the user. 
+This method will capture the contents of the currently displayed screen as a native hardware screenshot. It does not require a ref input, as it does not work at the view level. This means that ScrollViews will not be captured in their entirety - only the portions currently visible to the user.
 
 Returns a Promise of the image URI.
 
@@ -158,17 +167,18 @@ Returns a Promise of the image URI.
 
 Model tested: iPhone 6 (iOS), Nexus 5 (Android).
 
-| System             | iOS                | Android           | Windows           |
-|--------------------|--------------------|-------------------|-------------------|
-| View,Text,Image,.. | YES                | YES               | YES               |                    
-| WebView            | YES                | YES<sup>1</sup>   | YES               |
-| gl-react v2        | YES                | NO<sup>2</sup>    | NO<sup>3</sup>    |
-| react-native-video | NO                 | NO                | NO                |
-| react-native-maps  | YES                | NO<sup>4</sup>    | NO<sup>3</sup>    |
-| react-native-svg   | YES                | YES               | maybe?            |
-| react-native-camera   | NO                | YES               | NO <sup>3</sup>        |
+| System                | iOS              | Android           | Windows                |
+| --------------------- | ---------------- | ----------------- | ---------------------- |
+| View,Text,Image,..    | YES              | YES               | YES                    |
+| WebView               | YES              | YES<sup>1</sup>   | YES                    |
+| gl-react v2           | YES              | NO<sup>2</sup>    | NO<sup>3</sup>         |
+| react-native-video    | NO               | NO                | NO                     |
+| react-native-maps     | YES              | NO<sup>4</sup>    | NO<sup>3</sup>         |
+| react-native-svg      | YES              | YES               | maybe?                 |
+| react-native-camera   | NO               | YES               | NO <sup>3</sup>        |
 
 >
+
 1. Only supported by wrapping a `<View collapsable={false}>` parent and snapshotting it.
 2. It returns an empty image (not a failure Promise).
 3. Component itself lacks platform support.
@@ -177,11 +187,13 @@ Model tested: iPhone 6 (iOS), Nexus 5 (Android).
 ## Performance Optimization
 
 During profiling captured several things that influence on performance:
-1) (de-)allocation of memory for bitmap
-2) (de-)allocation of memory for Base64 output buffer
-3) compression of bitmap to different image formats: PNG, JPG
+
+1. (de-)allocation of memory for bitmap
+2. (de-)allocation of memory for Base64 output buffer
+3. compression of bitmap to different image formats: PNG, JPG
 
 To solve that in code introduced several new approaches:
+
 - reusable images, that reduce load on GC;
 - reusable arrays/buffers that also reduce load on GC;
 - RAW image format for avoiding expensive compression;
@@ -194,6 +206,7 @@ more details and code snippet are below.
 Introduced a new image format RAW. it correspond a ARGB array of pixels.
 
 Advantages:
+
 - no compression, so its supper quick. Screenshot taking is less than 16ms;
 
 RAW format supported for `zip-base64`, `base64` and `tmpfile` result types.
@@ -209,32 +222,32 @@ approach for capturing screen views and deliver them to the react side.
 ### How to work with zip-base64 and RAW format?
 
 ```js
-const fs = require('fs')
-const zlib = require('zlib')
-const PNG = require('pngjs').PNG
-const Buffer = require('buffer').Buffer
+const fs = require("fs");
+const zlib = require("zlib");
+const PNG = require("pngjs").PNG;
+const Buffer = require("buffer").Buffer;
 
-const format = Platform.OS === 'android' ? 'raw' : 'png'
-const result = Platform.OS === 'android' ? 'zip-base64' : 'base64'
+const format = Platform.OS === "android" ? "raw" : "png";
+const result = Platform.OS === "android" ? "zip-base64" : "base64";
 
 captureRef(this.ref, { result, format }).then(data => {
-    // expected pattern 'width:height|', example: '1080:1731|'
-    const resolution = /^(\d+):(\d+)\|/g.exec(data)
-    const width = (resolution || ['', 0, 0])[1]
-    const height = (resolution || ['', 0, 0])[2]
-    const base64 = data.substr((resolution || [''])[0].length || 0)
+  // expected pattern 'width:height|', example: '1080:1731|'
+  const resolution = /^(\d+):(\d+)\|/g.exec(data);
+  const width = (resolution || ["", 0, 0])[1];
+  const height = (resolution || ["", 0, 0])[2];
+  const base64 = data.substr((resolution || [""])[0].length || 0);
 
-    // convert from base64 to Buffer
-    const buffer = Buffer.from(base64, 'base64')
-    // un-compress data
-    const inflated = zlib.inflateSync(buffer)
-    // compose PNG
-    const png = new PNG({ width, height })
-    png.data = inflated
-    const pngData = PNG.sync.write(png)
-    // save composed PNG
-    fs.writeFileSync(output, pngData)
-})
+  // convert from base64 to Buffer
+  const buffer = Buffer.from(base64, "base64");
+  // un-compress data
+  const inflated = zlib.inflateSync(buffer);
+  // compose PNG
+  const png = new PNG({ width, height });
+  png.data = inflated;
+  const pngData = PNG.sync.write(png);
+  // save composed PNG
+  fs.writeFileSync(output, pngData);
+});
 ```
 
 Keep in mind that packaging PNG data is a CPU consuming operation as a `zlib.inflate`.
@@ -244,6 +257,7 @@ Hint: use `process.fork()` approach for converting raw data into PNGs.
 > Note: code is tested in large commercial project.
 
 > Note #2: Don't forget to add packages into your project:
+>
 > ```js
 > yarn add pngjs
 > yarn add zlib
@@ -284,7 +298,6 @@ Alternatively, you can use the `ViewShot` component that will wait the first `on
 ### Snapshotted image does not match my width and height but is twice/3-times bigger
 
 This is because the snapshot image result is in real pixel size where the width/height defined in a React Native style are defined in "point" unit. You might want to set width and height option to force a resize. (might affect image quality)
-
 
 ---
 

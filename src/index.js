@@ -3,9 +3,9 @@ import React, { Component } from "react";
 import { View, NativeModules, Platform, findNodeHandle } from "react-native";
 const { RNViewShot } = NativeModules;
 
-import type { Element, ElementRef, ElementType, Ref } from 'react';
-import type { ViewStyleProp } from 'StyleSheet';
-import type { LayoutEvent } from 'CoreEventTypes';
+import type { Element, ElementRef, ElementType, Ref } from "react";
+import type { ViewStyleProp } from "StyleSheet";
+import type { LayoutEvent } from "CoreEventTypes";
 
 const neverEndingPromise = new Promise(() => {});
 
@@ -20,7 +20,7 @@ type Options = {
 
 if (!RNViewShot) {
   console.warn(
-    "NativeModules.RNViewShot is undefined. Make sure the library is linked on the native side."
+    "react-native-view-shot: NativeModules.RNViewShot is undefined. Make sure the library is linked on the native side."
   );
 }
 
@@ -76,31 +76,51 @@ function validateOptions(
   if (acceptedFormats.indexOf(options.format) === -1) {
     options.format = defaultOptions.format;
     errors.push(
-      "option format '" + options.format + "' is not in valid formats: " + acceptedFormats.join(" | ")
+      "option format '" +
+        options.format +
+        "' is not in valid formats: " +
+        acceptedFormats.join(" | ")
     );
   }
   if (acceptedResults.indexOf(options.result) === -1) {
     options.result = defaultOptions.result;
     errors.push(
-      "option result '" + options.result  + "' is not in valid formats: " + acceptedResults.join(" | ")
+      "option result '" +
+        options.result +
+        "' is not in valid formats: " +
+        acceptedResults.join(" | ")
     );
   }
   return { options, errors };
+}
+
+export function ensureModuleIsLoaded() {
+  if (!RNViewShot) {
+    throw new Error(
+      "react-native-view-shot: NativeModules.RNViewShot is undefined. Make sure the library is linked on the native side."
+    );
+  }
 }
 
 export function captureRef<T: ElementType>(
   view: number | ?View | Ref<T>,
   optionsObject?: Object
 ): Promise<string> {
-  if (view && typeof view === "object" && "current" in view && view.current) { // React.RefObject
+  ensureModuleIsLoaded();
+  if (view && typeof view === "object" && "current" in view && view.current) {
+    // React.RefObject
     view = view.current;
+    if (!view) {
+      return Promise.reject(new Error("ref.current is null"));
+    }
   }
   if (typeof view !== "number") {
     const node = findNodeHandle(view);
-    if (!node)
+    if (!node) {
       return Promise.reject(
         new Error("findNodeHandle failed to resolve view=" + String(view))
       );
+    }
     view = node;
   }
   const { options, errors } = validateOptions(optionsObject);
@@ -123,9 +143,8 @@ export function releaseCapture(uri: string): void {
   }
 }
 
-export function captureScreen(
-  optionsObject?: Options
-): Promise<string> {
+export function captureScreen(optionsObject?: Options): Promise<string> {
+  ensureModuleIsLoaded();
   const { options, errors } = validateOptions(optionsObject);
   if (__DEV__ && errors.length > 0) {
     console.warn(
@@ -172,8 +191,8 @@ export default class ViewShot extends Component<Props> {
   static captureRef = captureRef;
   static releaseCapture = releaseCapture;
   constructor(props) {
-    super(props)
-    this.state={}
+    super(props);
+    this.state = {};
   }
   root: ?View;
 
@@ -253,16 +272,12 @@ export default class ViewShot extends Component<Props> {
     }
   }
 
-  static getDerivedStateFromProps(props, state) {
-    if(props.captureMode !== undefined) {
-      if (props.captureMode !== this.props.captureMode) {
-        this.syncCaptureLoop(props.captureMode);
+  componentDidUpdate(prevProps) {
+    if (this.props.captureMode !== undefined) {
+      if (this.props.captureMode !== prevProps.captureMode) {
+        this.syncCaptureLoop(this.props.captureMode);
       }
     }
-    return null;
-  }
-
-  componentDidUpdate() {
     if (this.props.captureMode === "update") {
       this.capture();
     }
@@ -275,7 +290,12 @@ export default class ViewShot extends Component<Props> {
   render() {
     const { children } = this.props;
     return (
-      <View ref={this.onRef} collapsable={false} onLayout={this.onLayout} style={this.props.style}>
+      <View
+        ref={this.onRef}
+        collapsable={false}
+        onLayout={this.onLayout}
+        style={this.props.style}
+      >
         {children}
       </View>
     );

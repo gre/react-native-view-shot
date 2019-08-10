@@ -13,6 +13,7 @@
     "rasterize"
   ],
   "author": "Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>",
+  "homepage": "https://github.com/gre/react-native-view-shot",
   "license": "MIT",
   "repository": {
     "type": "git",
