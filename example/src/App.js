@@ -11,8 +11,10 @@ import TransparencyScreen from './Transparency';
 import VideoScreen from './Video';
 import WebViewScreen from './WebView';
 import MapViewScreen from './MapView';
+import CanvasScreen from './Canvas';
 import GLReactV2Screen from './GLReactV2';
 import SVGUriScreen from './SVGUri';
+import ARTScreen from './ART';
 import ModalScreen from './Modal';
 
 const screens = {
@@ -25,14 +27,20 @@ const screens = {
   WebView: {
     screen: WebViewScreen,
   },
+  SVGUri: {
+    screen: SVGUriScreen,
+  },
+  ART: {
+    screen: ARTScreen,
+  },
+  Canvas: {
+    screen: CanvasScreen,
+  },
   MapView: {
     screen: MapViewScreen,
   },
   GLReactV2: {
     screen: GLReactV2Screen,
-  },
-  SVGUri: {
-    screen: SVGUriScreen,
   },
   Modal: {
     screen: ModalScreen,

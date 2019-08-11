@@ -1641,6 +1641,11 @@ cross-spawn@^6.0.0, cross-spawn@^6.0.5:
     shebang-command "^1.2.0"
     which "^1.2.9"
 
+ctx-polyfill@^1.1.4:
+  version "1.1.4"
+  resolved "https://registry.yarnpkg.com/ctx-polyfill/-/ctx-polyfill-1.1.4.tgz#08420bc5c540d08ac36d05720ca503c65e302d65"
+  integrity sha1-CEILxcVA0IrDbQVyDKUDxl4wLWU=
+
 debounce@^1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/debounce/-/debounce-1.2.0.tgz#44a540abc0ea9943018dc0eaa95cce87f65cd131"
@@ -4301,6 +4306,13 @@ react-lifecycles-compat@^3.0.4:
   version "3.0.4"
   resolved "https://registry.yarnpkg.com/react-lifecycles-compat/-/react-lifecycles-compat-3.0.4.tgz#4f1a273afdfc8f3488a8c516bfda78f872352362"
   integrity sha512-fBASbA6LnOU9dOU2eW7aQ8xmYBSXUIWr+UmF9b1efZBazGNO+rcXT/icdKnYm2pTwcRylVUYwW7H1PHfLekVzA==
+
+react-native-canvas@^0.1.33:
+  version "0.1.33"
+  resolved "https://registry.yarnpkg.com/react-native-canvas/-/react-native-canvas-0.1.33.tgz#e38a650e7d57b42faa717e7f3a1285d63d40e0f3"
+  integrity sha512-rYnMcU+xB0O00Dz+77xHQcnemkt1gf9dHukNzhilLN0nQbT0JwbF/fsVOZNlqucSpuWVr4LyKhFVrAE/qebBAQ==
+  dependencies:
+    ctx-polyfill "^1.1.4"
 
 react-native-gesture-handler@^1.3.0:
   version "1.3.0"
