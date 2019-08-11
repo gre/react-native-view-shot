@@ -96,6 +96,8 @@ PODS:
     - React-fishhook (= 0.60.4)
   - ReactNativeART (1.0.1):
     - React
+  - RNFS (2.14.1):
+    - React
   - RNGestureHandler (1.3.0):
     - React
   - RNGL (2.42.1):
@@ -135,6 +137,7 @@ DEPENDENCIES:
   - React-RCTVibration (from `../node_modules/react-native/Libraries/Vibration`)
   - React-RCTWebSocket (from `../node_modules/react-native/Libraries/WebSocket`)
   - "ReactNativeART (from `../node_modules/@react-native-community/art`)"
+  - RNFS (from `../node_modules/react-native-fs`)
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNGL (from `../node_modules/gl-react-native`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
@@ -200,6 +203,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/Libraries/WebSocket"
   ReactNativeART:
     :path: "../node_modules/@react-native-community/art"
+  RNFS:
+    :path: "../node_modules/react-native-fs"
   RNGestureHandler:
     :path: "../node_modules/react-native-gesture-handler"
   RNGL:
@@ -240,6 +245,7 @@ SPEC CHECKSUMS:
   React-RCTVibration: 0bea40cd51bd089bd591a8f74c86e91fdf2666c5
   React-RCTWebSocket: 163873f4cdd5f1058a9483443404fc3801581cb6
   ReactNativeART: d230fdaf9a6d15d5ec842355ada1edbe326c49d0
+  RNFS: a8fbe7060fa49157d819466404794ad9c58e58cf
   RNGestureHandler: 5329a942fce3d41c68b84c2c2276ce06a696d8b0
   RNGL: cb1021a8021300492e6413d17700113d0e65cee1
   RNReanimated: 1b52415c4302f198cb581282a0166690bad62c43

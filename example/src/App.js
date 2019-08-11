@@ -15,6 +15,7 @@ import CanvasScreen from './Canvas';
 import GLReactV2Screen from './GLReactV2';
 import SVGUriScreen from './SVGUri';
 import ARTScreen from './ART';
+import FSScreen from './FS';
 import ModalScreen from './Modal';
 
 const screens = {
@@ -32,6 +33,9 @@ const screens = {
   },
   ART: {
     screen: ARTScreen,
+  },
+  FS: {
+    screen: FSScreen,
   },
   Canvas: {
     screen: CanvasScreen,
