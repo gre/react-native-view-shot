@@ -18,7 +18,7 @@ const CanvasRendering = ({ onDrawn }) => {
     ctx.fillRect(120, 30, 60, 60);
     ctx.fillStyle = 'blue';
     ctx.fillRect(140, 50, 60, 60);
-    const timeout = setTimeout(onDrawn, 500); // hack. react-native-canvas have no way to tell when it's executed
+    const timeout = setTimeout(onDrawn, 1000); // hack. react-native-canvas have no way to tell when it's executed
     return () => clearTimeout(timeout);
   }, []);
   return <Canvas ref={ref} style={dimension} />;
