@@ -12,7 +12,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const Desc = ({ desc }) => {
+const Desc = ({ desc }: { desc: string }) => {
   return <Text style={styles.desc}>{desc}</Text>;
 };
 

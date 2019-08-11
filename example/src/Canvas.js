@@ -1,9 +1,7 @@
 //@flow
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { SafeAreaView, Image, View } from 'react-native';
+import { SafeAreaView, Image } from 'react-native';
 import ViewShot from 'react-native-view-shot';
-import { Surface, Group, Shape } from '@react-native-community/art';
-import Desc from './Desc';
 import Canvas from 'react-native-canvas';
 
 const dimension = { width: 300, height: 300 };
@@ -20,7 +18,7 @@ const CanvasRendering = ({ onDrawn }) => {
     ctx.fillRect(140, 50, 60, 60);
     const timeout = setTimeout(onDrawn, 1000); // hack. react-native-canvas have no way to tell when it's executed
     return () => clearTimeout(timeout);
-  }, []);
+  }, [onDrawn]);
   return <Canvas ref={ref} style={dimension} />;
 };
 

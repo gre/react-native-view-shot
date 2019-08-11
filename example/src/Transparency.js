@@ -1,6 +1,7 @@
+/* eslint-disable react-native/no-inline-styles */
 //@flow
-import React, { Component, useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View, Button, Image } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { View, Image } from 'react-native';
 import ViewShot from 'react-native-view-shot';
 
 const Transparency = () => {

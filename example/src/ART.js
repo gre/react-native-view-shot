@@ -1,8 +1,9 @@
+/* eslint-disable react-native/no-inline-styles */
 //@flow
 import React, { useState, useCallback } from 'react';
 import { SafeAreaView, Image, View } from 'react-native';
 import ViewShot from 'react-native-view-shot';
-import { Surface, Group, Shape, Path } from '@react-native-community/art';
+import { Surface, Group, Shape } from '@react-native-community/art';
 import Desc from './Desc';
 
 const dimension = { width: 300, height: 300 };

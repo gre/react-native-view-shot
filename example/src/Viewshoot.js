@@ -83,8 +83,10 @@ export default class Viewshoot extends Component {
     );
   }
 
+  full = React.createRef();
+
   captureViewShoot() {
-    this.refs.full.capture().then(uri => {
+    this.full.current.capture().then(uri => {
       console.log('do something with ', uri);
       this.setState({ res: { uri: uri } });
     });
@@ -94,7 +96,7 @@ export default class Viewshoot extends Component {
     return (
       <ScrollView style={styles.container}>
         <ViewShot
-          ref="full"
+          ref={this.full}
           options={{ format: this.state.options.format, quality: this.state.options.quality }}
           style={styles.container}
         >

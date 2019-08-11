@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 //@flow
 import React, { useState, useCallback } from 'react';
 import { SafeAreaView, Image, View } from 'react-native';
