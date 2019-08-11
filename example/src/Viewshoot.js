@@ -1,132 +1,102 @@
-/**
- * Sample How To Screenshot Screen inside of ScrollView
- * The original github from
- * https://github.com/gre/react-native-view-shot
- */
-import React, { Component } from 'react';
-import { ScrollView, StyleSheet, Text, View, Button, Image } from 'react-native';
-
+import React, { useCallback, useState, useRef } from 'react';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  SafeAreaView,
+  RefreshControl,
+} from 'react-native';
 import ViewShot from 'react-native-view-shot';
+import Btn from './Btn';
 
-export default class Viewshoot extends Component {
-  static navigationProps = {
-    title: 'Viewshoot',
-  };
+const Viewshoot = () => {
+  const full = useRef();
+  const [preview, setPreview] = useState(null);
+  const [itemsCount, setItemsCount] = useState(10);
+  const [refreshing, setRefreshing] = useState(false);
 
-  state = {
-    error: null,
-    res: null,
-    options: {
-      format: 'jpg',
-      quality: 0.9,
-    },
-  };
+  const onCapture = useCallback(() => {
+    full.current.capture().then(uri => setPreview({ uri }));
+  }, []);
 
-  renderContent() {
-    const data = [
-      1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      12,
-      13,
-      14,
-      15,
-      16,
-      17,
-      18,
-      19,
-      20,
-      21,
-      22,
-      23,
-    ];
-    return data.map((item, index) => {
-      return (
-        <View style={styles.item} key={index}>
-          <Text>{item}</Text>
-        </View>
-      );
-    });
-  }
-
-  renderResultSnapshot() {
-    if (this.state.res !== null) {
-      console.log('Result on return snapshot: ', this.state.res);
-      return (
-        <Image
-          fadeDuration={0}
-          resizeMode="contain"
-          style={styles.previewImage}
-          source={this.state.res}
+  return (
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.root}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => {
+            setRefreshing(true);
+            setTimeout(() => {
+              setItemsCount(itemsCount + 10);
+              setRefreshing(false);
+            }, 5000);
+          }}
         />
-      );
-    }
+      }
+    >
+      <SafeAreaView>
+        <ViewShot ref={full} style={styles.container}>
+          <Btn onPress={onCapture} label="Shoot Me" />
 
-    return;
-  }
+          <Image
+            fadeDuration={0}
+            resizeMode="contain"
+            style={styles.previewImage}
+            source={preview}
+          />
 
-  renderShootButton() {
-    return (
-      <Button
-        onPress={async () => await this.captureViewShoot()}
-        title="Shoot Me"
-        color="#841584"
-      />
-    );
-  }
-
-  full = React.createRef();
-
-  captureViewShoot() {
-    this.full.current.capture().then(uri => {
-      console.log('do something with ', uri);
-      this.setState({ res: { uri: uri } });
-    });
-  }
-
-  renderViewShot() {
-    return (
-      <ScrollView style={styles.container}>
-        <ViewShot
-          ref={this.full}
-          options={{ format: this.state.options.format, quality: this.state.options.quality }}
-          style={styles.container}
-        >
-          {this.renderResultSnapshot()}
-          {this.renderContent()}
-          {this.renderShootButton()}
+          {Array(itemsCount)
+            .fill(null)
+            .map((_, index) => ({
+              key: index,
+              text: `${index + 1}`,
+              color: `hsl(${(index * 13) % 360}, 50%, 80%)`,
+            }))
+            .map(({ key, text, color }) => {
+              return (
+                <View style={[styles.item, { backgroundColor: color }]} key={key}>
+                  <Text style={styles.itemText}>{text}</Text>
+                </View>
+              );
+            })}
         </ViewShot>
-      </ScrollView>
-    );
-  }
-
-  render() {
-    return this.renderViewShot();
-  }
-}
+      </SafeAreaView>
+    </ScrollView>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
   },
+  root: {
+    paddingVertical: 20,
+  },
   content: {
-    padding: 10,
     backgroundColor: '#fff',
   },
   item: {
-    height: 50,
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  itemText: {
+    fontSize: 22,
+    color: '#666',
   },
   previewImage: {
-    width: 375,
-    height: 300,
+    height: 200,
+    backgroundColor: 'black',
   },
 });
+
+Viewshoot.navigationProps = {
+  title: 'Viewshoot',
+};
+
+export default Viewshoot;
