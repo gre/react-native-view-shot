@@ -5,57 +5,7 @@ import { createStackNavigator, createAppContainer } from 'react-navigation';
 
 // To add a screen, import it and add it in screens
 
-import FullScreen from './Full';
-import ViewshootScreen from './Viewshoot';
-import TransparencyScreen from './Transparency';
-import VideoScreen from './Video';
-import WebViewScreen from './WebView';
-import MapViewScreen from './MapView';
-import CanvasScreen from './Canvas';
-import GLReactV2Screen from './GLReactV2';
-import SVGUriScreen from './SVGUri';
-import ARTScreen from './ART';
-import FSScreen from './FS';
-import ModalScreen from './Modal';
-
-const screens = {
-  Full: {
-    screen: FullScreen,
-  },
-  Video: {
-    screen: VideoScreen,
-  },
-  WebView: {
-    screen: WebViewScreen,
-  },
-  SVGUri: {
-    screen: SVGUriScreen,
-  },
-  ART: {
-    screen: ARTScreen,
-  },
-  FS: {
-    screen: FSScreen,
-  },
-  Canvas: {
-    screen: CanvasScreen,
-  },
-  MapView: {
-    screen: MapViewScreen,
-  },
-  GLReactV2: {
-    screen: GLReactV2Screen,
-  },
-  Modal: {
-    screen: ModalScreen,
-  },
-  Viewshoot: {
-    screen: ViewshootScreen,
-  },
-  Transparency: {
-    screen: TransparencyScreen,
-  },
-};
+import screens from './screens';
 
 ///////////////////////////////////////////////////
 
