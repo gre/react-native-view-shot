@@ -193,7 +193,7 @@ public class ViewShot implements UIBlock {
             }
         } catch (final Throwable ex) {
             Log.e(TAG, "Failed to capture view snapshot", ex);
-            promise.reject(ERROR_UNABLE_TO_SNAPSHOT, "Failed to capture view snapshot");
+            promise.reject(ERROR_UNABLE_TO_SNAPSHOT, "Failed to capture view snapshot. (" + ex.toString() + ")");
         }
     }
     //endregion
