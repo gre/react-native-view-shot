@@ -1,7 +1,7 @@
 //@flow
 import React, { Component } from "react";
-import { View, NativeModules, Platform, findNodeHandle } from "react-native";
-const { RNViewShot } = NativeModules;
+import { View, Platform, findNodeHandle } from "react-native";
+import RNViewShot from "./RNViewShot";
 
 import type { Element, ElementRef, ElementType, Ref } from "react";
 import type { ViewStyleProp } from "StyleSheet";
