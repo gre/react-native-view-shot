@@ -4,7 +4,7 @@ import { View, NativeModules, Platform, findNodeHandle } from "react-native";
 const { RNViewShot } = NativeModules;
 
 import type { Element, ElementRef, ElementType, Ref } from "react";
-import type { ViewStyleProp } from "StyleSheet";
+import type { ViewStyleProp } from "react-native/Libraries/StyleSheet/StyleSheetTypes";
 import type { LayoutEvent } from "CoreEventTypes";
 
 const neverEndingPromise = new Promise(() => {});
