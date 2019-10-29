@@ -5,7 +5,7 @@ const { RNViewShot } = NativeModules;
 
 import type { Element, ElementRef, ElementType, Ref } from "react";
 import type { ViewStyleProp } from "react-native/Libraries/StyleSheet/StyleSheetTypes";
-import type { LayoutEvent } from "CoreEventTypes";
+import type { LayoutEvent } from "react-native/Libraries/Types/CoreEventTypes";
 
 const neverEndingPromise = new Promise(() => {});
 
