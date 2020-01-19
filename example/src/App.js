@@ -1,6 +1,14 @@
 // @flow
 import React, { Component, Fragment } from 'react';
-import { SafeAreaView, StatusBar, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  SafeAreaView,
+  StatusBar,
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+} from 'react-native';
 import { createAppContainer } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 
@@ -20,6 +28,7 @@ import ARTScreen from './ART';
 import FSScreen from './FS';
 import ModalScreen from './Modal';
 import OffscreenScreen from './Offscreen';
+import ElevationScreen from './Elevation';
 
 const screens = {
   Full: {
@@ -64,6 +73,9 @@ const screens = {
   Offscreen: {
     screen: OffscreenScreen,
   },
+  Elevation: {
+    screen: ElevationScreen,
+  },
 };
 
 ///////////////////////////////////////////////////
@@ -78,17 +90,19 @@ class HomeScreen extends Component {
       <Fragment>
         <StatusBar barStyle="dark-content" />
         <SafeAreaView>
-          {Object.keys(screens).map(key => (
-            <TouchableOpacity key={key} onPress={() => navigation.navigate(key)}>
-              <View style={styles.entry}>
-                <Text style={styles.entryText}>
-                  {(screens[key].screen.navigationOptions &&
-                    screens[key].screen.navigationOptions.title) ||
-                    key}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+          <ScrollView>
+            {Object.keys(screens).map(key => (
+              <TouchableOpacity key={key} onPress={() => navigation.navigate(key)}>
+                <View style={styles.entry}>
+                  <Text style={styles.entryText}>
+                    {(screens[key].screen.navigationOptions &&
+                      screens[key].screen.navigationOptions.title) ||
+                      key}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </SafeAreaView>
       </Fragment>
     );

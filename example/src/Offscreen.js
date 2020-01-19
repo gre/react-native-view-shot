@@ -9,7 +9,7 @@ const OffscreenViewShot = ({ width, height, ...rest }) => (
   <ViewShot {...rest} style={{ width, height, position: 'absolute', right: -width - 5 }} />
 );
 
-const SvgUriExample = () => {
+const OffscreenExample = () => {
   const [source, setSource] = useState(null);
   const onCapture = useCallback(uri => setSource({ uri }), []);
 
@@ -33,8 +33,8 @@ const SvgUriExample = () => {
   );
 };
 
-SvgUriExample.navigationOptions = {
+OffscreenExample.navigationOptions = {
   title: 'Offscreen',
 };
 
-export default SvgUriExample;
+export default OffscreenExample;

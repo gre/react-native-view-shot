@@ -7,7 +7,7 @@ import Desc from './Desc';
 
 const dimension = { width: 300, height: 300 };
 
-const SvgUriExample = () => {
+const BlurExample = () => {
   const [source, setSource] = useState(null);
   const [viewHandle, setRefHandle] = useState(null);
   const onCapture = useCallback(uri => setSource({ uri }), []);
@@ -38,8 +38,8 @@ const SvgUriExample = () => {
   );
 };
 
-SvgUriExample.navigationOptions = {
+BlurExample.navigationOptions = {
   title: 'react-native-community/blur',
 };
 
-export default SvgUriExample;
+export default BlurExample;
