@@ -11,6 +11,7 @@
     "@react-native-community/blur": "^3.4.1",
     "@react-native-community/masked-view": "^0.1.6",
     "@react-native-community/slider": "^2.0.8",
+    "buffer": "^5.4.3",
     "gl-react": "2",
     "gl-react-native": "2",
     "lodash": "^4.17.15",
