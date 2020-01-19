@@ -1,11 +1,11 @@
-//@flow
+// @flow
 import React, { Component } from "react";
 import { View, NativeModules, Platform, findNodeHandle } from "react-native";
 const { RNViewShot } = NativeModules;
 
 import type { Element, ElementRef, ElementType, Ref } from "react";
-import type { ViewStyleProp } from "StyleSheet";
-import type { LayoutEvent } from "CoreEventTypes";
+import type { ViewStyleProp } from "react-native/Libraries/StyleSheet/StyleSheet";
+import type { LayoutEvent } from "react-native/Libraries/Types/CoreEventTypes";
 
 const neverEndingPromise = new Promise(() => {});
 
@@ -41,11 +41,11 @@ const defaultOptions = {
 
 // validate and coerce options
 function validateOptions(
-  options: ?Object
+  input: ?$Shape<Options>
 ): { options: Options, errors: Array<string> } {
-  options = {
+  const options: Options = {
     ...defaultOptions,
-    ...options
+    ...input
   };
   const errors = [];
   if (
@@ -103,22 +103,23 @@ export function ensureModuleIsLoaded() {
 }
 
 export function captureRef<T: ElementType>(
-  view: number | ?View | Ref<T>,
+  input: number | ?View | Ref<T>,
   optionsObject?: Object
 ): Promise<string> {
   ensureModuleIsLoaded();
-  if (view && typeof view === "object" && "current" in view && view.current) {
-    // React.RefObject
-    view = view.current;
+  let view;
+  if (input && typeof input === "object" && "current" in input) {
+    // $FlowFixMe input is a ref
+    view = input.current;
     if (!view) {
       return Promise.reject(new Error("ref.current is null"));
     }
   }
-  if (typeof view !== "number") {
-    const node = findNodeHandle(view);
+  if (typeof input !== "number") {
+    const node = findNodeHandle(input);
     if (!node) {
       return Promise.reject(
-        new Error("findNodeHandle failed to resolve view=" + String(view))
+        new Error("findNodeHandle failed to resolve view=" + String(input))
       );
     }
     view = node;
@@ -130,7 +131,7 @@ export function captureRef<T: ElementType>(
         errors.map(e => `- ${e}`).join("\n")
     );
   }
-  return RNViewShot.captureRef(view, options);
+  return RNViewShot.captureRef(input, options);
 }
 
 export function releaseCapture(uri: string): void {
@@ -190,17 +191,14 @@ function checkCompatibleProps(props: Props) {
 export default class ViewShot extends Component<Props> {
   static captureRef = captureRef;
   static releaseCapture = releaseCapture;
-  constructor(props) {
-    super(props);
-    this.state = {};
-  }
+
   root: ?View;
 
   _raf: *;
   lastCapturedURI: ?string;
 
   resolveFirstLayout: (layout: Object) => void;
-  firstLayoutPromise = new Promise(resolve => {
+  firstLayoutPromise: Promise<Object> = new Promise(resolve => {
     this.resolveFirstLayout = resolve;
   });
 
@@ -272,7 +270,7 @@ export default class ViewShot extends Component<Props> {
     }
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps: Props) {
     if (this.props.captureMode !== undefined) {
       if (this.props.captureMode !== prevProps.captureMode) {
         this.syncCaptureLoop(this.props.captureMode);
