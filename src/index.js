@@ -2,8 +2,6 @@
 import React, { Component } from "react";
 import { View, NativeModules, Platform, findNodeHandle } from "react-native";
 const { RNViewShot } = NativeModules;
-
-import type { Element, ElementRef, ElementType, Ref } from "react";
 import type { ViewStyleProp } from "react-native/Libraries/StyleSheet/StyleSheet";
 import type { LayoutEvent } from "react-native/Libraries/Types/CoreEventTypes";
 
@@ -102,8 +100,8 @@ export function ensureModuleIsLoaded() {
   }
 }
 
-export function captureRef<T: ElementType>(
-  input: number | ?View | Ref<T>,
+export function captureRef<T: React$ElementType>(
+  input: number | ?View | React$Ref<T>,
   optionsObject?: Object
 ): Promise<string> {
   ensureModuleIsLoaded();
@@ -159,7 +157,7 @@ export function captureScreen(optionsObject?: Options): Promise<string> {
 type Props = {
   options?: Object,
   captureMode?: "mount" | "continuous" | "update",
-  children: Element<*>,
+  children: React$Node,
   onLayout?: (e: *) => void,
   onCapture?: (uri: string) => void,
   onCaptureFailure?: (e: Error) => void,
@@ -168,9 +166,7 @@ type Props = {
 
 function checkCompatibleProps(props: Props) {
   if (!props.captureMode && props.onCapture) {
-    console.warn(
-      "react-native-view-shot: a captureMode prop must be provided for `onCapture`"
-    );
+    // in that case, it's authorized if you call capture() yourself
   } else if (props.captureMode && !props.onCapture) {
     console.warn(
       "react-native-view-shot: captureMode prop is defined but onCapture prop callback is missing"
@@ -251,7 +247,7 @@ export default class ViewShot extends Component<Props> {
     }
   };
 
-  onRef = (ref: ElementRef<*>) => {
+  onRef = (ref: React$ElementRef<*>) => {
     this.root = ref;
   };
 

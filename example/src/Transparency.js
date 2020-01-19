@@ -39,7 +39,7 @@ const Transparency = () => {
           justifyContent: 'center',
         }}
       >
-        <Image source={source} style={{ width: 100, height: 100 }} />
+        <Image fadeDuration={0} source={source} style={{ width: 100, height: 100 }} />
       </View>
     </View>
   );

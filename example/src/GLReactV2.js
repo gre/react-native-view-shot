@@ -38,7 +38,7 @@ const GLReactV2 = () => {
 
       <Desc desc="above is a gl-react surface and below is a capture of it" />
 
-      <Image source={source} style={dimension} />
+      <Image fadeDuration={0} source={source} style={dimension} />
     </SafeAreaView>
   );
 };

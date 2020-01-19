@@ -19,7 +19,7 @@ const SvgUriExample = () => {
   return (
     <SafeAreaView>
       <Desc desc="We have rendered this SVG as image offscreen:" />
-      <Image source={source} style={{ width, height }} />
+      <Image fadeDuration={0} source={source} style={{ width, height }} />
 
       <OffscreenViewShot
         captureMode="continuous"

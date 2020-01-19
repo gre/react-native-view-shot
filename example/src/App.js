@@ -7,6 +7,7 @@ import { createStackNavigator } from 'react-navigation-stack';
 // To add a screen, import it and add it in screens
 
 import FullScreen from './Full';
+import BlurScreen from './Blur';
 import ViewshootScreen from './Viewshoot';
 import TransparencyScreen from './Transparency';
 import VideoScreen from './Video';
@@ -35,6 +36,9 @@ const screens = {
   },
   ART: {
     screen: ARTScreen,
+  },
+  Blur: {
+    screen: BlurScreen,
   },
   FS: {
     screen: FSScreen,
