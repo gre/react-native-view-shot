@@ -31,7 +31,7 @@ const SvgUriExample = () => {
         <BlurView blurType="light" blurAmount={10} style={absoluteDimension} viewRef={viewHandle} />
       </ViewShot>
 
-      <Desc desc="above is a blurred SVG view and below is a screenshot of it" />
+      <Desc desc="above is a blurred image and below is a screenshot of it" />
 
       <Image fadeDuration={0} source={source} style={dimension} />
     </SafeAreaView>
