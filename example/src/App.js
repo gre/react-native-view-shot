@@ -18,6 +18,7 @@ import SVGUriScreen from './SVGUri';
 import ARTScreen from './ART';
 import FSScreen from './FS';
 import ModalScreen from './Modal';
+import OffscreenScreen from './Offscreen';
 
 const screens = {
   Full: {
@@ -55,6 +56,9 @@ const screens = {
   },
   Transparency: {
     screen: TransparencyScreen,
+  },
+  Offscreen: {
+    screen: OffscreenScreen,
   },
 };
 
