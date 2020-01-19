@@ -1,7 +1,8 @@
 // @flow
-import React, { Fragment } from 'react';
+import React, { Component, Fragment } from 'react';
 import { SafeAreaView, StatusBar, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { createStackNavigator, createAppContainer } from 'react-navigation';
+import { createAppContainer } from 'react-navigation';
+import { createStackNavigator } from 'react-navigation-stack';
 
 // To add a screen, import it and add it in screens
 
@@ -59,7 +60,7 @@ const screens = {
 
 ///////////////////////////////////////////////////
 
-class HomeScreen extends React.Component {
+class HomeScreen extends Component {
   static navigationOptions = {
     title: 'Home',
   };
