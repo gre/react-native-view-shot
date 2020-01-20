@@ -101,23 +101,28 @@ export function ensureModuleIsLoaded() {
 }
 
 export function captureRef<T: React$ElementType>(
-  input: number | ?View | React$Ref<T>,
+  view: number | ?View | React$Ref<T>,
   optionsObject?: Object
 ): Promise<string> {
   ensureModuleIsLoaded();
-  let view;
-  if (input && typeof input === "object" && "current" in input) {
-    // $FlowFixMe input is a ref
-    view = input.current;
+  if (
+    view &&
+    typeof view === "object" &&
+    "current" in view &&
+    // $FlowFixMe view is a ref
+    view.current
+  ) {
+    // $FlowFixMe view is a ref
+    view = view.current;
     if (!view) {
       return Promise.reject(new Error("ref.current is null"));
     }
   }
-  if (typeof input !== "number") {
-    const node = findNodeHandle(input);
+  if (typeof view !== "number") {
+    const node = findNodeHandle(view);
     if (!node) {
       return Promise.reject(
-        new Error("findNodeHandle failed to resolve view=" + String(input))
+        new Error("findNodeHandle failed to resolve view=" + String(view))
       );
     }
     view = node;
@@ -129,7 +134,7 @@ export function captureRef<T: React$ElementType>(
         errors.map(e => `- ${e}`).join("\n")
     );
   }
-  return RNViewShot.captureRef(input, options);
+  return RNViewShot.captureRef(view, options);
 }
 
 export function releaseCapture(uri: string): void {
