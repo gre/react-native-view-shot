@@ -9,6 +9,7 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
+import libPkg from 'react-native-view-shot/package.json';
 import { createAppContainer } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 
@@ -82,7 +83,7 @@ const screens = {
 
 class HomeScreen extends Component {
   static navigationOptions = {
-    title: 'Home',
+    title: 'react-native-view-shot ' + libPkg.version,
   };
   render() {
     const { navigation } = this.props;
