@@ -8,9 +8,13 @@ Capture a React Native view to an image.
 
 ```bash
 yarn add react-native-view-shot
+
+# In Expo
+
+expo install react-native-view-shot
 ```
 
-Make sure react-native-view-shot is correctly linked in XCode (might require a manual installation, refer to [React Native doc](https://facebook.github.io/react-native/docs/linking-libraries-ios.html)).
+Make sure `react-native-view-shot` is correctly linked in Xcode (might require a manual installation, refer to [React Native doc](https://reactnative.dev/docs/linking-libraries-ios.html)).
 
 **Before React Native 0.60.x you would have to:**
 
@@ -18,10 +22,10 @@ Make sure react-native-view-shot is correctly linked in XCode (might require a m
 react-native link react-native-view-shot
 ```
 
-**Since 0.60.x, [autolink](https://github.com/react-native-community/cli/blob/master/docs/autolinking.md) should just work**, On iOS, you might have to:
+**Since 0.60.x, [autolink](https://github.com/react-native-community/cli/blob/master/docs/autolinking.md) should just work**, on iOS, you'll need to ensure the CocoaPods are installed with:
 
 ```bash
-cd ios && pod install && cd ..
+npx pod-install
 ```
 
 ## Recommended High Level API
