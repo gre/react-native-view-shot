@@ -41,7 +41,7 @@ const ARTExample = () => {
 
       <Desc desc="ART overlapping test" />
 
-      <Image source={source} style={dimension} />
+      <Image fadeDuration={0} source={source} style={dimension} />
     </SafeAreaView>
   );
 };

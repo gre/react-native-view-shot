@@ -22,7 +22,7 @@ const WebViewExample = () => {
 
       <Desc desc="above is a webview and below is a continuous screenshot of it" />
 
-      <Image source={source} style={dimension} />
+      <Image fadeDuration={0} source={source} style={dimension} />
     </SafeAreaView>
   );
 };

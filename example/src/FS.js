@@ -27,7 +27,7 @@ const FSExample = () => {
 
       <Desc desc="FS to get the image from captured file" />
 
-      <Image source={source} style={dimension} />
+      <Image fadeDuration={0} source={source} style={dimension} />
     </SafeAreaView>
   );
 };

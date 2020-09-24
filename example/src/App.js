@@ -1,11 +1,22 @@
 // @flow
-import React, { Fragment } from 'react';
-import { SafeAreaView, StatusBar, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { createStackNavigator, createAppContainer } from 'react-navigation';
+import React, { Component, Fragment } from 'react';
+import {
+  SafeAreaView,
+  StatusBar,
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+} from 'react-native';
+import libPkg from 'react-native-view-shot/package.json';
+import { createAppContainer } from 'react-navigation';
+import { createStackNavigator } from 'react-navigation-stack';
 
 // To add a screen, import it and add it in screens
 
 import FullScreen from './Full';
+import BlurScreen from './Blur';
 import ViewshootScreen from './Viewshoot';
 import TransparencyScreen from './Transparency';
 import VideoScreen from './Video';
@@ -17,6 +28,8 @@ import SVGUriScreen from './SVGUri';
 import ARTScreen from './ART';
 import FSScreen from './FS';
 import ModalScreen from './Modal';
+import OffscreenScreen from './Offscreen';
+import ElevationScreen from './Elevation';
 
 const screens = {
   Full: {
@@ -33,6 +46,9 @@ const screens = {
   },
   ART: {
     screen: ARTScreen,
+  },
+  Blur: {
+    screen: BlurScreen,
   },
   FS: {
     screen: FSScreen,
@@ -55,13 +71,19 @@ const screens = {
   Transparency: {
     screen: TransparencyScreen,
   },
+  Offscreen: {
+    screen: OffscreenScreen,
+  },
+  Elevation: {
+    screen: ElevationScreen,
+  },
 };
 
 ///////////////////////////////////////////////////
 
-class HomeScreen extends React.Component {
+class HomeScreen extends Component {
   static navigationOptions = {
-    title: 'Home',
+    title: 'react-native-view-shot ' + libPkg.version,
   };
   render() {
     const { navigation } = this.props;
@@ -69,17 +91,19 @@ class HomeScreen extends React.Component {
       <Fragment>
         <StatusBar barStyle="dark-content" />
         <SafeAreaView>
-          {Object.keys(screens).map(key => (
-            <TouchableOpacity key={key} onPress={() => navigation.navigate(key)}>
-              <View style={styles.entry}>
-                <Text style={styles.entryText}>
-                  {(screens[key].screen.navigationOptions &&
-                    screens[key].screen.navigationOptions.title) ||
-                    key}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+          <ScrollView>
+            {Object.keys(screens).map(key => (
+              <TouchableOpacity key={key} onPress={() => navigation.navigate(key)}>
+                <View style={styles.entry}>
+                  <Text style={styles.entryText}>
+                    {(screens[key].screen.navigationOptions &&
+                      screens[key].screen.navigationOptions.title) ||
+                      key}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </SafeAreaView>
       </Fragment>
     );

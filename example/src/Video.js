@@ -18,7 +18,7 @@ const VideoExample = () => {
 
       <Desc desc="above is a video and below is a continuous screenshot of it" />
 
-      <Image source={source} style={dimension} />
+      <Image fadeDuration={0} source={source} style={dimension} />
     </SafeAreaView>
   );
 };

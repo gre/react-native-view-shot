@@ -1,11 +1,9 @@
-//@flow
+// @flow
 import React, { Component } from "react";
 import { View, NativeModules, Platform, findNodeHandle } from "react-native";
 const { RNViewShot } = NativeModules;
-
-import type { Element, ElementRef, ElementType, Ref } from "react";
-import type { ViewStyleProp } from "StyleSheet";
-import type { LayoutEvent } from "CoreEventTypes";
+import type { ViewStyleProp } from "react-native/Libraries/StyleSheet/StyleSheet";
+import type { LayoutEvent } from "react-native/Libraries/Types/CoreEventTypes";
 
 const neverEndingPromise = new Promise(() => {});
 
@@ -41,11 +39,11 @@ const defaultOptions = {
 
 // validate and coerce options
 function validateOptions(
-  options: ?Object
+  input: ?$Shape<Options>
 ): { options: Options, errors: Array<string> } {
-  options = {
+  const options: Options = {
     ...defaultOptions,
-    ...options
+    ...input
   };
   const errors = [];
   if (
@@ -102,13 +100,19 @@ export function ensureModuleIsLoaded() {
   }
 }
 
-export function captureRef<T: ElementType>(
-  view: number | ?View | Ref<T>,
+export function captureRef<T: React$ElementType>(
+  view: number | ?View | React$Ref<T>,
   optionsObject?: Object
 ): Promise<string> {
   ensureModuleIsLoaded();
-  if (view && typeof view === "object" && "current" in view && view.current) {
-    // React.RefObject
+  if (
+    view &&
+    typeof view === "object" &&
+    "current" in view &&
+    // $FlowFixMe view is a ref
+    view.current
+  ) {
+    // $FlowFixMe view is a ref
     view = view.current;
     if (!view) {
       return Promise.reject(new Error("ref.current is null"));
@@ -158,7 +162,7 @@ export function captureScreen(optionsObject?: Options): Promise<string> {
 type Props = {
   options?: Object,
   captureMode?: "mount" | "continuous" | "update",
-  children: Element<*>,
+  children: React$Node,
   onLayout?: (e: *) => void,
   onCapture?: (uri: string) => void,
   onCaptureFailure?: (e: Error) => void,
@@ -167,9 +171,7 @@ type Props = {
 
 function checkCompatibleProps(props: Props) {
   if (!props.captureMode && props.onCapture) {
-    console.warn(
-      "react-native-view-shot: a captureMode prop must be provided for `onCapture`"
-    );
+    // in that case, it's authorized if you call capture() yourself
   } else if (props.captureMode && !props.onCapture) {
     console.warn(
       "react-native-view-shot: captureMode prop is defined but onCapture prop callback is missing"
@@ -190,17 +192,14 @@ function checkCompatibleProps(props: Props) {
 export default class ViewShot extends Component<Props> {
   static captureRef = captureRef;
   static releaseCapture = releaseCapture;
-  constructor(props) {
-    super(props);
-    this.state = {};
-  }
+
   root: ?View;
 
   _raf: *;
   lastCapturedURI: ?string;
 
   resolveFirstLayout: (layout: Object) => void;
-  firstLayoutPromise = new Promise(resolve => {
+  firstLayoutPromise: Promise<Object> = new Promise(resolve => {
     this.resolveFirstLayout = resolve;
   });
 
@@ -253,7 +252,7 @@ export default class ViewShot extends Component<Props> {
     }
   };
 
-  onRef = (ref: ElementRef<*>) => {
+  onRef = (ref: React$ElementRef<*>) => {
     this.root = ref;
   };
 
@@ -272,7 +271,7 @@ export default class ViewShot extends Component<Props> {
     }
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps: Props) {
     if (this.props.captureMode !== undefined) {
       if (this.props.captureMode !== prevProps.captureMode) {
         this.syncCaptureLoop(this.props.captureMode);

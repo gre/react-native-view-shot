@@ -55,7 +55,7 @@ const ModalExample = () => {
             screenshot Modal as part of a captureScreen."
           />
           <Btn onPress={onOpenModal} label="Open Modal" />
-          <Image source={source} style={styles.preview} resizeMode="contain" />
+          <Image fadeDuration={0} source={source} style={styles.preview} resizeMode="contain" />
         </View>
       </SafeAreaView>
 

@@ -13,6 +13,7 @@ import {
   Image,
 } from 'react-native';
 
+import { Buffer } from 'buffer';
 import * as ART from '@react-native-community/art';
 import Slider from '@react-native-community/slider';
 import omit from 'lodash/omit';
@@ -74,6 +75,10 @@ const App = () => {
 
   const onCapture = useCallback(
     res => {
+      if (config.result === 'base64') {
+        const b = Buffer.from(res, 'base64');
+        console.log('buffer of length ' + b.length);
+      }
       setPreviewSource({
         uri: config.result === 'base64' ? 'data:image/' + config.format + ';base64,' + res : res,
       });
