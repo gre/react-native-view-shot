@@ -135,6 +135,7 @@ public class ViewShot implements UIBlock {
     private final Boolean snapshotContentContainer;
     @SuppressWarnings({"unused", "FieldCanBeLocal"})
     private final ReactApplicationContext reactContext;
+    private final boolean handleGLSurfaceView;
     private final Activity currentActivity;
     //endregion
 
@@ -152,6 +153,7 @@ public class ViewShot implements UIBlock {
             final Boolean snapshotContentContainer,
             final ReactApplicationContext reactContext,
             final Activity currentActivity,
+            final boolean handleGLSurfaceView,
             final Promise promise) {
         this.tag = tag;
         this.extension = extension;
@@ -164,6 +166,7 @@ public class ViewShot implements UIBlock {
         this.snapshotContentContainer = snapshotContentContainer;
         this.reactContext = reactContext;
         this.currentActivity = currentActivity;
+        this.handleGLSurfaceView = handleGLSurfaceView;
         this.promise = promise;
     }
     //endregion
@@ -378,7 +381,7 @@ public class ViewShot implements UIBlock {
 
                 c.restoreToCount(countCanvasSave);
                 recycleBitmap(childBitmapBuffer);
-            } else if (child instanceof SurfaceView) {
+            } else if (child instanceof SurfaceView && handleGLSurfaceView) {
                 final SurfaceView svChild = (SurfaceView)child;
                 final CountDownLatch latch = new CountDownLatch(1);
 
