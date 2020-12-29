@@ -2,7 +2,7 @@
 
 Capture a React Native view to an image.
 
-<img src="./example/docs/recursive.gif" width=300 />
+<img src="./.readme/recursive.gif" width=300 />
 
 ## Install
 
