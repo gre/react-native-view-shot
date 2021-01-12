@@ -1,63 +1,59 @@
-using Newtonsoft.Json.Linq;
-using ReactNative.Bridge;
-using ReactNative.UIManager;
+using Microsoft.ReactNative;
+using Microsoft.ReactNative.Managed;
 using System;
-using System.IO;
-using System.Collections.Generic;
+using Windows.UI.Xaml;
 
 namespace RNViewShot
 {
     /// <summary>
     /// A module that allows JS to share data.
     /// </summary>
-    class RNViewShotModule : ReactContextNativeModuleBase
+
+    [ReactModule]
+    class RNViewShot
     {
-        private const string ErrorUnableToSnapshot = "E_UNABLE_TO_SNAPSHOT";
-        private readonly ReactContext _reactContext;
+        private ReactContext _context;
 
-        /// <summary>
-        /// Instantiates the <see cref="RNViewShotModule"/>.
-        /// </summary>
-        public RNViewShotModule(ReactContext reactContext) : base(reactContext)
+        [ReactInitializer]
+        public void Initialize(ReactContext context)
         {
-            this._reactContext = reactContext;
-        }
-
-        /// <summary>
-        /// The name of the native module.
-        /// </summary>
-        public override string Name
-        {
-            get
-            {
-                return "RNViewShot";
-            }
+            _context = context;
         }
 
         [ReactMethod]
-        public void releaseCapture (string uri) {
-          // TODO implement me
+        public void releaseCapture(string uri)
+        {
+            // TODO implement me
         }
 
         [ReactMethod]
-        public void captureRef(int tag, JObject options, IPromise promise)
+        public async void captureRef(int tag, JSValue options, IReactPromise<string> promise)
         {
-            string format = options["format"] != null ? options.Value<string>("format") : "png";
-            double quality = options["quality"] != null ? options.Value<double>("quality") : 1.0;
-            int? width = options["width"] != null ? options.Value<int?>("width") : null;
-            int? height = options["height"] != null ? options.Value<int?>("height") : null;
-            string result = options["result"] != null ? options.Value<string>("result") : "file";
-            string path = options["path"] != null ? options.Value<string>("path") : null;
+            string format = options["format"].IsNull ? "png" : options["format"].AsString();
+            double quality = options["quality"].IsNull ? 1.0 : options["quality"].AsDouble();
+            int width = options["width"].IsNull ? 0 : options["width"].AsInt16();
+            int height = options["height"].IsNull ? 0 : options["height"].AsInt16();
+            string result = options["result"].IsNull ? "tmpfile" : options["result"].AsString();
+            string path = options["path"].IsNull ? null : options["path"].AsString();
 
             if (format != "png" && format != "jpg" && format != "jpeg")
             {
-                promise.Reject(ViewShot.ErrorUnableToSnapshot, "Unsupported image format: " + format + ". Try one of: png | jpg | jpeg");
+                promise.Reject(new ReactError { Code = ViewShot.ErrorUnableToSnapshot, Message = "Unsupported image format: " + format + ". Try one of: png | jpg | jpeg" });
                 return;
             }
 
-            UIManagerModule uiManager = this._reactContext.GetNativeModule<UIManagerModule>();
-            var viewShot = new ViewShot(tag, format, quality, width, height, path, result, promise);
-            uiManager.AddUIBlock(viewShot);
+            try
+            {
+                var control = XamlUIService.FromContext(_context.Handle).ElementFromReactTag(tag) as FrameworkElement;
+
+                ViewShot view = new ViewShot();
+                var output = await view.Execute(control, format, quality, width, height, path, result);
+                promise.Resolve(output);
+            }
+            catch (Exception exc)
+            {
+                promise.Reject(new ReactError { Message = exc.Message, Exception = exc });
+            }
         }
     }
 }

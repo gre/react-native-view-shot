@@ -1,6 +1,4 @@
-﻿using ReactNative.Bridge;
-using ReactNative.UIManager;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -10,54 +8,38 @@ using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 
 namespace RNViewShot
 {
-    public class ViewShot : IUIBlock
+    internal class ViewShot: Control
     {
         public const string ErrorUnableToSnapshot = "E_UNABLE_TO_SNAPSHOT";
-        private int tag;
         private string extension;
         private double quality;
         private int? width;
         private int? height;
         private string path;
-        private string result;
-        private IPromise promise;
 
-        public ViewShot(
-            int tag,
-            string extension,
-            double quality,
-            int? width,
-            int? height,
-            string path,
-            string result,
-            IPromise promise)
+        public ViewShot()
         {
-            this.tag = tag;
+            DefaultStyleKey = typeof(ViewShot);
+        }
+
+        public async Task<string> Execute(FrameworkElement view, string extension, double quality, int width, int height, string path, string result)
+        {
             this.extension = extension;
             this.quality = quality;
             this.width = width;
             this.height = height;
             this.path = path;
-            this.result = result;
-            this.promise = promise;
-        }
 
-        public async void Execute(NativeViewHierarchyManager nvhm)
-        {
-            var view = nvhm.ResolveView(tag) as FrameworkElement;
-            if (view == null)
-            {
-                promise.Reject(ErrorUnableToSnapshot, "No view found with reactTag: " + tag);
-                return;
-            }
+            string output = string.Empty;
 
             try
             {
-                if ("file" == result)
+                if ("tmpfile" == result)
                 {
                     using (var ras = new InMemoryRandomAccessStream())
                     {
@@ -66,7 +48,7 @@ namespace RNViewShot
                         using (var fileStream = await file.OpenAsync(FileAccessMode.ReadWrite))
                         {
                             await RandomAccessStream.CopyAndCloseAsync(ras.GetInputStreamAt(0), fileStream.GetOutputStreamAt(0));
-                            promise.Resolve(file.Path);
+                            output = file.Path;
                         }
                     }
                 }
@@ -78,7 +60,7 @@ namespace RNViewShot
                         var imageBytes = new byte[ras.Size];
                         await ras.AsStream().ReadAsync(imageBytes, 0, imageBytes.Length);
                         string data = Convert.ToBase64String(imageBytes);
-                        promise.Resolve(data);
+                        output = data;
                     }
                 }
                 else if ("data-uri" == result)
@@ -90,19 +72,17 @@ namespace RNViewShot
                         await ras.AsStream().ReadAsync(imageBytes, 0, imageBytes.Length);
                         string data = Convert.ToBase64String(imageBytes);
                         data = "data:image/" + extension + ";base64," + data;
-                        promise.Resolve(data);
+                        output = data;
                     }
-                }
-                else
-                {
-                    promise.Reject(ErrorUnableToSnapshot, "Unsupported result: " + result + ". Try one of: file | base64 | data-uri");
                 }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.ToString());
-                promise.Reject(ErrorUnableToSnapshot, "Failed to capture view snapshot");
+                throw ex;
             }
+
+            return output;
         }
 
         private async Task<BitmapEncoder> CaptureView(FrameworkElement view, IRandomAccessStream stream)
@@ -163,7 +143,7 @@ namespace RNViewShot
         private async Task<StorageFile> GetStorageFile()
         {
             var storageFolder = ApplicationData.Current.LocalFolder;
-            var fileName = string.IsNullOrEmpty(path) ? path : Path.ChangeExtension(Guid.NewGuid().ToString(), extension);                
+            var fileName = !string.IsNullOrEmpty(path) ? path : Path.ChangeExtension(Guid.NewGuid().ToString(), extension);                
             return await storageFolder.CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
         }
     }
