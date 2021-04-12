@@ -67,7 +67,7 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
     CGSize size = [RCTConvert CGSize:options];
     NSString *format = [RCTConvert NSString:options[@"format"]];
     NSString *result = [RCTConvert NSString:options[@"result"]];
-    BOOL renderInContext = [RCTConvert BOOL:options[@"useRenderInContext"]]
+    BOOL renderInContext = [RCTConvert BOOL:options[@"useRenderInContext"]];
     BOOL snapshotContentContainer = [RCTConvert BOOL:options[@"snapshotContentContainer"]];
 
     // Capture image
