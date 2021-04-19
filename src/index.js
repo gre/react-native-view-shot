@@ -5,7 +5,7 @@ const { RNViewShot } = NativeModules;
 import type { ViewStyleProp } from "react-native/Libraries/StyleSheet/StyleSheet";
 import type { LayoutEvent } from "react-native/Libraries/Types/CoreEventTypes";
 
-const neverEndingPromise = new Promise(() => {});
+const neverEndingPromise = new Promise(() => { });
 
 type Options = {
   width?: number,
@@ -75,18 +75,18 @@ function validateOptions(
     options.format = defaultOptions.format;
     errors.push(
       "option format '" +
-        options.format +
-        "' is not in valid formats: " +
-        acceptedFormats.join(" | ")
+      options.format +
+      "' is not in valid formats: " +
+      acceptedFormats.join(" | ")
     );
   }
   if (acceptedResults.indexOf(options.result) === -1) {
     options.result = defaultOptions.result;
     errors.push(
       "option result '" +
-        options.result +
-        "' is not in valid formats: " +
-        acceptedResults.join(" | ")
+      options.result +
+      "' is not in valid formats: " +
+      acceptedResults.join(" | ")
     );
   }
   return { options, errors };
@@ -131,7 +131,7 @@ export function captureRef<T: React$ElementType>(
   if (__DEV__ && errors.length > 0) {
     console.warn(
       "react-native-view-shot: bad options:\n" +
-        errors.map(e => `- ${e}`).join("\n")
+      errors.map(e => `- ${e}`).join("\n")
     );
   }
   return RNViewShot.captureRef(view, options);
@@ -153,7 +153,7 @@ export function captureScreen(optionsObject?: Options): Promise<string> {
   if (__DEV__ && errors.length > 0) {
     console.warn(
       "react-native-view-shot: bad options:\n" +
-        errors.map(e => `- ${e}`).join("\n")
+      errors.map(e => `- ${e}`).join("\n")
     );
   }
   return RNViewShot.captureScreen(options);
@@ -166,6 +166,7 @@ type Props = {
   onLayout?: (e: *) => void,
   onCapture?: (uri: string) => void,
   onCaptureFailure?: (e: Error) => void,
+  pointerEvents?: 'box-none' | 'none' | 'box-only' | 'auto';
   style?: ViewStyleProp
 };
 
@@ -184,12 +185,15 @@ function checkCompatibleProps(props: Props) {
   ) {
     console.warn(
       "react-native-view-shot: result=tmpfile is recommended for captureMode=" +
-        props.captureMode
+      props.captureMode
     );
   }
 }
 
 export default class ViewShot extends Component<Props> {
+  static defaultProps = {
+    pointerEvents: "box-none"
+  }
   static captureRef = captureRef;
   static releaseCapture = releaseCapture;
 
@@ -287,13 +291,14 @@ export default class ViewShot extends Component<Props> {
   }
 
   render() {
-    const { children } = this.props;
+    const { children, pointerEvents, style } = this.props;
     return (
       <View
         ref={this.onRef}
         collapsable={false}
         onLayout={this.onLayout}
-        style={this.props.style}
+        pointerEvents={pointerEvents}
+        style={style}
       >
         {children}
       </View>
