@@ -13,7 +13,8 @@ type Options = {
   format: "png" | "jpg" | "webm" | "raw",
   quality: number,
   result: "tmpfile" | "base64" | "data-uri" | "zip-base64",
-  snapshotContentContainer: boolean
+  snapshotContentContainer: boolean,
+  handleGLSurfaceViewOnAndroid: boolean
 };
 
 if (!RNViewShot) {
@@ -34,7 +35,8 @@ const defaultOptions = {
   format: "png",
   quality: 1,
   result: "tmpfile",
-  snapshotContentContainer: false
+  snapshotContentContainer: false,
+  handleGLSurfaceViewOnAndroid: false
 };
 
 // validate and coerce options
@@ -70,6 +72,9 @@ function validateOptions(
   }
   if (typeof options.snapshotContentContainer !== "boolean") {
     errors.push("option snapshotContentContainer should be a boolean");
+  }
+  if (typeof options.handleGLSurfaceViewOnAndroid !== "boolean") {
+    errors.push("option handleGLSurfaceViewOnAndroid should be a boolean");
   }
   if (acceptedFormats.indexOf(options.format) === -1) {
     options.format = defaultOptions.format;
