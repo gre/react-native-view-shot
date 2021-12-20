@@ -4622,10 +4622,9 @@ react-native-video@^5.0.2:
     prop-types "^15.5.10"
     shaka-player "^2.4.4"
 
-react-native-view-shot@^3.1.1:
-  version "3.1.1"
-  resolved "https://registry.yarnpkg.com/react-native-view-shot/-/react-native-view-shot-3.1.1.tgz#d21ed5414c696f7bfd7544f81eab6a430d6d68f9"
-  integrity sha512-Wx/bxvmcpoqX5u/CTK6PDQoU2Oq8zYdPx9o076Btq7SGHLAhlD6TBNQYG/sWIZ+GualHSbfJHRkWLGLh9pfS9w==
+"react-native-view-shot@github:cristianoccazinsp/react-native-view-shot#c244f176eaafe02d08e821772678c24a85e93e4f":
+  version "3.2.0"
+  resolved "https://codeload.github.com/cristianoccazinsp/react-native-view-shot/tar.gz/c244f176eaafe02d08e821772678c24a85e93e4f"
 
 react-native-webview@^11.0.0:
   version "11.0.0"

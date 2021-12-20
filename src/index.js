@@ -182,10 +182,10 @@ function checkCompatibleProps(props: Props) {
     (props.captureMode === "continuous" || props.captureMode === "update") &&
     props.options &&
     props.options.result &&
-    props.options.result !== "tmpfile"
+    props.options.result !== "file"
   ) {
     console.warn(
-      "react-native-view-shot: result=tmpfile is recommended for captureMode=" +
+      "react-native-view-shot: result=file is recommended for captureMode=" +
         props.captureMode
     );
   }
