@@ -12,7 +12,8 @@ type Options = {
   height?: number,
   format: "png" | "jpg" | "webm" | "raw",
   quality: number,
-  result: "tmpfile" | "base64" | "data-uri" | "zip-base64",
+  result: "file" | "base64" | "data-uri" | "zip-base64",
+  path?: string,
   snapshotContentContainer: boolean
 };
 
@@ -26,14 +27,15 @@ const acceptedFormats = ["png", "jpg"].concat(
   Platform.OS === "android" ? ["webm", "raw"] : []
 );
 
-const acceptedResults = ["tmpfile", "base64", "data-uri"].concat(
+const acceptedResults = ["file", "base64", "data-uri"].concat(
   Platform.OS === "android" ? ["zip-base64"] : []
 );
 
 const defaultOptions = {
   format: "png",
   quality: 1,
-  result: "tmpfile",
+  result: "file",
+  path: "",
   snapshotContentContainer: false
 };
 

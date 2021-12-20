@@ -84,12 +84,12 @@ public class ViewShot implements UIBlock {
     /**
      * Supported Output results.
      */
-    @StringDef({Results.BASE_64, Results.DATA_URI, Results.TEMP_FILE, Results.ZIP_BASE_64})
+    @StringDef({Results.BASE_64, Results.DATA_URI, Results.FILE, Results.ZIP_BASE_64})
     public @interface Results {
         /**
-         * Save screenshot as temp file on device.
+         * Save screenshot as file on device.
          */
-        String TEMP_FILE = "tmpfile";
+        String FILE = "file";
         /**
          * Base 64 encoded image.
          */
@@ -182,10 +182,10 @@ public class ViewShot implements UIBlock {
             stream.setSize(proposeSize(view));
             outputBuffer = stream.innerBuffer();
 
-            if (Results.TEMP_FILE.equals(result) && Formats.RAW == this.format) {
+            if (Results.FILE.equals(result) && Formats.RAW == this.format) {
                 saveToRawFileOnDevice(view);
-            } else if (Results.TEMP_FILE.equals(result) && Formats.RAW != this.format) {
-                saveToTempFileOnDevice(view);
+            } else if (Results.FILE.equals(result) && Formats.RAW != this.format) {
+                saveToFileOnDevice(view);
             } else if (Results.BASE_64.equals(result) || Results.ZIP_BASE_64.equals(result)) {
                 saveToBase64String(view);
             } else if (Results.DATA_URI.equals(result)) {
@@ -199,7 +199,7 @@ public class ViewShot implements UIBlock {
     //endregion
 
     //region Implementation
-    private void saveToTempFileOnDevice(@NonNull final View view) throws IOException {
+    private void saveToFileOnDevice(@NonNull final View view) throws IOException {
         final FileOutputStream fos = new FileOutputStream(output);
         captureView(view, fos);
 
@@ -301,7 +301,7 @@ public class ViewShot implements UIBlock {
      */
     private Point captureView(@NonNull final View view, @NonNull final OutputStream os) throws IOException {
         try {
-            DebugViews.longDebug(TAG, DebugViews.logViewHierarchy(this.currentActivity));
+            //DebugViews.longDebug(TAG, DebugViews.logViewHierarchy(this.currentActivity));
 
             return captureViewImpl(view, os);
         } finally {

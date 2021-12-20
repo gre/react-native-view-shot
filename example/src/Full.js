@@ -69,7 +69,7 @@ const App = () => {
   const [config, setConfig] = useState({
     format: 'png',
     quality: 0.9,
-    result: 'tmpfile',
+    result: 'file',
     snapshotContentContainer: false,
   });
 
@@ -103,7 +103,7 @@ const App = () => {
     ref => {
       (ref ? captureRef(ref, config) : captureScreen(config))
         .then(res =>
-          config.result !== 'tmpfile'
+          config.result !== 'file'
             ? res
             : new Promise((success, failure) =>
                 // just a test to ensure res can be used in Image.getSize
@@ -241,7 +241,7 @@ const App = () => {
                 selectedValue={config.result}
                 onValueChange={r => setConfig({ ...config, result: r })}
               >
-                <Picker.Item label="tmpfile" value="tmpfile" />
+                <Picker.Item label="file" value="file" />
                 <Picker.Item label="base64" value="base64" />
                 <Picker.Item label="zip-base64 (Android Only)" value="zip-base64" />
                 <Picker.Item label="data URI" value="data-uri" />
