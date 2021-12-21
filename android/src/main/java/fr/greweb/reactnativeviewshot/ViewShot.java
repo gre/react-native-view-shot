@@ -11,6 +11,7 @@ import android.net.Uri;
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.StringDef;
+
 import android.util.Base64;
 import android.util.Log;
 import android.view.TextureView;
@@ -28,8 +29,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -182,15 +184,7 @@ public class ViewShot implements UIBlock {
             stream.setSize(proposeSize(view));
             outputBuffer = stream.innerBuffer();
 
-            if (Results.FILE.equals(result) && Formats.RAW == this.format) {
-                saveToRawFileOnDevice(view);
-            } else if (Results.FILE.equals(result) && Formats.RAW != this.format) {
-                saveToFileOnDevice(view);
-            } else if (Results.BASE_64.equals(result) || Results.ZIP_BASE_64.equals(result)) {
-                saveToBase64String(view);
-            } else if (Results.DATA_URI.equals(result)) {
-                saveToDataUriString(view);
-            }
+            new Thread(new AsyncExecutor(this, view)).start();
         } catch (final Throwable ex) {
             Log.e(TAG, "Failed to capture view snapshot", ex);
             promise.reject(ERROR_UNABLE_TO_SNAPSHOT, "Failed to capture view snapshot");
@@ -218,7 +212,7 @@ public class ViewShot implements UIBlock {
         final int length = os.size();
         final String resolution = String.format(Locale.US, "%d:%d|", size.x, size.y);
 
-        fos.write(resolution.getBytes(Charset.forName("US-ASCII")));
+        fos.write(resolution.getBytes(StandardCharsets.US_ASCII));
         fos.write(outputBuffer, 0, length);
         fos.close();
 
@@ -302,7 +296,6 @@ public class ViewShot implements UIBlock {
     private Point captureView(@NonNull final View view, @NonNull final OutputStream os) throws IOException {
         try {
             //DebugViews.longDebug(TAG, DebugViews.logViewHierarchy(this.currentActivity));
-
             return captureViewImpl(view, os);
         } finally {
             os.close();
@@ -450,7 +443,7 @@ public class ViewShot implements UIBlock {
     /**
      * Reusable bitmaps for screenshots.
      */
-    private static final Set<Bitmap> weakBitmaps = Collections.newSetFromMap(new WeakHashMap<Bitmap, Boolean>());
+    private static final Set<Bitmap> weakBitmaps = Collections.newSetFromMap(new WeakHashMap<>());
 
     /**
      * Propose allocation size of the array output stream.
@@ -571,6 +564,43 @@ public class ViewShot implements UIBlock {
         }
 
     }
-    //endregion
 
+    public static class AsyncExecutor implements Runnable {
+        final private ViewShot instance;
+        final private WeakReference<View> weakView;
+
+        protected AsyncExecutor(ViewShot instance, View view) {
+            super();
+            this.instance = instance;
+            this.weakView = new WeakReference<>(view);
+        }
+
+        @Override
+        public void run() {
+            if (instance == null || weakView == null) {
+                return;
+            }
+
+            View view = weakView.get();
+            if (view == null) {
+                return;
+            }
+
+            try{
+                if (Results.FILE.equals(instance.result) && Formats.RAW == instance.format) {
+                    instance.saveToRawFileOnDevice(view);
+                } else if (Results.FILE.equals(instance.result)) {
+                    instance.saveToFileOnDevice(view);
+                } else if (Results.BASE_64.equals(instance.result) || Results.ZIP_BASE_64.equals(instance.result)) {
+                    instance.saveToBase64String(view);
+                } else if (Results.DATA_URI.equals(instance.result)) {
+                    instance.saveToDataUriString(view);
+                }
+            } catch (final Throwable ex) {
+                Log.e(TAG, "Failed to capture view snapshot", ex);
+                instance.promise.reject(ERROR_UNABLE_TO_SNAPSHOT, "Failed to capture view snapshot");
+            }
+        }
+    }
+    //endregion
 }
