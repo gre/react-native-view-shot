@@ -2,8 +2,6 @@ package fr.greweb.reactnativeviewshot;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.net.Uri;
@@ -13,10 +11,7 @@ import androidx.annotation.StringDef;
 
 import android.util.Base64;
 import android.util.Log;
-import android.view.TextureView;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.ViewParent;
 import android.widget.ScrollView;
 
 import com.facebook.react.bridge.Promise;
@@ -31,17 +26,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Locale;
 import java.util.zip.Deflater;
-
 import javax.annotation.Nullable;
 
-import static android.view.View.VISIBLE;
 
 /**
  * Snapshot utility class allow to screenshot a view.
@@ -307,28 +296,6 @@ public class ViewShot implements UIBlock {
         });
     }
 
-    @NonNull
-    private List<View> getAllChildren(@NonNull final View v) {
-        if (!(v instanceof ViewGroup)) {
-            final ArrayList<View> viewArrayList = new ArrayList<>();
-            viewArrayList.add(v);
-
-            return viewArrayList;
-        }
-
-        final ArrayList<View> result = new ArrayList<>();
-
-        ViewGroup viewGroup = (ViewGroup) v;
-        for (int i = 0; i < viewGroup.getChildCount(); i++) {
-            View child = viewGroup.getChildAt(i);
-
-            //Do not add any parents, just add child elements
-            result.addAll(getAllChildren(child));
-        }
-
-        return result;
-    }
-
     /**
      * Screenshot a view and return the captured bitmap or error
      * in the callback. Certain operations may be performed on a background thread,
@@ -360,7 +327,6 @@ public class ViewShot implements UIBlock {
 
             final int h = hh;
             final Point resolution = new Point(w, h);
-            final Bitmap bitmap = getBitmapForScreenshot(w, h);
 
             final Paint paint = new Paint();
             paint.setAntiAlias(true);
@@ -370,34 +336,20 @@ public class ViewShot implements UIBlock {
             // Uncomment next line if you want to wait attached android studio debugger:
             //   Debug.waitForDebugger();
 
-            final Canvas c = new Canvas(bitmap);
-            view.draw(c);
-
-            //after view is drawn, go through children
-            final List<View> childrenList = getAllChildren(view);
-
-            for (final View child : childrenList) {
-                // skip any child that we don't know how to process
-                if (!(child instanceof TextureView)) continue;
-
-                // skip all invisible to user child views
-                if (child.getVisibility() != VISIBLE) continue;
-
-                final TextureView tvChild = (TextureView) child;
-                tvChild.setOpaque(false); // <-- switch off background fill
-
-                final Bitmap childBitmapBuffer = tvChild.getBitmap(getBitmapForScreenshot(child.getWidth(), child.getHeight()));
-
-                final int countCanvasSave = c.save();
-                applyTransformations(c, view, child);
-
-                // due to re-use of bitmaps for screenshot, we can get bitmap that is bigger in size than requested
-                c.drawBitmap(childBitmapBuffer, 0, 0, paint);
-
-                c.restoreToCount(countCanvasSave);
-
-                childBitmapBuffer.recycle();
+            final boolean cacheEnabled = view.isDrawingCacheEnabled();
+            Bitmap viewBitmap;
+            try {
+                if (!cacheEnabled) {
+                    view.setDrawingCacheEnabled(true);
+                }
+                viewBitmap = Bitmap.createBitmap(view.getDrawingCache());
+            } finally {
+                if (!cacheEnabled) {
+                    view.setDrawingCacheEnabled(false);
+                }
             }
+
+            final Bitmap bitmap = viewBitmap;
 
             // this can be called asynchronously
             new Thread(() -> {
@@ -452,50 +404,6 @@ public class ViewShot implements UIBlock {
     }
 
     /**
-     * Concat all the transformation matrix's from parent to child.
-     */
-    @NonNull
-    @SuppressWarnings("UnusedReturnValue")
-    private Matrix applyTransformations(final Canvas c, @NonNull final View root, @NonNull final View child) {
-        final Matrix transform = new Matrix();
-        final LinkedList<View> ms = new LinkedList<>();
-
-        // find all parents of the child view
-        View iterator = child;
-        do {
-            ms.add(iterator);
-
-            ViewParent parent = iterator.getParent();
-            if (parent instanceof View) {
-                iterator = (View) iterator.getParent();
-            } else {
-                break;
-            }
-        } while (iterator != root);
-
-        // apply transformations from parent --> child order
-        Collections.reverse(ms);
-
-        for (final View v : ms) {
-            c.save();
-
-            // apply each view transformations, so each child will be affected by them
-            final float dx = v.getLeft() + ((v != child) ? v.getPaddingLeft() : 0) + v.getTranslationX();
-            final float dy = v.getTop() + ((v != child) ? v.getPaddingTop() : 0) + v.getTranslationY();
-            c.translate(dx, dy);
-            c.rotate(v.getRotation(), v.getPivotX(), v.getPivotY());
-            c.scale(v.getScaleX(), v.getScaleY());
-
-            // compute the matrix just for any future use
-            transform.postTranslate(dx, dy);
-            transform.postRotate(v.getRotation(), v.getPivotX(), v.getPivotY());
-            transform.postScale(v.getScaleX(), v.getScaleY());
-        }
-
-        return transform;
-    }
-
-    /**
      * Propose allocation size of the array output stream.
      */
     private static int proposeSize(@NonNull final View view) {
@@ -503,11 +411,6 @@ public class ViewShot implements UIBlock {
         final int h = view.getHeight();
 
         return Math.min(w * h * ARGB_SIZE, 32);
-    }
-
-    @NonNull
-    private static Bitmap getBitmapForScreenshot(final int width, final int height) {
-        return Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
     }
 
 //    private static void recycleBitmap(@NonNull final Bitmap bitmap) {
