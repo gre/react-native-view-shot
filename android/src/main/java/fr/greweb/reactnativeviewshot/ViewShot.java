@@ -2,6 +2,7 @@ package fr.greweb.reactnativeviewshot;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.net.Uri;
@@ -328,68 +329,63 @@ public class ViewShot implements UIBlock {
             final int h = hh;
             final Point resolution = new Point(w, h);
 
+            // Uncomment next line if you want to wait attached android studio debugger:
+            //   Debug.waitForDebugger();
+
+            Bitmap bitmap = getBitmapForScreenshot(w, h);
+
             final Paint paint = new Paint();
             paint.setAntiAlias(true);
             paint.setFilterBitmap(true);
             paint.setDither(true);
-
-            // Uncomment next line if you want to wait attached android studio debugger:
-            //   Debug.waitForDebugger();
-
-            final boolean cacheEnabled = view.isDrawingCacheEnabled();
-            Bitmap viewBitmap;
-            try {
-                if (!cacheEnabled) {
-                    view.setDrawingCacheEnabled(true);
-                }
-                viewBitmap = Bitmap.createBitmap(view.getDrawingCache());
-            } finally {
-                if (!cacheEnabled) {
-                    view.setDrawingCacheEnabled(false);
-                }
-            }
-
-            final Bitmap bitmap = viewBitmap;
+            final Canvas c = new Canvas(bitmap);
+            view.draw(c);
 
             // this can be called asynchronously
-            new Thread(() -> {
-                Bitmap rBitmap = bitmap;
-                try {
-                    if (width != null && height != null && (width != w || height != h)) {
-                        final Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, width, height, true);
-                        bitmap.recycle();
-                        rBitmap = scaledBitmap;
-                    }
+            try {
+                new Thread(() -> {
+                    Bitmap rBitmap = bitmap;
 
-                    // special case, just save RAW ARGB array without any compression
-                    if (Formats.RAW == format && os instanceof ReusableByteArrayOutputStream) {
-                        final int total = w * h * ARGB_SIZE;
-                        final ReusableByteArrayOutputStream rbaos = (ReusableByteArrayOutputStream)os;
-                        rBitmap.copyPixelsToBuffer(rbaos.asBuffer(total));
-                        rbaos.setSize(total);
-                    } else {
-                        final Bitmap.CompressFormat cf = Formats.mapping[format];
-                        rBitmap.compress(cf, (int) (100.0 * quality), os);
-                    }
-
-                    rBitmap.recycle();
-                    onCapture.onResult(resolution);  // return image width and height
-                } catch (Exception ex) {
-                    if (!bitmap.isRecycled()) {
-                        bitmap.recycle();
-                    }
-                    if (bitmap != rBitmap && !rBitmap.isRecycled()) {
-                        rBitmap.recycle();
-                    }
-                    onCapture.onError(ex);
-                } finally {
                     try {
-                        os.close();
-                    } catch (IOException ioex) {
-                        Log.e(TAG, "Failed to close stream: " + ioex.getMessage(), ioex);
+                        if (width != null && height != null && (width != w || height != h)) {
+                            final Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, width, height, true);
+                            bitmap.recycle();
+                            rBitmap = scaledBitmap;
+                        }
+
+                        // special case, just save RAW ARGB array without any compression
+                        if (Formats.RAW == format && os instanceof ReusableByteArrayOutputStream) {
+                            final int total = w * h * ARGB_SIZE;
+                            final ReusableByteArrayOutputStream rbaos = (ReusableByteArrayOutputStream) os;
+                            rBitmap.copyPixelsToBuffer(rbaos.asBuffer(total));
+                            rbaos.setSize(total);
+                        } else {
+                            final Bitmap.CompressFormat cf = Formats.mapping[format];
+                            rBitmap.compress(cf, (int) (100.0 * quality), os);
+                        }
+
+                        rBitmap.recycle();
+                        onCapture.onResult(resolution);  // return image width and height
+                    } catch (Exception ex) {
+                        if (!bitmap.isRecycled()) {
+                            bitmap.recycle();
+                        }
+                        if (bitmap != rBitmap && !rBitmap.isRecycled()) {
+                            rBitmap.recycle();
+                        }
+                        onCapture.onError(ex);
+                    } finally {
+                        try {
+                            os.close();
+                        } catch (IOException ioex) {
+                            Log.e(TAG, "Failed to close stream: " + ioex.getMessage(), ioex);
+                        }
                     }
-                }
-            }).start();
+                }).start();
+            } catch (Exception ex){
+              bitmap.recycle();
+              throw ex;
+            }
 
         } catch (Exception ex) {
             // if we failed right away and not in the async work
@@ -478,6 +474,10 @@ public class ViewShot implements UIBlock {
                     MAX_ARRAY_SIZE;
         }
 
+    }
+    @NonNull
+    private static Bitmap getBitmapForScreenshot(final int width, final int height) {
+        return Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
     }
 
     public static abstract class OnViewCaptured {
