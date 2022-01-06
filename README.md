@@ -98,6 +98,8 @@ class ExampleCaptureScrollViewContent extends Component {
 
 ### Functional Component Example
 ```js
+import ViewShot from "react-native-view-shot";
+
 function ExampleCaptureOnMountManually() {
   const viewShotRef = useRef(null);
 
