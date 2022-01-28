@@ -1,51 +1,28 @@
+def DEFAULT_COMPILE_SDK_VERSION = 29
+def DEFAULT_TARGET_SDK_VERSION = 29
+
 def safeExtGet(prop, fallback) {
     rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
 }
 
-buildscript {
-    /* In case of submodule usage, do not try to apply own repositories and plugins,
-        root project is responsible for that. */
-    if (rootProject.buildDir == project.buildDir) {
-        repositories {
-            google()
-            mavenCentral()
-        }
-        dependencies {
-            classpath 'com.android.tools.build:gradle:4.2.2'
-        }
-    }
-}
-
 apply plugin: 'com.android.library'
 
-android {
-    compileSdkVersion safeExtGet('compileSdkVersion', 28)
 
-    compileOptions {
-      sourceCompatibility JavaVersion.VERSION_1_8
-      targetCompatibility JavaVersion.VERSION_1_8
-    }
+android {
+    compileSdkVersion safeExtGet('compileSdkVersion', DEFAULT_COMPILE_SDK_VERSION)
 
     defaultConfig {
         minSdkVersion safeExtGet('minSdkVersion', 16)
-        targetSdkVersion safeExtGet('targetSdkVersion', 28)
-    }
-
-    lintOptions {
-        abortOnError false
+        targetSdkVersion safeExtGet('targetSdkVersion', DEFAULT_TARGET_SDK_VERSION)
+        versionCode 1
+        versionName "1.0"
     }
 }
 
-repositories {
-    maven {
-        // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
-        url "$rootDir/../node_modules/react-native/android"
-    }
-    google()
-    mavenLocal()
+repositories{
     mavenCentral()
 }
 
 dependencies {
-    api "com.facebook.react:react-native:${safeExtGet('reactNative', '+')}"
+    implementation "com.facebook.react:react-native:${safeExtGet('reactNativeVersion', '+')}"
 }
