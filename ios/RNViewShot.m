@@ -53,7 +53,7 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
 
     if ([target intValue] == -1) {
       UIWindow *window = [[UIApplication sharedApplication] keyWindow];
-      view = window.rootViewController.view;
+      view = window;
     } else {
       view = viewRegistry[target];
     }
