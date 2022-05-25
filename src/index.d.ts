@@ -32,13 +32,15 @@ declare module 'react-native-view-shot' {
         quality?: number;
         /**
          * the method you want to use to save the snapshot, one of:
-         " - tmpfile" (default): save to a temporary file (that will only exist for as long as the app is running).
-         " - base64": encode as base64 and returns the raw string. Use only with small images as this may result of
+         " - file (default): save to a file (temporary or the one provided in `path`).
+         " - base64: encode as base64 and returns the raw string. Use only with small images as this may result of
          *   lags (the string is sent over the bridge). N.B. This is not a data uri, use data-uri instead.
-         " - data-uri": same as base64 but also includes the Data URI scheme header.
+         " - data-uri: same as base64 but also includes the Data URI scheme header.
          " - zip-base64: compress data with zip deflate algorithm and than convert to base64 and return as a raw string."
          */
-        result?: 'tmpfile' | 'base64' | 'data-uri' | 'zip-base64';
+        result?: 'file' | 'base64' | 'data-uri' | 'zip-base64';
+        /** The path to save the file to if using `file` */
+        path?: string,
         /**
          * if true and when view is a ScrollView, the "content container" height will be evaluated instead of the
          * container height.
@@ -93,12 +95,7 @@ declare module 'react-native-view-shot' {
     export function captureRef<T>(viewRef: number | ReactInstance | RefObject<T>, options?: CaptureOptions): Promise<string>
 
     /**
-     * This method release a previously captured uri. For tmpfile it will clean them out, for other result types it
-     * just won't do anything.
-     *
-     * NB: the tmpfile captures are automatically cleaned out after the app closes, so you might not have to worry
-     *  about this unless advanced usecases. The ViewShot component will use it each time you capture more than once
-     * (useful for continuous capture to not leak files).
+     * This method release a previously captured uri.
      * @param {string} uri
      */
     export function releaseCapture(uri: string): void
