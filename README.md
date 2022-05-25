@@ -96,6 +96,27 @@ class ExampleCaptureScrollViewContent extends Component {
 }
 ```
 
+### Functional Component Example
+```js
+import ViewShot from "react-native-view-shot";
+
+function ExampleCaptureOnMountManually() {
+  const viewShotRef = useRef(null);
+
+  useEffect(() => {
+    viewShotRef.current.capture().then((uri) => {
+      console.log('do something with ', uri);
+    });
+  }, []);
+
+  return (
+    <ViewShot ref={viewShotRef} options={{ format: 'jpg', quality: 0.9 }}>
+      <Text>...Something to rasterize...</Text>
+    </ViewShot>
+  );
+}
+```
+
 **Props:**
 
 - **`children`**: the actual content to rasterize.
