@@ -31,10 +31,14 @@ RCT_EXPORT_METHOD(captureScreen: (NSDictionary *)options
 
 RCT_EXPORT_METHOD(releaseCapture:(nonnull NSString *)uri)
 {
+  NSString *directory = [NSTemporaryDirectory() stringByAppendingPathComponent:@"ReactNative"];
+  // Ensure it's a valid file in the tmp directory
+  if ([uri hasPrefix:directory] && ![uri isEqualToString:directory]) {
     NSFileManager *fileManager = [NSFileManager new];
     if ([fileManager fileExistsAtPath:uri]) {
       [fileManager removeItemAtPath:uri error:NULL];
     }
+  }
 }
 
 RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
@@ -63,8 +67,7 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
     CGSize size = [RCTConvert CGSize:options];
     NSString *format = [RCTConvert NSString:options[@"format"]];
     NSString *result = [RCTConvert NSString:options[@"result"]];
-    NSString *path = [RCTConvert NSString:options[@"path"]];
-      
+    BOOL renderInContext = [RCTConvert BOOL:options[@"useRenderInContext"]];
     BOOL snapshotContentContainer = [RCTConvert BOOL:options[@"snapshotContentContainer"]];
 
     // Capture image
@@ -105,7 +108,15 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
 
     UIGraphicsBeginImageContextWithOptions(size, NO, 0);
     
-    success = [rendered drawViewHierarchyInRect:(CGRect){CGPointZero, size} afterScreenUpdates:YES];
+    if (renderInContext) {
+      // this comes with some trade-offs such as inability to capture gradients or scrollview's content in full but it works for large views
+      [rendered.layer renderInContext: UIGraphicsGetCurrentContext()];
+      success = YES;
+    }
+    else {
+      // this doesn't work for large views and reports incorrect success even though the image is blank
+      success = [rendered drawViewHierarchyInRect:(CGRect){CGPointZero, size} afterScreenUpdates:YES];
+    }
     UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
 
@@ -150,15 +161,11 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
         res = [NSString stringWithFormat:@"data:image/%@;base64,%@", imageFormat, base64];
       }
       else {
-        // Save to path or temp file
-        NSString *savePath = path;
-        if (!path || [path length] == 0) {
-            savePath = RCTTempFilePath(format, &error);
-        }
-          
-        if (savePath && !error) {
-          if ([data writeToFile:savePath options:(NSDataWritingOptions)0 error:&error]) {
-            res = savePath;
+        // Save to a temp file
+        NSString *path = RCTTempFilePath(format, &error);
+        if (path && !error) {
+          if ([data writeToFile:path options:(NSDataWritingOptions)0 error:&error]) {
+            res = path;
           }
         }
       }

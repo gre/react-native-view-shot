@@ -39,7 +39,7 @@ namespace RNViewShot
 
             try
             {
-                if ("file" == result)
+                if ("tmpfile" == result)
                 {
                     using (var ras = new InMemoryRandomAccessStream())
                     {
@@ -121,7 +121,7 @@ namespace RNViewShot
                 (uint)targetBitmap.PixelHeight,
                 displayInformation.LogicalDpi,
                 displayInformation.LogicalDpi,
-                pixelBuffer.ToArray());
+                pixelBuffer.ToArray());                
 
 
             if (width != null && height != null && (width != w || height != h))
@@ -137,13 +137,13 @@ namespace RNViewShot
 
             await encoder.FlushAsync();
 
-            return encoder;
+            return encoder;            
         }
 
         private async Task<StorageFile> GetStorageFile()
         {
             var storageFolder = ApplicationData.Current.LocalFolder;
-            var fileName = !string.IsNullOrEmpty(path) ? path : Path.ChangeExtension(Guid.NewGuid().ToString(), extension);
+            var fileName = !string.IsNullOrEmpty(path) ? path : Path.ChangeExtension(Guid.NewGuid().ToString(), extension);                
             return await storageFolder.CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
         }
     }

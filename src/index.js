@@ -12,8 +12,7 @@ type Options = {
   height?: number,
   format: "png" | "jpg" | "webm" | "raw",
   quality: number,
-  result: "file" | "base64" | "data-uri" | "zip-base64",
-  path?: string,
+  result: "tmpfile" | "base64" | "data-uri" | "zip-base64",
   snapshotContentContainer: boolean
 };
 
@@ -27,15 +26,14 @@ const acceptedFormats = ["png", "jpg"].concat(
   Platform.OS === "android" ? ["webm", "raw"] : []
 );
 
-const acceptedResults = ["file", "base64", "data-uri"].concat(
+const acceptedResults = ["tmpfile", "base64", "data-uri"].concat(
   Platform.OS === "android" ? ["zip-base64"] : []
 );
 
 const defaultOptions = {
   format: "png",
   quality: 1,
-  result: "file",
-  path: "",
+  result: "tmpfile",
   snapshotContentContainer: false
 };
 
@@ -182,10 +180,10 @@ function checkCompatibleProps(props: Props) {
     (props.captureMode === "continuous" || props.captureMode === "update") &&
     props.options &&
     props.options.result &&
-    props.options.result !== "file"
+    props.options.result !== "tmpfile"
   ) {
     console.warn(
-      "react-native-view-shot: result=file is recommended for captureMode=" +
+      "react-native-view-shot: result=tmpfile is recommended for captureMode=" +
         props.captureMode
     );
   }

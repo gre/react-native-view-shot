@@ -34,7 +34,7 @@ namespace RNViewShot
             double quality = options["quality"].IsNull ? 1.0 : options["quality"].AsDouble();
             int width = options["width"].IsNull ? 0 : options["width"].AsInt16();
             int height = options["height"].IsNull ? 0 : options["height"].AsInt16();
-            string result = options["result"].IsNull ? "file" : options["result"].AsString();
+            string result = options["result"].IsNull ? "tmpfile" : options["result"].AsString();
             string path = options["path"].IsNull ? null : options["path"].AsString();
 
             if (format != "png" && format != "jpg" && format != "jpeg")

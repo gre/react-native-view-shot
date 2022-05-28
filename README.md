@@ -151,17 +151,16 @@ Returns a Promise of the image URI.
   - **`format`** _(string)_: either `png` or `jpg` or `webm` (Android). Defaults to `png`.
   - **`quality`** _(number)_: the quality. 0.0 - 1.0 (default). (only available on lossy formats like jpg)
   - **`result`** _(string)_, the method you want to use to save the snapshot, one of:
-    - `"file"` (default): save to a temporary file if path is not given, or to the given path.
+    - `"tmpfile"` (default): save to a temporary file _(that will only exist for as long as the app is running)_.
     - `"base64"`: encode as base64 and returns the raw string. Use only with small images as this may result of lags (the string is sent over the bridge). _N.B. This is not a data uri, use `data-uri` instead_.
     - `"data-uri"`: same as `base64` but also includes the [Data URI scheme](https://en.wikipedia.org/wiki/Data_URI_scheme) header.
-  - **`path`** _(str or empty)_: if using `"file"`, this is the path the file will be saved to, or a path will be provided automatically into the cache folder. If a path is given, you are responsible of making it a valid folder and using a valid file name and extension.
   - **`snapshotContentContainer`** _(bool)_: if true and when view is a ScrollView, the "content container" height will be evaluated instead of the container height.
-
 
 ## `releaseCapture(uri)`
 
-This method release a previously captured `uri`.
+This method release a previously captured `uri`. For tmpfile it will clean them out, for other result types it just won't do anything.
 
+NB: the tmpfile captures are automatically cleaned out after the app closes, so you might not have to worry about this unless advanced usecases. The `ViewShot` component will use it each time you capture more than once (useful for continuous capture to not leak files).
 
 ## `captureScreen()` Android and iOS Only
 
@@ -235,7 +234,7 @@ Advantages:
 
 - no compression, so its supper quick. Screenshot taking is less than 16ms;
 
-RAW format supported for `zip-base64`, `base64` and `file` result types.
+RAW format supported for `zip-base64`, `base64` and `tmpfile` result types.
 
 RAW file on disk saved in format: `${width}:${height}|${base64}` string.
 
