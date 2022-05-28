@@ -81,8 +81,8 @@ public class RNViewShotModule extends ReactContextBaseJavaModule {
                 : Formats.PNG;
 
         final double quality = options.getDouble("quality");
-        final Integer scaleWidth = options.hasKey("width") ? (int) (dm.density * options.getDouble("width")) : null;
-        final Integer scaleHeight = options.hasKey("height") ? (int) (dm.density * options.getDouble("height")) : null;
+        final Integer scaleWidth = options.hasKey("width") ? options.getInt("width") : null;
+        final Integer scaleHeight = options.hasKey("height") ? options.getInt("height") : null;
         final String resultStreamFormat = options.getString("result");
         final String fileName = options.hasKey("fileName") ? options.getString("fileName") : null;
         final Boolean snapshotContentContainer = options.getBoolean("snapshotContentContainer");
