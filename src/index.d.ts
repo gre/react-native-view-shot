@@ -9,7 +9,7 @@
  */
 
 declare module 'react-native-view-shot' {
-    import { Component, ReactInstance, RefObject } from 'react'
+    import { Component, ReactInstance, RefObject, ReactNode } from 'react'
     import { ViewStyle } from 'react-native'
 
     export interface CaptureOptions {
@@ -58,6 +58,10 @@ declare module 'react-native-view-shot' {
          *   use-cases.
          */
         captureMode?: 'mount' | 'continuous' | 'update';
+        /**
+         * children of ViewShot component
+         */
+        children?: ReactNode;
         /**
          * when a captureMode is defined, this callback will be called with the capture result.
          * @param {string} uri
