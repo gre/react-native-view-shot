@@ -44,7 +44,7 @@ function ExampleCaptureOnMountManually {
   }, []);
 
   return (
-    <ViewShot ref={ref} options={{ fileName: "Your-File-Name" format: "jpg", quality: 0.9 }}>
+    <ViewShot ref={ref} options={{ fileName: "Your-File-Name", format: "jpg", quality: 0.9 }}>
       <Text>...Something to rasterize...</Text>
     </ViewShot>
   );
