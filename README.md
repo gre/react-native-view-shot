@@ -133,7 +133,7 @@ Returns a Promise of the image URI.
 
 - **`view`** is a reference to a React Native component.
 - **`options`** may include:
-  - **`fileName`** _(string)_: the file name of the file.
+  - **`fileName`** _(string)_: the file name of the file. Must be at least 3 characters long.
   - **`width`** / **`height`** _(number)_: the width and height of the final image (resized from the View bound. don't provide it if you want the original pixel size).
   - **`format`** _(string)_: either `png` or `jpg` or `webm` (Android). Defaults to `png`.
   - **`quality`** _(number)_: the quality. 0.0 - 1.0 (default). (only available on lossy formats like jpg)
