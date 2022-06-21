@@ -14,6 +14,10 @@ declare module 'react-native-view-shot' {
 
     export interface CaptureOptions {
         /**
+         * (Android only) name of the file to be saved. Must be at least 3 characters long.
+         */
+        fileName?: string;
+        /**
          * (number): the width and height of the final image (resized from the View bound. don't provide it if you want
          * the original pixel size).
          */
