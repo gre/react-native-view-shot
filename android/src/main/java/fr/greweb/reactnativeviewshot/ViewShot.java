@@ -8,7 +8,8 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.net.Uri;
-
+import android.os.Build;
+import android.os.Handler;
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.StringDef;
@@ -18,6 +19,8 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Base64;
 import android.util.Log;
+import android.view.PixelCopy;
+import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -44,6 +47,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.Deflater;
 
 import javax.annotation.Nullable;
@@ -74,6 +79,7 @@ public class ViewShot implements UIBlock, LifecycleEventListener {
 
     private HandlerThread mBgThread;
     private Handler mBgHandler;
+    private static final int SURFACE_VIEW_READ_PIXELS_TIMEOUT = 5;
 
     @Override
     public void onHostResume() {
@@ -157,6 +163,7 @@ public class ViewShot implements UIBlock, LifecycleEventListener {
     private final Boolean snapshotContentContainer;
     @SuppressWarnings({"unused", "FieldCanBeLocal"})
     private final ReactApplicationContext reactContext;
+    private final boolean handleGLSurfaceView;
     private final Activity currentActivity;
     //endregion
 
@@ -174,6 +181,7 @@ public class ViewShot implements UIBlock, LifecycleEventListener {
             final Boolean snapshotContentContainer,
             final ReactApplicationContext reactContext,
             final Activity currentActivity,
+            final boolean handleGLSurfaceView,
             final Promise promise) {
         this.tag = tag;
         this.extension = extension;
@@ -186,6 +194,7 @@ public class ViewShot implements UIBlock, LifecycleEventListener {
         this.snapshotContentContainer = snapshotContentContainer;
         this.reactContext = reactContext;
         this.currentActivity = currentActivity;
+        this.handleGLSurfaceView = handleGLSurfaceView;
         this.promise = promise;
 
         reactContext.addLifecycleEventListener(this);
@@ -405,26 +414,50 @@ public class ViewShot implements UIBlock, LifecycleEventListener {
 
         for (final View child : childrenList) {
             // skip any child that we don't know how to process
-            if (!(child instanceof TextureView)) continue;
+            if (child instanceof TextureView) {
+                // skip all invisible to user child views
+                if (child.getVisibility() != VISIBLE) continue;
 
-            // skip all invisible to user child views
-            if (child.getVisibility() != VISIBLE) continue;
+                final TextureView tvChild = (TextureView) child;
+                tvChild.setOpaque(false); // <-- switch off background fill
 
-            final TextureView tvChild = (TextureView) child;
-            tvChild.setOpaque(false); // <-- switch off background fill
+                // NOTE (olku): get re-usable bitmap. TextureView should use bitmaps with matching size,
+                // otherwise content of the TextureView will be scaled to provided bitmap dimensions
+                final Bitmap childBitmapBuffer = tvChild.getBitmap(getExactBitmapForScreenshot(child.getWidth(), child.getHeight()));
 
-            // NOTE (olku): get re-usable bitmap. TextureView should use bitmaps with matching size,
-            // otherwise content of the TextureView will be scaled to provided bitmap dimensions
-            final Bitmap childBitmapBuffer = tvChild.getBitmap(getExactBitmapForScreenshot(child.getWidth(), child.getHeight()));
+                final int countCanvasSave = c.save();
+                applyTransformations(c, view, child);
 
-            final int countCanvasSave = c.save();
-            applyTransformations(c, view, child);
+                // due to re-use of bitmaps for screenshot, we can get bitmap that is bigger in size than requested
+                c.drawBitmap(childBitmapBuffer, 0, 0, paint);
 
-            // due to re-use of bitmaps for screenshot, we can get bitmap that is bigger in size than requested
-            c.drawBitmap(childBitmapBuffer, 0, 0, paint);
+                c.restoreToCount(countCanvasSave);
+                recycleBitmap(childBitmapBuffer);
+            } else if (child instanceof SurfaceView && handleGLSurfaceView) {
+                final SurfaceView svChild = (SurfaceView)child;
+                final CountDownLatch latch = new CountDownLatch(1);
 
-            c.restoreToCount(countCanvasSave);
-            recycleBitmap(childBitmapBuffer);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    try {
+                        PixelCopy.request(svChild, bitmap, new PixelCopy.OnPixelCopyFinishedListener() {
+
+                            @Override
+                            public void onPixelCopyFinished(int copyResult) {
+                                latch.countDown();
+                            }
+                        }, new Handler());
+
+                        latch.await(SURFACE_VIEW_READ_PIXELS_TIMEOUT, TimeUnit.SECONDS);
+                    } catch (Exception e) {
+                        Log.e(TAG, "Cannot PixelCopy for " + svChild, e);
+                    }
+                } else {
+                    Bitmap cache = svChild.getDrawingCache();
+                    if (cache != null) {
+                        c.drawBitmap(svChild.getDrawingCache(), 0, 0, paint);
+                    }
+                }
+            }
         }
 
         if (width != null && height != null && (width != w || height != h)) {
