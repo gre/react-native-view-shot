@@ -416,11 +416,6 @@ public class ViewShot implements UIBlock, LifecycleEventListener {
         //after view is drawn, go through children
         final List<View> childrenList = getAllChildren(view);
 
-        int[] point = new int[2];
-        view.getLocationInWindow(point);
-        final int rootX = point[0];
-        final int rootY = point[1];
-
         for (final View child : childrenList) {
             // skip any child that we don't know how to process
             if (child instanceof TextureView) {
@@ -452,9 +447,10 @@ public class ViewShot implements UIBlock, LifecycleEventListener {
                         PixelCopy.request(svChild, childBitmapBuffer, new PixelCopy.OnPixelCopyFinishedListener() {
                             @Override
                             public void onPixelCopyFinished(int copyResult) {
-                                int[] childPoint = new int[2];
-                                svChild.getLocationInWindow(childPoint);
-                                c.drawBitmap(childBitmapBuffer, childPoint[0] - rootX, childPoint[1] - rootY, paint);
+                                final int countCanvasSave = c.save();
+                                applyTransformations(c, view, child);
+                                c.drawBitmap(childBitmapBuffer, 0, 0, paint);
+                                c.restoreToCount(countCanvasSave);
                                 recycleBitmap(childBitmapBuffer);
                                 latch.countDown();
                             }
