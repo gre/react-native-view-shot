@@ -17,6 +17,7 @@ import androidx.annotation.StringDef;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.Looper;
 import android.util.Base64;
 import android.util.Log;
 import android.view.PixelCopy;
@@ -445,7 +446,7 @@ public class ViewShot implements UIBlock, LifecycleEventListener {
                             public void onPixelCopyFinished(int copyResult) {
                                 latch.countDown();
                             }
-                        }, new Handler());
+                        }, new Handler(Looper.getMainLooper()));
 
                         latch.await(SURFACE_VIEW_READ_PIXELS_TIMEOUT, TimeUnit.SECONDS);
                     } catch (Exception e) {
