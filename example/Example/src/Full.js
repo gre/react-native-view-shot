@@ -37,6 +37,7 @@ const App = () => {
   const mapViewRef = useRef();
   const webviewRef = useRef();
   const videoRef = useRef();
+  const videoSurfaceRef = useRef();
   const transformParentRef = useRef();
   const transformRef = useRef();
   const surfaceRef = useRef();
@@ -82,8 +83,9 @@ const App = () => {
   }, []);
 
   const capture = useCallback(
-    ref => {
-      (ref ? captureRef(ref, config) : captureScreen(config))
+    (ref, options = {}) => {
+      const opts = {...config, ...options};
+      (ref ? captureRef(ref, opts) : captureScreen(opts))
         .then(res =>
           config.result !== 'file'
             ? res
@@ -159,6 +161,12 @@ const App = () => {
               <Btn label="📷 MapView" onPress={() => capture(mapViewRef)} />
               <Btn label="📷 WebView" onPress={() => capture(webviewRef)} />
               <Btn label="📷 Video" onPress={() => capture(videoRef)} />
+              <Btn
+                label="📷 Video with SurfaceView (Android)"
+                onPress={() =>
+                  capture(videoRef, {handleGLSurfaceViewOnAndroid: true})
+                }
+              />
               <Btn label="📷 Native Screenshot" onPress={() => capture()} />
               <Btn
                 label="📷 Empty View (should crash)"
@@ -326,10 +334,20 @@ const App = () => {
             </View>
             <Video
               ref={videoRef}
+              disableFocus // NOTE: https://github.com/react-native-video/react-native-video/issues/2666
               style={{width: 300, height: 300}}
               source={require('./broadchurch.mp4')}
               volume={0}
               repeat
+            />
+            <Video
+              ref={videoSurfaceRef}
+              disableFocus // NOTE: https://github.com/react-native-video/react-native-video/issues/2666
+              style={{width: 300, height: 300}}
+              source={require('./broadchurch.mp4')}
+              volume={0}
+              repeat
+              useTextureView={false} // Use SurfaceView
             />
           </View>
         </ScrollView>

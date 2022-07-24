@@ -29,7 +29,7 @@
     "react-native-screens": "^3.13.1",
     "react-native-svg": "^12.3.0",
     "react-native-svg-uri": "^1.2.3",
-    "react-native-video": "^5.2.0",
+    "react-native-video": "^6.0.0-alpha.1",
     "react-native-view-shot": "^3.3.0-next.0",
     "react-native-webview": "^11.18.2"
   },

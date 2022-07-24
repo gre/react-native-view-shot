@@ -75,6 +75,9 @@ PODS:
   - glog (0.3.5)
   - libevent (2.1.12)
   - OpenSSL-Universal (1.1.1100)
+  - PromisesObjC (2.1.1)
+  - PromisesSwift (2.1.1):
+    - PromisesObjC (= 2.1.1)
   - RCT-Folly (2021.06.28.00-v2):
     - boost
     - DoubleConversion
@@ -292,10 +295,11 @@ PODS:
     - ReactCommon/turbomodule/core
   - react-native-slider (4.2.2):
     - React-Core
-  - react-native-video (5.2.0):
+  - react-native-video (6.0.0-alpha.1):
     - React-Core
-    - react-native-video/Video (= 5.2.0)
-  - react-native-video/Video (5.2.0):
+    - react-native-video/Video (= 6.0.0-alpha.1)
+  - react-native-video/Video (6.0.0-alpha.1):
+    - PromisesSwift
     - React-Core
   - react-native-view-shot (3.3.0-next.0):
     - React-Core
@@ -499,6 +503,8 @@ SPEC REPOS:
     - fmt
     - libevent
     - OpenSSL-Universal
+    - PromisesObjC
+    - PromisesSwift
     - SocketRocket
     - YogaKit
 
@@ -613,6 +619,8 @@ SPEC CHECKSUMS:
   glog: 476ee3e89abb49e07f822b48323c51c57124b572
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   OpenSSL-Universal: ebc357f1e6bc71fa463ccb2fe676756aff50e88c
+  PromisesObjC: ab77feca74fa2823e7af4249b8326368e61014cb
+  PromisesSwift: 99fddfe4a0ec88a56486644c0da106694c92a604
   RCT-Folly: 4d8508a426467c48885f1151029bc15fa5d7b3b8
   RCTRequired: 3e917ea5377751094f38145fdece525aa90545a0
   RCTTypeSafety: c43c072a4bd60feb49a9570b0517892b4305c45e
@@ -629,7 +637,7 @@ SPEC CHECKSUMS:
   react-native-maps: 8b8bfada2c86205a7f5a07dd1f92f29b33ea83aa
   react-native-safe-area-context: ebf8c413eb8b5f7c392a036a315eb7b46b96845f
   react-native-slider: 2f25c919f1dc309b90e2cc8346b8042ecec2102f
-  react-native-video: a4c2635d0802f983594b7057e1bce8f442f0ad28
+  react-native-video: bb6f12a7198db53b261fefb5d609dc77417acc8b
   react-native-view-shot: 47106be5202c2554b4f106845616a8a158aae614
   react-native-webview: 8ec7ddf9eb4ddcd92b32cee7907efec19a9ec7cb
   React-perflogger: a18b4f0bd933b8b24ecf9f3c54f9bf65180f3fe6
