@@ -77,10 +77,13 @@ public class ViewShot implements UIBlock, LifecycleEventListener {
      * ARGB size in bytes.
      */
     private static final int ARGB_SIZE = 4;
+    /**
+     * Wait timeout for surface view capture.
+     */
+    private static final int SURFACE_VIEW_READ_PIXELS_TIMEOUT = 5;
 
     private HandlerThread mBgThread;
     private Handler mBgHandler;
-    private static final int SURFACE_VIEW_READ_PIXELS_TIMEOUT = 5;
 
     @Override
     public void onHostResume() {
@@ -413,6 +416,11 @@ public class ViewShot implements UIBlock, LifecycleEventListener {
         //after view is drawn, go through children
         final List<View> childrenList = getAllChildren(view);
 
+        int[] point = new int[2];
+        view.getLocationInWindow(point);
+        final int rootX = point[0];
+        final int rootY = point[1];
+
         for (final View child : childrenList) {
             // skip any child that we don't know how to process
             if (child instanceof TextureView) {
@@ -439,15 +447,18 @@ public class ViewShot implements UIBlock, LifecycleEventListener {
                 final CountDownLatch latch = new CountDownLatch(1);
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    final Bitmap childBitmapBuffer = getExactBitmapForScreenshot(child.getWidth(), child.getHeight());
                     try {
-                        PixelCopy.request(svChild, bitmap, new PixelCopy.OnPixelCopyFinishedListener() {
-
+                        PixelCopy.request(svChild, childBitmapBuffer, new PixelCopy.OnPixelCopyFinishedListener() {
                             @Override
                             public void onPixelCopyFinished(int copyResult) {
+                                int[] childPoint = new int[2];
+                                svChild.getLocationInWindow(childPoint);
+                                c.drawBitmap(childBitmapBuffer, childPoint[0] - rootX, childPoint[1] - rootY, paint);
+                                recycleBitmap(childBitmapBuffer);
                                 latch.countDown();
                             }
                         }, new Handler(Looper.getMainLooper()));
-
                         latch.await(SURFACE_VIEW_READ_PIXELS_TIMEOUT, TimeUnit.SECONDS);
                     } catch (Exception e) {
                         Log.e(TAG, "Cannot PixelCopy for " + svChild, e);
