@@ -280,7 +280,7 @@ Hint: use `process.fork()` approach for converting raw data into PNGs.
 
 ### Saving to a file?
 
-- If you want to save the snapshotted image result to the CameraRoll, just use https://facebook.github.io/react-native/docs/cameraroll.html#savetocameraroll
+- If you want to save the snapshotted image result to the CameraRoll, just use https://github.com/react-native-cameraroll/react-native-cameraroll
 - If you want to save it to an arbitrary file path, use something like https://github.com/itinance/react-native-fs
 - For any more advanced needs, you can write your own (or find another) native module that would solve your use-case.
 
