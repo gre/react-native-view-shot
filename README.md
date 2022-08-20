@@ -312,6 +312,18 @@ Alternatively, you can use the `ViewShot` component that will wait the first `on
 
 This is because the snapshot image result is in real pixel size where the width/height defined in a React Native style are defined in "point" unit. You might want to set width and height option to force a resize. (might affect image quality)
 
+### on Android, capture GL Views
+
+A prop may be necessary to properly capture GL Surface View in the view tree:
+
+```js
+/**
+  * if true and when view is a SurfaceView or have it in the view tree, view will be captured.
+  * False by default, because it can have signoficant performance impact
+  */
+handleGLSurfaceViewOnAndroid?: boolean;
+```
+
 ---
 
 ## Thanks
