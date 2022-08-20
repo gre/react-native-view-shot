@@ -48,6 +48,11 @@ declare module 'react-native-view-shot' {
          * container height.
          */
         snapshotContentContainer?: boolean;
+        /**
+         * if true and when view is a SurfaceView or have it in the view tree, view will be captured.
+         * False by default, because it can have signoficant performance impact
+         */
+        handleGLSurfaceViewOnAndroid?: boolean;
     }
 
     export interface ViewShotProperties {
