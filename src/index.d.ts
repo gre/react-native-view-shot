@@ -92,7 +92,7 @@ declare module 'react-native-view-shot' {
         style?: ViewStyle;
     }
 
-    export default class ViewShot extends Component<ViewShotProperties> {
+    export default class ViewShot extends Component<React.PropsWithChildren<ViewShotProperties>> {
         capture?(): Promise<string>;
     }
 
