@@ -324,6 +324,15 @@ A prop may be necessary to properly capture GL Surface View in the view tree:
 handleGLSurfaceViewOnAndroid?: boolean;
 ```
 
+### Trying to share the capture result with `expo-sharing`?
+
+`tmpfile` or the default capture result works best for this. Just be sure to prepend `file://` to result before you call `shareAsync`.
+
+```js
+captureRef(viewRef)
+  .then((uri) => Sharing.shareAsync(`file://${uri}`, options)
+```
+
 ---
 
 ## Thanks
