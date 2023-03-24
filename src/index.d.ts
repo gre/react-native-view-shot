@@ -11,6 +11,8 @@
 declare module 'react-native-view-shot' {
     import { Component, ReactInstance, RefObject, ReactNode } from 'react'
     import { ViewStyle } from 'react-native'
+    import { LayoutChangeEvent } from 'react-native'
+
 
     export interface CaptureOptions {
         /**
@@ -83,9 +85,9 @@ declare module 'react-native-view-shot' {
         onCaptureFailure?(error: Error): void;
         /**
          * Invoked on mount and layout changes
-         * @param {LayoutEvent} event
+         * @param {LayoutChangeEvent} event
          */
-        onLayout?(event: LayoutEvent): void;
+        onLayout?(event: LayoutChangeEvent): void;
         /**
          * style prop as ViewStyle
          */
