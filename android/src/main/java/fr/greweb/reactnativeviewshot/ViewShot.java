@@ -14,9 +14,6 @@ import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.StringDef;
 
-import android.os.Build;
-import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.Looper;
 import android.util.Base64;
 import android.util.Log;
@@ -27,7 +24,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ScrollView;
 
-import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
@@ -59,7 +55,7 @@ import static android.view.View.VISIBLE;
 /**
  * Snapshot utility class allow to screenshot a view.
  */
-public class ViewShot implements UIBlock, LifecycleEventListener {
+public class ViewShot implements UIBlock {
     //region Constants
     /**
      * Tag fort Class logs.
@@ -81,30 +77,6 @@ public class ViewShot implements UIBlock, LifecycleEventListener {
      * Wait timeout for surface view capture.
      */
     private static final int SURFACE_VIEW_READ_PIXELS_TIMEOUT = 5;
-
-    private HandlerThread mBgThread;
-    private Handler mBgHandler;
-
-    @Override
-    public void onHostResume() {
-
-    }
-
-    @Override
-    public void onHostPause() {
-
-    }
-
-    @Override
-    public void onHostDestroy() {
-        this.reactContext.removeLifecycleEventListener(this);
-        mBgHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                cleanup();
-            }
-        });
-    }
 
     @SuppressWarnings("WeakerAccess")
     @IntDef({Formats.JPEG, Formats.PNG, Formats.WEBP, Formats.RAW})
@@ -200,32 +172,13 @@ public class ViewShot implements UIBlock, LifecycleEventListener {
         this.currentActivity = currentActivity;
         this.handleGLSurfaceView = handleGLSurfaceView;
         this.promise = promise;
-
-        reactContext.addLifecycleEventListener(this);
-
-        // bg hanadler for non UI heavy work
-        mBgThread = new HandlerThread("RNViewShot-Handler-Thread");
-        mBgThread.start();
-        mBgHandler = new Handler(mBgThread.getLooper());
     }
     //endregion
-
-    private void cleanup() {
-        if (mBgThread != null) {
-            if (Build.VERSION.SDK_INT < 18) {
-                mBgThread.quit();
-            } else {
-                mBgThread.quitSafely();
-            }
-
-            mBgThread = null;
-        }
-    }
 
     //region Overrides
     @Override
     public void execute(final NativeViewHierarchyManager nativeViewHierarchyManager) {
-        mBgHandler.post(new Runnable() {
+        new Thread("RNViewShot-Capture-Thread") {
             @Override
             public void run() {
                 try {
@@ -261,7 +214,7 @@ public class ViewShot implements UIBlock, LifecycleEventListener {
                     promise.reject(ERROR_UNABLE_TO_SNAPSHOT, "Failed to capture view snapshot");
                 }
             }
-        });
+        }.start();
     }
     //endregion
 
