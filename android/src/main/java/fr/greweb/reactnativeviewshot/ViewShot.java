@@ -45,6 +45,8 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.Deflater;
 
@@ -141,6 +143,7 @@ public class ViewShot implements UIBlock {
     private final ReactApplicationContext reactContext;
     private final boolean handleGLSurfaceView;
     private final Activity currentActivity;
+    private final Executor executor;
     //endregion
 
     //region Constructors
@@ -158,7 +161,8 @@ public class ViewShot implements UIBlock {
             final ReactApplicationContext reactContext,
             final Activity currentActivity,
             final boolean handleGLSurfaceView,
-            final Promise promise) {
+            final Promise promise,
+            final Executor executor) {
         this.tag = tag;
         this.extension = extension;
         this.format = format;
@@ -172,13 +176,14 @@ public class ViewShot implements UIBlock {
         this.currentActivity = currentActivity;
         this.handleGLSurfaceView = handleGLSurfaceView;
         this.promise = promise;
+        this.executor = executor;
     }
     //endregion
 
     //region Overrides
     @Override
     public void execute(final NativeViewHierarchyManager nativeViewHierarchyManager) {
-        new Thread("RNViewShot-Capture-Thread") {
+        executor.execute(new Runnable () {
             @Override
             public void run() {
                 try {
@@ -214,7 +219,7 @@ public class ViewShot implements UIBlock {
                     promise.reject(ERROR_UNABLE_TO_SNAPSHOT, "Failed to capture view snapshot");
                 }
             }
-        }.start();
+        });
     }
     //endregion
 

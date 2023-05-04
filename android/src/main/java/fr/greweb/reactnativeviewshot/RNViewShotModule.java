@@ -23,6 +23,8 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import fr.greweb.reactnativeviewshot.ViewShot.Formats;
 import fr.greweb.reactnativeviewshot.ViewShot.Results;
@@ -32,6 +34,8 @@ public class RNViewShotModule extends ReactContextBaseJavaModule {
     public static final String RNVIEW_SHOT = "RNViewShot";
 
     private final ReactApplicationContext reactContext;
+
+    private final Executor executor = Executors.newCachedThreadPool();
 
     public RNViewShotModule(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -100,7 +104,7 @@ public class RNViewShotModule extends ReactContextBaseJavaModule {
             uiManager.addUIBlock(new ViewShot(
                     tag, extension, imageFormat, quality,
                     scaleWidth, scaleHeight, outputFile, resultStreamFormat,
-                    snapshotContentContainer, reactContext, activity, handleGLSurfaceView, promise)
+                    snapshotContentContainer, reactContext, activity, handleGLSurfaceView, promise, executor)
             );
         } catch (final Throwable ex) {
             Log.e(RNVIEW_SHOT, "Failed to snapshot view tag " + tag, ex);
