@@ -1,6 +1,6 @@
 // @flow
 import React, { Component } from "react";
-import { View, Platform, findNodeHandle } from "react-native";
+import { View, Platform, findNodeHandle, StyleProp } from "react-native";
 import RNViewShot from "./RNViewShot";
 import type { ViewStyleProp } from "react-native/Libraries/StyleSheet/StyleSheet";
 import type { LayoutEvent } from "react-native/Libraries/Types/CoreEventTypes";
@@ -14,7 +14,7 @@ type Options = {
   quality: number,
   result: "tmpfile" | "base64" | "data-uri" | "zip-base64",
   snapshotContentContainer: boolean,
-  handleGLSurfaceViewOnAndroid: boolean
+  handleGLSurfaceViewOnAndroid: boolean,
 };
 
 if (!RNViewShot) {
@@ -36,16 +36,17 @@ const defaultOptions = {
   quality: 1,
   result: "tmpfile",
   snapshotContentContainer: false,
-  handleGLSurfaceViewOnAndroid: false
+  handleGLSurfaceViewOnAndroid: false,
 };
 
 // validate and coerce options
-function validateOptions(
-  input: ?$Shape<Options>
-): { options: Options, errors: Array<string> } {
+function validateOptions(input: ?$Shape<Options>): {
+  options: Options,
+  errors: Array<string>,
+} {
   const options: Options = {
     ...defaultOptions,
-    ...input
+    ...input,
   };
   const errors = [];
   if (
@@ -136,7 +137,7 @@ export function captureRef<T: React$ElementType>(
   if (__DEV__ && errors.length > 0) {
     console.warn(
       "react-native-view-shot: bad options:\n" +
-        errors.map(e => `- ${e}`).join("\n")
+        errors.map((e) => `- ${e}`).join("\n")
     );
   }
   return RNViewShot.captureRef(view, options);
@@ -158,7 +159,7 @@ export function captureScreen(optionsObject?: Options): Promise<string> {
   if (__DEV__ && errors.length > 0) {
     console.warn(
       "react-native-view-shot: bad options:\n" +
-        errors.map(e => `- ${e}`).join("\n")
+        errors.map((e) => `- ${e}`).join("\n")
     );
   }
   return RNViewShot.captureScreen(options);
@@ -171,7 +172,7 @@ type Props = {
   onLayout?: (e: *) => void,
   onCapture?: (uri: string) => void,
   onCaptureFailure?: (e: Error) => void,
-  style?: ViewStyleProp
+  style?: StyleProp<ViewStyleProp>,
 };
 
 function checkCompatibleProps(props: Props) {
@@ -204,7 +205,7 @@ export default class ViewShot extends Component<Props> {
   lastCapturedURI: ?string;
 
   resolveFirstLayout: (layout: Object) => void;
-  firstLayoutPromise: Promise<Object> = new Promise(resolve => {
+  firstLayoutPromise: Promise<Object> = new Promise((resolve) => {
     this.resolveFirstLayout = resolve;
   });
 
