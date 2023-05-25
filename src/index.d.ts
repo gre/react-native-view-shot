@@ -55,6 +55,11 @@ declare module 'react-native-view-shot' {
          * False by default, because it can have signoficant performance impact
          */
         handleGLSurfaceViewOnAndroid?: boolean;
+        /**
+         * (iOS only) change the iOS snapshot strategy to use method renderInContext instead of drawViewHierarchyInRect 
+         * which may help for some use cases.
+         */
+        useRenderInContext?: boolean;
     }
 
     export interface ViewShotProperties {
