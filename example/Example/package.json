@@ -37,7 +37,7 @@
     "react-native-svg-uri": "^1.2.3",
     "react-native-video": "^6.0.0-alpha.1",
     "react-native-view-shot": "../../",
-    "react-native-web": "^0.19.4",
+    "react-native-web": "0.18.12",
     "react-native-webview": "^11.18.2",
     "url-loader": "^4.1.1",
     "webpack": "^5.85.1",
