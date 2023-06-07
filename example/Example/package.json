@@ -8,7 +8,7 @@
     "start": "react-native start",
     "test": "jest",
     "lint": "eslint .",
-    "web": "webpack-dev-server -d --config ./web/webpack.config.js --inline --hot --colors"
+    "web": "webpack serve"
   },
   "dependencies": {
     "@react-native-community/art": "^1.2.0",
