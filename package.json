@@ -27,7 +27,7 @@
     "react-native": "*"
   },
   "devDependencies": {
-    "flow-bin": "^0.116.1",
+    "flow-bin": "^0.170.0",
     "react-native-windows": "^0.63.16"
   }
 }
