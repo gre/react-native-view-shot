@@ -36,7 +36,7 @@
     "react-native-svg": "^12.3.0",
     "react-native-svg-uri": "^1.2.3",
     "react-native-video": "^6.0.0-alpha.1",
-    "react-native-view-shot": "../../",
+    "react-native-view-shot": "file:../..",
     "react-native-web": "0.18.12",
     "react-native-webview": "^11.18.2",
     "url-loader": "^4.1.1",
