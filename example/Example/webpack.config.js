@@ -1,5 +1,8 @@
 const path = require('path');
 const webpack = require('webpack');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+
+const environment = process.env.NODE_ENV ?? 'development';
 
 // This is needed for webpack to compile JavaScript.
 // Many OSS React Native packages are not compiled to ES5 before being
@@ -27,6 +30,7 @@ const imageLoaderConfiguration = {
     loader: 'url-loader',
     options: {
       name: '[name].[ext]',
+      esModule: false,
     },
   },
 };
@@ -43,6 +47,7 @@ const fileLoaderConfiguration = {
 };
 
 module.exports = {
+  mode: environment,
   entry: [
     // load any web API polyfills if you have e.g.
     // path.resolve(__dirname, "polyfills-web.js"),
@@ -52,8 +57,8 @@ module.exports = {
 
   // configures where the build ends up
   output: {
-    filename: 'bundle.js',
-    path: path.resolve(__dirname, 'web'),
+    filename: 'bundle.web.js',
+    path: path.resolve(__dirname, 'dist'),
   },
 
   // ...the rest of your config
@@ -70,11 +75,11 @@ module.exports = {
     // `process.env.NODE_ENV === "production"` must be `true` for production
     // builds to eliminate development checks and reduce build size. You may
     // wish to include additional optimizations.
+    new HtmlWebpackPlugin({
+      template: 'index.ejs',
+    }),
     new webpack.DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify(
-        process.env.NODE_ENV || 'development',
-      ),
-      __DEV__: process.env.NODE_ENV === 'production' || true,
+      __DEV__: environment === 'development',
     }),
   ],
 

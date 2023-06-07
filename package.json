@@ -28,6 +28,7 @@
   },
   "devDependencies": {
     "flow-bin": "^0.170.0",
+    "html-webpack-plugin": "^5.5.1",
     "react-native-windows": "^0.63.16"
   }
 }
