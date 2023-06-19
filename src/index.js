@@ -1,7 +1,7 @@
 // @flow
 import React, { Component } from "react";
-import { View, NativeModules, Platform, findNodeHandle } from "react-native";
-const { RNViewShot } = NativeModules;
+import { View, Platform, findNodeHandle } from "react-native";
+import RNViewShot from "./RNViewShot";
 import type { ViewStyleProp } from "react-native/Libraries/StyleSheet/StyleSheet";
 import type { LayoutEvent } from "react-native/Libraries/Types/CoreEventTypes";
 

@@ -19,12 +19,16 @@
     "type": "git",
     "url": "https://github.com/gre/react-native-view-shot.git"
   },
+  "dependencies": {
+    "html2canvas": "^1.4.1"
+  },
   "peerDependencies": {
     "react": "*",
     "react-native": "*"
   },
   "devDependencies": {
-    "flow-bin": "^0.116.1",
+    "flow-bin": "^0.170.0",
+    "html-webpack-plugin": "^5.5.1",
     "react-native-windows": "^0.63.16"
   }
 }

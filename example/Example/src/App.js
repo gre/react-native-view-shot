@@ -12,66 +12,7 @@ import {
 import libPkg from 'react-native-view-shot/package.json';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-
-// To add a screen, import it and add it in screens
-
-import FullScreen from './Full';
-import ViewshootScreen from './Viewshoot';
-import TransparencyScreen from './Transparency';
-import VideoScreen from './Video';
-import WebViewScreen from './WebView';
-import MapViewScreen from './MapView';
-import CanvasScreen from './Canvas';
-import SVGUriScreen from './SVGUri';
-import ARTScreen from './ART';
-import FSScreen from './FS';
-import ModalScreen from './Modal';
-import OffscreenScreen from './Offscreen';
-import ElevationScreen from './Elevation';
-
-const screens = {
-  Full: {
-    screen: FullScreen,
-  },
-  Video: {
-    screen: VideoScreen,
-  },
-  WebView: {
-    screen: WebViewScreen,
-  },
-  SVGUri: {
-    screen: SVGUriScreen,
-  },
-  ART: {
-    screen: ARTScreen,
-  },
-  FS: {
-    screen: FSScreen,
-  },
-  Canvas: {
-    screen: CanvasScreen,
-  },
-  MapView: {
-    screen: MapViewScreen,
-  },
-  Modal: {
-    screen: ModalScreen,
-  },
-  Viewshoot: {
-    screen: ViewshootScreen,
-  },
-  Transparency: {
-    screen: TransparencyScreen,
-  },
-  Offscreen: {
-    screen: OffscreenScreen,
-  },
-  Elevation: {
-    screen: ElevationScreen,
-  },
-};
-
-///////////////////////////////////////////////////
+import screens from './screens';
 
 class HomeScreen extends Component {
   static navigationOptions = {
