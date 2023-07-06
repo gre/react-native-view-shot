@@ -60,6 +60,10 @@ declare module 'react-native-view-shot' {
          * which may help for some use cases.
          */
         useRenderInContext?: boolean;
+        /**
+         * (Web only) the background color of captured image. Set null for transparent. Default is null.
+         */
+        backgroundColor?: string;
     }
 
     export interface ViewShotProperties {
