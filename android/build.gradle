@@ -11,6 +11,13 @@ apply plugin: 'com.android.library'
 android {
     compileSdkVersion safeExtGet('compileSdkVersion', DEFAULT_COMPILE_SDK_VERSION)
 
+    def agpVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
+    // Check the AGP version, add namespace if the AGP version is above 7.
+    // Once we have fully moved on, we can remove it from the AndroidManifest.xml of the package
+    if (agpVersion.tokenize('.')[0].toInteger() >= 7) {
+        namespace "fr.greweb.reactnativeviewshot"
+    }
+
     defaultConfig {
         minSdkVersion safeExtGet('minSdkVersion', 16)
         targetSdkVersion safeExtGet('targetSdkVersion', DEFAULT_TARGET_SDK_VERSION)
