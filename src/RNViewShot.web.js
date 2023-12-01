@@ -9,7 +9,9 @@ async function captureRef(view, options) {
 
   // TODO: implement snapshotContentContainer option
 
-  const h2cOptions = {};
+  const h2cOptions = {
+    backgroundColor: options.backgroundColor || null
+  };
   let renderedCanvas = await html2canvas(view, h2cOptions);
 
   if (options.width && options.height) {
