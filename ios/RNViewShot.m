@@ -106,7 +106,7 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
       scrollView.frame = CGRectMake(0, 0, scrollView.contentSize.width, scrollView.contentSize.height);
     }
 
-    UIGraphicsBeginImageContextWithOptions(size, NO, 0);
+    UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithSize:size];
     
     if (renderInContext) {
       // this comes with some trade-offs such as inability to capture gradients or scrollview's content in full but it works for large views
@@ -117,8 +117,8 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
       // this doesn't work for large views and reports incorrect success even though the image is blank
       success = [rendered drawViewHierarchyInRect:(CGRect){CGPointZero, size} afterScreenUpdates:YES];
     }
-    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
+   
+    UIImage *image = [renderer imageWithActions:^(UIGraphicsImageRendererContext * _Nonnull rendererContext) {}];
 
     if (snapshotContentContainer) {
       // Restore scroll & frame
