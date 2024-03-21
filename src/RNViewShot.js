@@ -1,3 +1,3 @@
 //@flow
-import { NativeModules } from "react-native";
-export default NativeModules.RNViewShot
+import { RNViewShot } from './specs/NativeRNViewShot'
+export default RNViewShot
