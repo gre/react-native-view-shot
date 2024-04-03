@@ -6808,9 +6808,9 @@ react-art@^18.2.0:
     scheduler "^0.23.0"
 
 react-devtools-core@^4.23.0:
-  version "4.24.6"
-  resolved "https://registry.yarnpkg.com/react-devtools-core/-/react-devtools-core-4.24.6.tgz#3262114f483465179c97a49b7ada845048f4f97e"
-  integrity sha512-+6y6JAtAo1NUUxaCwCYTb13ViBpc7RjNTlj1HZRlDJmi7UYToj5+BNn8Duzz2YizzAzmRUWZkRM7OtqxnN6TnA==
+  version "4.28.5"
+  resolved "https://registry.yarnpkg.com/react-devtools-core/-/react-devtools-core-4.28.5.tgz#c8442b91f068cdf0c899c543907f7f27d79c2508"
+  integrity sha512-cq/o30z9W2Wb4rzBefjv5fBalHU0rJGZCHAkf/RHSBWSSYwh8PlQTqqOJmgIIbBtpj27T6FIPXeomIjZtCNVqA==
   dependencies:
     shell-quote "^1.6.1"
     ws "^7"
@@ -6949,7 +6949,7 @@ react-native-video@^6.0.0-alpha.1:
     shaka-player "^3.3.2"
 
 "react-native-view-shot@file:../..":
-  version "3.6.0"
+  version "3.8.0"
   dependencies:
     html2canvas "^1.4.1"
 
