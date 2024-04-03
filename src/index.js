@@ -1,7 +1,7 @@
 // @flow
 import React, { Component } from "react";
 import { View, Platform, findNodeHandle, StyleProp } from "react-native";
-import RNViewShot from "./RNViewShot";
+import RNViewShot from "./specs/NativeRNViewShot";
 import type { ViewStyleProp } from "react-native/Libraries/StyleSheet/StyleSheet";
 import type { LayoutEvent } from "react-native/Libraries/Types/CoreEventTypes";
 
@@ -19,7 +19,7 @@ type Options = {
 
 if (!RNViewShot) {
   console.warn(
-    "react-native-view-shot: NativeModules.RNViewShot is undefined. Make sure the library is linked on the native side."
+    "react-native-view-shot: RNViewShot is undefined. Make sure the library is linked on the native side."
   );
 }
 

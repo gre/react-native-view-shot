@@ -30,5 +30,13 @@
     "flow-bin": "^0.170.0",
     "html-webpack-plugin": "^5.5.1",
     "react-native-windows": "^0.63.16"
+  },
+  "codegenConfig": {
+    "name": "RNViewShot",
+    "type": "all",
+    "jsSrcsDir": "./src/specs",
+    "android": {
+      "javaPackageName": "fr.greweb.reactnativeviewshot"
+    }
   }
 }
