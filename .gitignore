@@ -44,3 +44,4 @@ captures/
 .externalNativeBuild
 .project
 
+.yarn
