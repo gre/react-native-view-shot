@@ -58,8 +58,8 @@ public class RNViewShotModule extends ReactContextBaseJavaModule implements Turb
     }
 
     @Override
-    public void onCatalystInstanceDestroy() {
-        super.onCatalystInstanceDestroy();
+    public void invalidate() {
+        super.invalidate();
         new CleanTask(getReactApplicationContext()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
