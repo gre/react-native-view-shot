@@ -28,8 +28,6 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 import fr.greweb.reactnativeviewshot.ViewShot.Formats;
 import fr.greweb.reactnativeviewshot.ViewShot.Results;
@@ -39,8 +37,6 @@ public class RNViewShotModule extends ReactContextBaseJavaModule implements Turb
     public static final String RNVIEW_SHOT = "RNViewShot";
 
     private final ReactApplicationContext reactContext;
-
-    private final Executor executor = Executors.newCachedThreadPool();
 
     public RNViewShotModule(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -108,7 +104,7 @@ public class RNViewShotModule extends ReactContextBaseJavaModule implements Turb
             ViewShot uiBlock = new ViewShot(
                     tag, extension, imageFormat, quality,
                     scaleWidth, scaleHeight, outputFile, resultStreamFormat,
-                    snapshotContentContainer, reactContext, activity, handleGLSurfaceView, promise, executor
+                    snapshotContentContainer, reactContext, activity, handleGLSurfaceView, promise
             );
 
             if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
