@@ -358,6 +358,15 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
             throw new RuntimeException("Impossible to snapshot the view: view is invalid");
         }
 
+        Log.d("ViewCapture", "Final capture dimensions: " + w + "x" + h);
+
+        // Force layout measurement
+        view.measure(
+                View.MeasureSpec.makeMeasureSpec(w, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(h, View.MeasureSpec.EXACTLY)
+        );
+        view.layout(0, 0, w, h);
+
         // Evaluate real height for ScrollView
         if (snapshotContentContainer && view instanceof ScrollView) {
             ScrollView scrollView = (ScrollView) view;
