@@ -365,15 +365,6 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
             h = content.getHeight() + scrollView.getPaddingTop() + scrollView.getPaddingBottom();
         }
 
-        Log.d("ViewCapture", "Final capture dimensions: " + w + "x" + h);
-
-        // Force layout measurement
-        view.measure(
-                View.MeasureSpec.makeMeasureSpec(w, View.MeasureSpec.EXACTLY),
-                View.MeasureSpec.makeMeasureSpec(h, View.MeasureSpec.EXACTLY)
-        );
-        view.layout(0, 0, w, h);
-
         final Point resolution = new Point(w, h);
         Bitmap bitmap = getBitmapForScreenshot(w, h);
 
