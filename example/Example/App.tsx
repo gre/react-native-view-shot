@@ -19,7 +19,6 @@ class HomeScreen extends Component {
   };
 
   render() {
-    console.log({ screens });
     // @ts-ignore
     const { navigation } = this.props;
     return (

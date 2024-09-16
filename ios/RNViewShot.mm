@@ -11,6 +11,10 @@
 #endif
 #import <React/RCTBridge.h>
 
+#ifdef RCT_NEW_ARCH_ENABLED
+#import <rnviewshot/rnviewshot.h>
+#endif
+
 @implementation RNViewShot
 
 RCT_EXPORT_MODULE()
@@ -41,7 +45,7 @@ RCT_EXPORT_METHOD(releaseCapture:(nonnull NSString *)uri)
   }
 }
 
-RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
+RCT_EXPORT_METHOD(captureRef:(NSNumber *)target
                   withOptions:(NSDictionary *)options
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
@@ -182,6 +186,14 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
     });
   }];
 }
+
+#ifdef RCT_NEW_ARCH_ENABLED
+- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
+(const facebook::react::ObjCTurboModule::InitParams &)params
+{
+  return std::make_shared<facebook::react::NativeRNViewShotSpecJSI>(params);
+}
+#endif
 
 
 @end

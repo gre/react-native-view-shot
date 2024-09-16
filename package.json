@@ -32,7 +32,7 @@
     "react-native-windows": "^0.63.16"
   },
   "codegenConfig": {
-    "name": "RNViewShotSpec",
+    "name": "rnviewshot",
     "type": "modules",
     "jsSrcsDir": "./src/specs",
     "android": {

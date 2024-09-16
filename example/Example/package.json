@@ -22,6 +22,7 @@
     "babel-plugin-react-native-web": "^0.19.4",
     "buffer": "^6.0.3",
     "expo": "^51.0.32",
+    "expo-build-properties": "~0.12.5",
     "file-loader": "^6.2.0",
     "lodash": "^4.17.21",
     "react": "^18.2.0",
