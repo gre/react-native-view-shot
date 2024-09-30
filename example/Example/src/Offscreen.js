@@ -1,12 +1,15 @@
 //@flow
-import React, { useState, useCallback } from 'react';
-import { SafeAreaView, Image, View } from 'react-native';
-import ViewShot from 'react-native-view-shot';
-import SvgUri from 'react-native-svg-uri';
-import Desc from './Desc';
+import React, { useState, useCallback } from "react";
+import { SafeAreaView, Image, View } from "react-native";
+import ViewShot from "react-native-view-shot";
+import { Svg } from "react-native-svg";
+import Desc from "./Desc";
 
 const OffscreenViewShot = ({ width, height, ...rest }) => (
-  <ViewShot {...rest} style={{ width, height, position: 'absolute', right: -width - 5 }} />
+  <ViewShot
+    {...rest}
+    style={{ width, height, position: "absolute", right: -width - 5 }}
+  />
 );
 
 const OffscreenExample = () => {
@@ -27,14 +30,14 @@ const OffscreenExample = () => {
         width={width}
         height={height}
       >
-        <SvgUri width={200} height={200} source={require('./homer-simpson.svg')} />
+        <Svg width={200} height={200} source={require("./homer-simpson.svg")} />
       </OffscreenViewShot>
     </SafeAreaView>
   );
 };
 
 OffscreenExample.navigationOptions = {
-  title: 'Offscreen',
+  title: "Offscreen",
 };
 
 export default OffscreenExample;
