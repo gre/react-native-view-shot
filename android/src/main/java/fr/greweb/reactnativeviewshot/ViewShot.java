@@ -26,6 +26,7 @@ import android.widget.ScrollView;
 
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.fabric.interop.UIBlockViewResolver;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.UIBlock;
@@ -46,8 +47,6 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.Deflater;
 
@@ -144,7 +143,6 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
     private final ReactApplicationContext reactContext;
     private final boolean handleGLSurfaceView;
     private final Activity currentActivity;
-    private final Executor executor;
     //endregion
 
     //region Constructors
@@ -162,8 +160,7 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
             final ReactApplicationContext reactContext,
             final Activity currentActivity,
             final boolean handleGLSurfaceView,
-            final Promise promise,
-            final Executor executor) {
+            final Promise promise) {
         this.tag = tag;
         this.extension = extension;
         this.format = format;
@@ -177,7 +174,6 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
         this.currentActivity = currentActivity;
         this.handleGLSurfaceView = handleGLSurfaceView;
         this.promise = promise;
-        this.executor = executor;
     }
     //endregion
 
@@ -195,7 +191,7 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
 
     //region Implementation
     private void executeImpl(final NativeViewHierarchyManager nativeViewHierarchyManager, final UIBlockViewResolver uiBlockViewResolver) {
-        executor.execute(new Runnable () {
+        UiThreadUtil.runOnUiThread(new Runnable () {
             @Override
             public void run() {
                 try {
