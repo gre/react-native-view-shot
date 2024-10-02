@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, {Fragment, useState, useRef, useCallback} from 'react';
+import React, { Fragment, useState, useRef, useCallback } from "react";
 import {
   SafeAreaView,
   StyleSheet,
@@ -10,21 +10,20 @@ import {
   Text,
   StatusBar,
   Image,
-} from 'react-native';
-import {Picker} from '@react-native-picker/picker';
-import {Buffer} from 'buffer';
-import * as ART from '@react-native-community/art';
-import Slider from '@react-native-community/slider';
-import omit from 'lodash/omit';
-import {captureRef, captureScreen} from 'react-native-view-shot';
-import MapView from 'react-native-maps';
-import WebView from 'react-native-webview';
-import Video from 'react-native-video';
-import SvgUri from 'react-native-svg-uri';
-import Btn from './Btn';
+} from "react-native";
+import { Picker } from "@react-native-picker/picker";
+import { Buffer } from "buffer";
+import Slider from "@react-native-community/slider";
+import omit from "lodash/omit";
+import { captureRef, captureScreen } from "react-native-view-shot";
+import MapView from "react-native-maps";
+import WebView from "react-native-webview";
+import Video from "react-native-video";
+import { SvgUri } from "react-native-svg";
+import Btn from "./Btn";
 
 const catsSource = {
-  uri: 'https://i.imgur.com/5EOyTDQ.jpg',
+  uri: "https://i.imgur.com/5EOyTDQ.jpg",
 };
 
 const App = () => {
@@ -44,25 +43,25 @@ const App = () => {
 
   const [previewSource, setPreviewSource] = useState(catsSource);
 
-  const [result, setResult] = useState({error: null, res: null});
+  const [result, setResult] = useState({ error: null, res: null });
 
   const [config, setConfig] = useState({
-    format: 'png',
+    format: "png",
     quality: 0.9,
-    result: 'file',
+    result: "file",
     snapshotContentContainer: false,
   });
 
   const onCapture = useCallback(
     res => {
-      if (config.result === 'base64') {
-        const b = Buffer.from(res, 'base64');
-        console.log('buffer of length ' + b.length);
+      if (config.result === "base64") {
+        const b = Buffer.from(res, "base64");
+        console.log("buffer of length " + b.length);
       }
       setPreviewSource({
         uri:
-          config.result === 'base64'
-            ? 'data:image/' + config.format + ';base64,' + res
+          config.result === "base64"
+            ? "data:image/" + config.format + ";base64," + res
             : res,
       });
       setResult({
@@ -70,7 +69,7 @@ const App = () => {
         res,
       });
     },
-    [config],
+    [config]
   );
 
   const onCaptureFailure = useCallback(error => {
@@ -84,19 +83,20 @@ const App = () => {
 
   const capture = useCallback(
     (ref, options = {}) => {
-      const opts = {...config, ...options};
+      const opts = { ...config, ...options };
+      console.log({ opts });
       (ref ? captureRef(ref, opts) : captureScreen(opts))
         .then(res =>
-          config.result !== 'file'
+          config.result !== "file"
             ? res
             : new Promise((success, failure) =>
                 // just a test to ensure res can be used in Image.getSize
-                Image.getSize(res, (width, height) => success(res), failure),
-              ),
+                Image.getSize(res, (width, height) => success(res), failure)
+              )
         )
         .then(onCapture, onCaptureFailure);
     },
-    [config, onCapture, onCaptureFailure],
+    [config, onCapture, onCaptureFailure]
   );
 
   return (
@@ -106,7 +106,8 @@ const App = () => {
         <ScrollView
           contentInsetAdjustmentBehavior="automatic"
           ref={fullRef}
-          contentContainerStyle={styles.container}>
+          contentContainerStyle={styles.container}
+        >
           <View ref={headerRef} style={styles.header}>
             <Text style={styles.title}>😃 ViewShot Example 😜</Text>
             <View style={styles.p1}>
@@ -117,7 +118,7 @@ const App = () => {
             <View style={styles.preview}>
               {result.error ? (
                 <Text style={styles.previewError}>
-                  {'' + (result.error.message || result.error)}
+                  {"" + (result.error.message || result.error)}
                 </Text>
               ) : (
                 <Image
@@ -129,7 +130,7 @@ const App = () => {
               )}
             </View>
             <Text numberOfLines={1} style={styles.previewUriText}>
-              {result.res ? result.res.slice(0, 200) : ''}
+              {result.res ? result.res.slice(0, 200) : ""}
             </Text>
           </View>
 
@@ -164,7 +165,7 @@ const App = () => {
               <Btn
                 label="📷 Video with SurfaceView (Android)"
                 onPress={() =>
-                  capture(videoRef, {handleGLSurfaceViewOnAndroid: true})
+                  capture(videoRef, { handleGLSurfaceViewOnAndroid: true })
                 }
               />
               <Btn label="📷 Native Screenshot" onPress={() => capture()} />
@@ -178,7 +179,8 @@ const App = () => {
               <Picker
                 style={styles.input}
                 selectedValue={config.format}
-                onValueChange={format => setConfig({...config, format})}>
+                onValueChange={format => setConfig({ ...config, format })}
+              >
                 <Picker.Item label="PNG" value="png" />
                 <Picker.Item label="JPEG" value="jpg" />
                 <Picker.Item label="WEBM (android only)" value="webm" />
@@ -191,7 +193,7 @@ const App = () => {
               <Slider
                 style={styles.input}
                 value={config.quality}
-                onValueChange={quality => setConfig({...config, quality})}
+                onValueChange={quality => setConfig({ ...config, quality })}
               />
               <Text>{(config.quality * 100).toFixed(0)}%</Text>
             </View>
@@ -208,19 +210,19 @@ const App = () => {
                         width: 300,
                         height: 300,
                       },
-                      checked ? [] : ['width', 'height'],
-                    ),
+                      checked ? [] : ["width", "height"]
+                    )
                   )
                 }
               />
               {config.width !== undefined ? (
                 <TextInput
                   style={styles.inputText}
-                  value={'' + config.width}
+                  value={"" + config.width}
                   keyboardType="number-pad"
                   onChangeText={txt =>
                     !isNaN(txt) &&
-                    setConfig({...config, width: parseInt(txt, 10)})
+                    setConfig({ ...config, width: parseInt(txt, 10) })
                   }
                 />
               ) : (
@@ -230,11 +232,11 @@ const App = () => {
               {config.height !== undefined ? (
                 <TextInput
                   style={styles.inputText}
-                  value={'' + config.height}
+                  value={"" + config.height}
                   keyboardType="number-pad"
                   onChangeText={txt =>
                     !isNaN(txt) &&
-                    setConfig({...config, height: parseInt(txt, 10)})
+                    setConfig({ ...config, height: parseInt(txt, 10) })
                   }
                 />
               ) : (
@@ -246,7 +248,8 @@ const App = () => {
               <Picker
                 style={styles.input}
                 selectedValue={config.result}
-                onValueChange={r => setConfig({...config, result: r})}>
+                onValueChange={r => setConfig({ ...config, result: r })}
+              >
                 <Picker.Item label="file" value="file" />
                 <Picker.Item label="base64" value="base64" />
                 <Picker.Item
@@ -263,7 +266,7 @@ const App = () => {
                 style={styles.switch}
                 value={config.snapshotContentContainer}
                 onValueChange={snapshotContentContainer =>
-                  setConfig({...config, snapshotContentContainer})
+                  setConfig({ ...config, snapshotContentContainer })
                 }
               />
             </View>
@@ -272,44 +275,14 @@ const App = () => {
           <View
             style={styles.experimental}
             ref={complexRef}
-            collapsable={false}>
+            collapsable={false}
+          >
             <Text style={styles.experimentalTitle}>Experimental Stuff</Text>
-            <View
-              ref={transformParentRef}
-              collapsable={false}
-              style={styles.experimentalRoot}>
-              <View collapsable={false} style={styles.experimentalTransform}>
-                <Text ref={transformRef}>Transform</Text>
-                <ART.Surface ref={surfaceRef} width={20} height={20}>
-                  <ART.Text
-                    fill="#000000"
-                    font={{fontFamily: 'Arial', fontSize: 6}}>
-                    Sample Text
-                  </ART.Text>
-                  <ART.Shape
-                    d="M2.876,10.6499757 L16.375,18.3966817 C16.715,18.5915989 17.011,18.4606545 17.125,18.3956822 C17.237,18.3307098 17.499,18.1367923 17.499,17.746958 L17.499,2.25254636 C17.499,1.86271212 17.237,1.66879457 17.125,1.6038222 C17.011,1.53884983 16.715,1.4079055 16.375,1.60282262 L2.876,9.34952866 C2.537,9.54544536 2.5,9.86930765 2.5,10.000252 C2.5,10.1301967 2.537,10.4550586 2.876,10.6499757 M16.749,20 C16.364,20 15.98,19.8990429 15.629,19.6971288 L2.13,11.9504227 L2.129,11.9504227 C1.422,11.5445953 1,10.8149056 1,10.000252 C1,9.18459879 1.422,8.45590864 2.129,8.04908162 L15.629,0.302375584 C16.332,-0.10245228 17.173,-0.10045313 17.876,0.306373884 C18.579,0.713200898 18.999,1.44089148 18.999,2.25254636 L18.999,17.746958 C18.999,18.5586129 18.579,19.2863035 17.876,19.6931305 C17.523,19.8970438 17.136,20 16.749,20"
-                    fill="blue"
-                    stroke="black"
-                    strokeWidth={0}
-                  />
-                </ART.Surface>
-              </View>
-              <View style={styles.experimentalTransformV2}>
-                <ART.Surface width={20} height={20}>
-                  <ART.Shape
-                    x={0}
-                    y={10}
-                    d="M2.876,10.6499757 L16.375,18.3966817 C16.715,18.5915989 17.011,18.4606545 17.125,18.3956822 C17.237,18.3307098 17.499,18.1367923 17.499,17.746958 L17.499,2.25254636 C17.499,1.86271212 17.237,1.66879457 17.125,1.6038222 C17.011,1.53884983 16.715,1.4079055 16.375,1.60282262 L2.876,9.34952866 C2.537,9.54544536 2.5,9.86930765 2.5,10.000252 C2.5,10.1301967 2.537,10.4550586 2.876,10.6499757 M16.749,20 C16.364,20 15.98,19.8990429 15.629,19.6971288 L2.13,11.9504227 L2.129,11.9504227 C1.422,11.5445953 1,10.8149056 1,10.000252 C1,9.18459879 1.422,8.45590864 2.129,8.04908162 L15.629,0.302375584 C16.332,-0.10245228 17.173,-0.10045313 17.876,0.306373884 C18.579,0.713200898 18.999,1.44089148 18.999,2.25254636 L18.999,17.746958 C18.999,18.5586129 18.579,19.2863035 17.876,19.6931305 C17.523,19.8970438 17.136,20 16.749,20"
-                    fill="red"
-                  />
-                </ART.Surface>
-              </View>
-            </View>
             <View ref={svgRef} collapsable={false}>
               <SvgUri
                 width={200}
                 height={200}
-                source={require('./homer-simpson.svg')}
+                uri="https://dev.w3.org/SVG/tools/svgweb/samples/svg-files/heliocentric.svg"
               />
             </View>
             <MapView
@@ -320,31 +293,32 @@ const App = () => {
                 latitudeDelta: 0.0922,
                 longitudeDelta: 0.0421,
               }}
-              style={{width: 300, height: 300}}
+              style={{ width: 300, height: 300 }}
             />
             <View
               ref={webviewRef}
               collapsable={false}
-              style={{width: 300, height: 300}}>
+              style={{ width: 300, height: 300 }}
+            >
               <WebView
                 source={{
-                  uri: 'https://github.com/gre/react-native-view-shot',
+                  uri: "https://github.com/gre/react-native-view-shot",
                 }}
               />
             </View>
             <Video
               ref={videoRef}
               disableFocus // NOTE: https://github.com/react-native-video/react-native-video/issues/2666
-              style={{width: 300, height: 300}}
-              source={require('./broadchurch.mp4')}
+              style={{ width: 300, height: 300 }}
+              source={require("./broadchurch.mp4")}
               volume={0}
               repeat
             />
             <Video
               ref={videoSurfaceRef}
               disableFocus // NOTE: https://github.com/react-native-video/react-native-video/issues/2666
-              style={{width: 300, height: 300}}
-              source={require('./broadchurch.mp4')}
+              style={{ width: 300, height: 300 }}
+              source={require("./broadchurch.mp4")}
               volume={0}
               repeat
               useTextureView={false} // Use SurfaceView
@@ -358,57 +332,57 @@ const App = () => {
 
 const styles = StyleSheet.create({
   root: {
-    backgroundColor: '#f6f6f6',
+    backgroundColor: "#f6f6f6",
   },
   container: {
     paddingVertical: 20,
   },
   title: {
     fontSize: 20,
-    textAlign: 'center',
+    textAlign: "center",
     margin: 10,
   },
   experimental: {
     padding: 10,
-    flexDirection: 'column',
-    alignItems: 'center',
+    flexDirection: "column",
+    alignItems: "center",
   },
   experimentalTitle: {
     fontSize: 16,
     margin: 10,
   },
   experimentalTransform: {
-    transform: [{rotate: '180deg'}],
-    backgroundColor: 'powderblue',
+    transform: [{ rotate: "180deg" }],
+    backgroundColor: "powderblue",
   },
   experimentalTransformV2: {
     //    transform: [{ rotate: '180deg' }],
-    backgroundColor: 'skyblue',
+    backgroundColor: "skyblue",
   },
   p1: {
     marginBottom: 10,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    alignItems: "center",
   },
   text: {
-    color: '#333',
+    color: "#333",
   },
   code: {
-    fontWeight: 'bold',
-    color: '#000',
+    fontWeight: "bold",
+    color: "#000",
   },
   field: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 4,
     paddingHorizontal: 10,
   },
   label: {
     minWidth: 80,
-    fontStyle: 'italic',
-    color: '#888',
+    fontStyle: "italic",
+    color: "#888",
   },
   switch: {
     marginRight: 50,
@@ -420,13 +394,13 @@ const styles = StyleSheet.create({
   inputText: {
     flex: 1,
     marginHorizontal: 5,
-    color: 'red',
-    textAlign: 'center',
+    color: "red",
+    textAlign: "center",
   },
   preview: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
   },
   previewImage: {
     width: 375,
@@ -434,9 +408,9 @@ const styles = StyleSheet.create({
   },
   previewUriText: {
     fontSize: 12,
-    fontStyle: 'italic',
-    color: '#666',
-    textAlign: 'center',
+    fontStyle: "italic",
+    color: "#666",
+    textAlign: "center",
     padding: 10,
     paddingBottom: 0,
   },
@@ -444,37 +418,37 @@ const styles = StyleSheet.create({
     width: 375,
     height: 300,
     paddingTop: 20,
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
-    backgroundColor: '#c00',
+    fontWeight: "bold",
+    color: "#fff",
+    backgroundColor: "#c00",
   },
   header: {
-    backgroundColor: '#f6f6f6',
-    borderColor: '#000',
+    backgroundColor: "#f6f6f6",
+    borderColor: "#000",
     borderWidth: 1,
     paddingBottom: 20,
   },
   form: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   btns: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 10,
     margin: 4,
   },
   experimentalRoot: {
     flex: 1,
-    flexDirection: 'row',
+    flexDirection: "row",
   },
 });
 
 App.navigationOptions = {
-  title: 'Full Example',
+  title: "Full Example",
 };
 
 export default App;
