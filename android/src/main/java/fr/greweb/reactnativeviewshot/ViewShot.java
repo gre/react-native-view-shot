@@ -357,15 +357,22 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
         if (w <= 0 || h <= 0) {
             throw new RuntimeException("Impossible to snapshot the view: view is invalid");
         }
-
-        // evaluate real height
-        if (snapshotContentContainer) {
-            h = 0;
+        
+        // Evaluate real height for ScrollView
+        if (snapshotContentContainer && view instanceof ScrollView) {
             ScrollView scrollView = (ScrollView) view;
-            for (int i = 0; i < scrollView.getChildCount(); i++) {
-                h += scrollView.getChildAt(i).getHeight();
-            }
+            View content = scrollView.getChildAt(0);
+            h = content.getHeight() + scrollView.getPaddingTop() + scrollView.getPaddingBottom();
         }
+
+        Log.d("ViewCapture", "Final capture dimensions: " + w + "x" + h);
+
+        // Force layout measurement
+        view.measure(
+                View.MeasureSpec.makeMeasureSpec(w, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(h, View.MeasureSpec.EXACTLY)
+        );
+        view.layout(0, 0, w, h);
 
         final Point resolution = new Point(w, h);
         Bitmap bitmap = getBitmapForScreenshot(w, h);
@@ -375,89 +382,99 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
         paint.setFilterBitmap(true);
         paint.setDither(true);
 
-        // Uncomment next line if you want to wait attached android studio debugger:
-        //   Debug.waitForDebugger();
-
         final Canvas c = new Canvas(bitmap);
-        view.draw(c);
+        captureViewHierarchy(c, view, paint);
 
-        //after view is drawn, go through children
-        final List<View> childrenList = getAllChildren(view);
+        if (width != null && height != null && (width != w || height != h)) {
+            Log.d("ViewCapture", "Scaling bitmap from " + w + "x" + h + " to " + width + "x" + height);
+            float scaleWidth = width / (float) w;
+            float scaleHeight = height / (float) h;
+            float scale = Math.min(scaleWidth, scaleHeight);
 
-        for (final View child : childrenList) {
-            // skip any child that we don't know how to process
-            if (child instanceof TextureView) {
-                // skip all invisible to user child views
-                if (child.getVisibility() != VISIBLE) continue;
+            Matrix matrix = new Matrix();
+            matrix.postScale(scale, scale);
 
-                final TextureView tvChild = (TextureView) child;
-                tvChild.setOpaque(false); // <-- switch off background fill
+            final Bitmap scaledBitmap = Bitmap.createBitmap(bitmap, 0, 0, w, h, matrix, true);
+            recycleBitmap(bitmap);
+            bitmap = scaledBitmap;
+        }
 
-                // NOTE (olku): get re-usable bitmap. TextureView should use bitmaps with matching size,
-                // otherwise content of the TextureView will be scaled to provided bitmap dimensions
-                final Bitmap childBitmapBuffer = tvChild.getBitmap(getExactBitmapForScreenshot(child.getWidth(), child.getHeight()));
+        // Save bitmap
+        if (Formats.RAW == this.format && os instanceof ReusableByteArrayOutputStream) {
+            final int total = bitmap.getWidth() * bitmap.getHeight() * ARGB_SIZE;
+            final ReusableByteArrayOutputStream rbaos = (ReusableByteArrayOutputStream) os;
+            bitmap.copyPixelsToBuffer(rbaos.asBuffer(total));
+            rbaos.setSize(total);
+        } else {
+            final Bitmap.CompressFormat cf = Formats.mapping[this.format];
+            bitmap.compress(cf, (int) (100.0 * quality), os);
+        }
 
-                final int countCanvasSave = c.save();
-                applyTransformations(c, view, child);
+        recycleBitmap(bitmap);
+        return resolution;
+    }
 
-                // due to re-use of bitmaps for screenshot, we can get bitmap that is bigger in size than requested
-                c.drawBitmap(childBitmapBuffer, 0, 0, paint);
+    private void captureViewHierarchy(Canvas canvas, View view, Paint paint) {
+        Log.d("ViewCapture", "Capturing view: " + view.getClass().getSimpleName()
+                + " at (" + view.getLeft() + "," + view.getTop()
+                + ") with size (" + view.getWidth() + "x" + view.getHeight() + ")");
 
-                c.restoreToCount(countCanvasSave);
-                recycleBitmap(childBitmapBuffer);
-            } else if (child instanceof SurfaceView && handleGLSurfaceView) {
-                final SurfaceView svChild = (SurfaceView)child;
-                final CountDownLatch latch = new CountDownLatch(1);
+        int saveCount = canvas.save();
+        canvas.translate(view.getLeft(), view.getTop());
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    final Bitmap childBitmapBuffer = getExactBitmapForScreenshot(child.getWidth(), child.getHeight());
-                    try {
-                        PixelCopy.request(svChild, childBitmapBuffer, new PixelCopy.OnPixelCopyFinishedListener() {
-                            @Override
-                            public void onPixelCopyFinished(int copyResult) {
-                                final int countCanvasSave = c.save();
-                                applyTransformations(c, view, child);
-                                c.drawBitmap(childBitmapBuffer, 0, 0, paint);
-                                c.restoreToCount(countCanvasSave);
-                                recycleBitmap(childBitmapBuffer);
-                                latch.countDown();
-                            }
-                        }, new Handler(Looper.getMainLooper()));
-                        latch.await(SURFACE_VIEW_READ_PIXELS_TIMEOUT, TimeUnit.SECONDS);
-                    } catch (Exception e) {
-                        Log.e(TAG, "Cannot PixelCopy for " + svChild, e);
-                    }
-                } else {
-                    Bitmap cache = svChild.getDrawingCache();
-                    if (cache != null) {
-                        c.drawBitmap(svChild.getDrawingCache(), 0, 0, paint);
+        // Draw the view itself
+        view.draw(canvas);
+
+        if (view instanceof ViewGroup) {
+            ViewGroup viewGroup = (ViewGroup) view;
+            for (int i = 0; i < viewGroup.getChildCount(); i++) {
+                View child = viewGroup.getChildAt(i);
+                if (child.getVisibility() == View.VISIBLE) {
+                    if (child instanceof TextureView) {
+                        captureTextureView(canvas, (TextureView) child, paint);
+                    } else if (child instanceof SurfaceView && handleGLSurfaceView) {
+                        captureSurfaceView(canvas, (SurfaceView) child, paint);
+                    } else {
+                        captureViewHierarchy(canvas, child, paint);
                     }
                 }
             }
         }
 
-        if (width != null && height != null && (width != w || height != h)) {
-            final Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, width, height, true);
-            recycleBitmap(bitmap);
+        canvas.restoreToCount(saveCount);
+    }
 
-            bitmap = scaledBitmap;
-        }
+    private void captureTextureView(Canvas canvas, TextureView textureView, Paint paint) {
+        textureView.setOpaque(false);
+        Bitmap childBitmapBuffer = textureView.getBitmap(getExactBitmapForScreenshot(textureView.getWidth(), textureView.getHeight()));
+        canvas.drawBitmap(childBitmapBuffer, 0, 0, paint);
+        recycleBitmap(childBitmapBuffer);
+    }
 
-        // special case, just save RAW ARGB array without any compression
-        if (Formats.RAW == this.format && os instanceof ReusableByteArrayOutputStream) {
-            final int total = w * h * ARGB_SIZE;
-            final ReusableByteArrayOutputStream rbaos = cast(os);
-            bitmap.copyPixelsToBuffer(rbaos.asBuffer(total));
-            rbaos.setSize(total);
+    private void captureSurfaceView(Canvas canvas, SurfaceView surfaceView, Paint paint) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            final CountDownLatch latch = new CountDownLatch(1);
+            final Bitmap childBitmapBuffer = getExactBitmapForScreenshot(surfaceView.getWidth(), surfaceView.getHeight());
+            try {
+                PixelCopy.request(surfaceView, childBitmapBuffer, (copyResult) -> {
+                    if (copyResult == PixelCopy.SUCCESS) {
+                        canvas.drawBitmap(childBitmapBuffer, 0, 0, paint);
+                    } else {
+                        Log.e("ViewCapture", "Failed to copy pixels from SurfaceView");
+                    }
+                    recycleBitmap(childBitmapBuffer);
+                    latch.countDown();
+                }, new Handler(Looper.getMainLooper()));
+                latch.await(SURFACE_VIEW_READ_PIXELS_TIMEOUT, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                Log.e("ViewCapture", "Error during PixelCopy for SurfaceView", e);
+            }
         } else {
-            final Bitmap.CompressFormat cf = Formats.mapping[this.format];
-
-            bitmap.compress(cf, (int) (100.0 * quality), os);
+            Bitmap cache = surfaceView.getDrawingCache();
+            if (cache != null) {
+                canvas.drawBitmap(cache, 0, 0, paint);
+            }
         }
-
-        recycleBitmap(bitmap);
-
-        return resolution; // return image width and height
     }
 
     /**
