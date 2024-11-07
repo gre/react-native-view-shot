@@ -25,8 +25,6 @@ import com.facebook.react.uimanager.common.UIManagerType;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 import fr.greweb.reactnativeviewshot.ViewShot.Formats;
 import fr.greweb.reactnativeviewshot.ViewShot.Results;
@@ -34,8 +32,6 @@ import fr.greweb.reactnativeviewshot.ViewShot.Results;
 public class RNViewShotModule extends NativeRNViewShotSpec {
 
     private final ReactApplicationContext reactContext;
-
-    private final Executor executor = Executors.newCachedThreadPool();
 
     public RNViewShotModule(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -93,7 +89,7 @@ public class RNViewShotModule extends NativeRNViewShotSpec {
             ViewShot uiBlock = new ViewShot(
                     tag, extension, imageFormat, quality,
                     scaleWidth, scaleHeight, outputFile, resultStreamFormat,
-                    snapshotContentContainer, reactContext, activity, handleGLSurfaceView, promise, executor
+                    snapshotContentContainer, reactContext, activity, handleGLSurfaceView, promise
             );
 
             if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
