@@ -11,7 +11,7 @@ yarn add react-native-view-shot
 
 # In Expo
 
-expo install react-native-view-shot
+npx expo install react-native-view-shot
 ```
 
 Make sure `react-native-view-shot` is correctly linked in Xcode (might require a manual installation, refer to [React Native doc](https://reactnative.dev/docs/linking-libraries-ios.html)).
