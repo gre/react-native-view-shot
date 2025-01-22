@@ -210,26 +210,26 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
 
     //region Implementation
     private void executeImpl(final NativeViewHierarchyManager nativeViewHierarchyManager, final UIBlockViewResolver uiBlockViewResolver) {
+        final View view;
+
+        if (tag == -1) {
+            view = currentActivity.getWindow().getDecorView().findViewById(android.R.id.content);
+        } else if (uiBlockViewResolver != null) {
+            view = uiBlockViewResolver.resolveView(tag);
+        } else {
+            view = nativeViewHierarchyManager.resolveView(tag);
+        }
+
+        if (view == null) {
+            Log.e(TAG, "No view found with reactTag: " + tag, new AssertionError());
+            promise.reject(ERROR_UNABLE_TO_SNAPSHOT, "No view found with reactTag: " + tag);
+            return;
+        }
+
         executor.execute(new Runnable () {
             @Override
             public void run() {
                 try {
-                    final View view;
-
-                    if (tag == -1) {
-                        view = currentActivity.getWindow().getDecorView().findViewById(android.R.id.content);
-                    } else if (uiBlockViewResolver != null) {
-                        view = uiBlockViewResolver.resolveView(tag);
-                    } else {
-                        view = nativeViewHierarchyManager.resolveView(tag);
-                    }
-
-                    if (view == null) {
-                        Log.e(TAG, "No view found with reactTag: " + tag, new AssertionError());
-                        promise.reject(ERROR_UNABLE_TO_SNAPSHOT, "No view found with reactTag: " + tag);
-                        return;
-                    }
-
                     final ReusableByteArrayOutputStream stream = new ReusableByteArrayOutputStream(outputBuffer);
                     stream.setSize(proposeSize(view));
                     outputBuffer = stream.innerBuffer();
