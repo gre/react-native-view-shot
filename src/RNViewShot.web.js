@@ -32,7 +32,9 @@ function captureScreen(options) {
 }
 
 function releaseCapture(uri) {
-  throw new Error("Tmpfile is not implemented for web. Try base64 or file");
+  if (options.result === "tmpfile") {
+    throw new Error("Tmpfile is not implemented for web. Try base64 or file");
+  }
 }
 
 export default {
