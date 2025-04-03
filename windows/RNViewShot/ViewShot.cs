@@ -104,6 +104,7 @@ namespace RNViewShot
                 var propertySet = new BitmapPropertySet();
                 var qualityValue = new BitmapTypedValue(quality, Windows.Foundation.PropertyType.Single);
                 propertySet.Add("ImageQuality", qualityValue);
+                encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream, propertySet);
             }
             else
             {
