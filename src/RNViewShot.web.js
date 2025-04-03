@@ -30,9 +30,10 @@ async function captureRef(view, options) {
     renderedCanvas = resizedCanvas;
   }
 
-  const mimeType =
-    options.format === "webp" ? "image/webp" : `image/${options.format}`;
-  const dataUrl = renderedCanvas.toDataURL(mimeType, options.quality);
+  const dataUrl = renderedCanvas.toDataURL(
+    "image/" + options.format,
+    options.quality
+  );
   if (options.result === "data-uri" || options.result === "tmpfile")
     return dataUrl;
   return dataUrl.replace(/data:image\/(\w+);base64,/, "");
