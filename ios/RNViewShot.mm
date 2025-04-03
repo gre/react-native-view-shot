@@ -149,6 +149,10 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
         CGFloat quality = [RCTConvert CGFloat:options[@"quality"]];
         data = UIImageJPEGRepresentation(image, quality);
       }
+      else if ([format isEqualToString:@"webp"]) {
+        CGFloat quality = [RCTConvert CGFloat:options[@"quality"]];
+        data = UIImageWebPRepresentation(image, quality);
+      }
       else {
         data = UIImagePNGRepresentation(image);
       }

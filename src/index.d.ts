@@ -31,7 +31,7 @@ declare module 'react-native-view-shot' {
         /**
          * either png or jpg or webm (Android). Defaults to png. raw is a ARGB array of image pixels.
          */
-        format?: 'jpg' | 'png' | 'webm' | 'raw';
+        format?: 'jpg' | 'png' | 'webm' | 'raw' | 'webp';
         /**
          * the quality. 0.0 - 1.0 (default). (only available on lossy formats like jpg)
          */

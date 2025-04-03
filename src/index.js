@@ -10,7 +10,7 @@ const neverEndingPromise = new Promise(() => {});
 type Options = {
   width?: number,
   height?: number,
-  format: "png" | "jpg" | "webm" | "raw",
+  format: "png" | "jpg" | "webm" | "raw" | "webp",
   quality: number,
   result: "tmpfile" | "base64" | "data-uri" | "zip-base64",
   snapshotContentContainer: boolean,
@@ -23,7 +23,7 @@ if (!RNViewShot) {
   );
 }
 
-const acceptedFormats = ["png", "jpg"].concat(
+const acceptedFormats = ["png", "jpg", "webp"].concat(
   Platform.OS === "android" ? ["webm", "raw"] : []
 );
 

@@ -82,16 +82,18 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
     private static final int SURFACE_VIEW_READ_PIXELS_TIMEOUT = 5;
 
     @SuppressWarnings("WeakerAccess")
-    @IntDef({Formats.JPEG, Formats.PNG, Formats.WEBP, Formats.RAW})
+    @IntDef({Formats.JPEG, Formats.PNG, Formats.WEBP, Formats.WEBM, Formats.RAW})
     public @interface Formats {
         int JPEG = 0; // Bitmap.CompressFormat.JPEG.ordinal();
         int PNG = 1;  // Bitmap.CompressFormat.PNG.ordinal();
         int WEBP = 2; // Bitmap.CompressFormat.WEBP.ordinal();
+        int WEBM = 3;
         int RAW = -1;
 
         Bitmap.CompressFormat[] mapping = {
                 Bitmap.CompressFormat.JPEG,
                 Bitmap.CompressFormat.PNG,
+                Bitmap.CompressFormat.WEBP,
                 Bitmap.CompressFormat.WEBP
         };
     }
