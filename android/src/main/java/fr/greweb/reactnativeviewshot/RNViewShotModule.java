@@ -1,3 +1,4 @@
+
 package fr.greweb.reactnativeviewshot;
 
 import android.app.Activity;
