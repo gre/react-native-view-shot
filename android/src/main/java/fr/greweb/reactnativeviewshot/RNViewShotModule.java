@@ -69,8 +69,6 @@ public class RNViewShotModule extends NativeRNViewShotSpec {
         final int imageFormat = "jpg".equals(extension)
                 ? Formats.JPEG
                 : "webm".equals(extension)
-                ? Formats.WEBM
-                : "webp".equals(extension)
                 ? Formats.WEBP
                 : "raw".equals(extension)
                 ? Formats.RAW
