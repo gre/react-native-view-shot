@@ -183,7 +183,6 @@ const App = () => {
               >
                 <Picker.Item label="PNG" value="png" />
                 <Picker.Item label="JPEG" value="jpg" />
-                <Picker.Item label="WEBP" value="webp" />
                 <Picker.Item label="WEBM (android only)" value="webm" />
                 <Picker.Item label="RAW (android only)" value="raw" />
                 <Picker.Item label="INVALID" value="_invalid_" />
