@@ -52,7 +52,7 @@ declare module 'react-native-view-shot' {
         snapshotContentContainer?: boolean;
         /**
          * if true and when view is a SurfaceView or have it in the view tree, view will be captured.
-         * False by default, because it can have signoficant performance impact
+         * False by default, because it can have significant performance impact
          */
         handleGLSurfaceViewOnAndroid?: boolean;
         /**
