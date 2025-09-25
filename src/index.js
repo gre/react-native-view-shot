@@ -1,34 +1,17 @@
-// @flow
-import React, { Component } from "react";
-import { View, Platform, findNodeHandle, StyleProp } from "react-native";
+import React, {Component} from "react";
+import {View, Platform, findNodeHandle} from "react-native";
 import RNViewShot from "./RNViewShot";
-import type { ViewStyleProp } from "react-native/Libraries/StyleSheet/StyleSheet";
-import type { LayoutEvent } from "react-native/Libraries/Types/CoreEventTypes";
 
 const neverEndingPromise = new Promise(() => {});
 
-type Options = {
-  width?: number,
-  height?: number,
-  format: "png" | "jpg" | "webm" | "raw",
-  quality: number,
-  result: "tmpfile" | "base64" | "data-uri" | "zip-base64",
-  snapshotContentContainer: boolean,
-  handleGLSurfaceViewOnAndroid: boolean,
-};
-
-if (!RNViewShot) {
-  console.warn(
-    "react-native-view-shot: RNViewShot is undefined. Make sure the library is linked on the native side."
-  );
-}
+// Options for capture configuration
 
 const acceptedFormats = ["png", "jpg"].concat(
-  Platform.OS === "android" ? ["webm", "raw"] : []
+  Platform.OS === "android" ? ["webm", "raw"] : [],
 );
 
 const acceptedResults = ["tmpfile", "base64", "data-uri"].concat(
-  Platform.OS === "android" ? ["zip-base64"] : []
+  Platform.OS === "android" ? ["zip-base64"] : [],
 );
 
 const defaultOptions = {
@@ -40,11 +23,8 @@ const defaultOptions = {
 };
 
 // validate and coerce options
-function validateOptions(input: ?$Shape<Options>): {
-  options: Options,
-  errors: Array<string>,
-} {
-  const options: Options = {
+function validateOptions(input) {
+  const options = {
     ...defaultOptions,
     ...input,
   };
@@ -83,7 +63,7 @@ function validateOptions(input: ?$Shape<Options>): {
       "option format '" +
         options.format +
         "' is not in valid formats: " +
-        acceptedFormats.join(" | ")
+        acceptedFormats.join(" | "),
     );
   }
   if (acceptedResults.indexOf(options.result) === -1) {
@@ -92,25 +72,21 @@ function validateOptions(input: ?$Shape<Options>): {
       "option result '" +
         options.result +
         "' is not in valid formats: " +
-        acceptedResults.join(" | ")
+        acceptedResults.join(" | "),
     );
   }
-  return { options, errors };
+  return {options, errors};
 }
 
-export function ensureModuleIsLoaded() {
+export function captureRef(view, optionsObject) {
   if (!RNViewShot) {
+    console.warn(
+      "react-native-view-shot: RNViewShot is undefined. Make sure the library is linked on the native side.",
+    );
     throw new Error(
-      "react-native-view-shot: NativeModules.RNViewShot is undefined. Make sure the library is linked on the native side."
+      "react-native-view-shot: NativeModules.RNViewShot is undefined. Make sure the library is linked on the native side.",
     );
   }
-}
-
-export function captureRef<T: React$ElementType>(
-  view: number | ?View | React$Ref<T>,
-  optionsObject?: Object
-): Promise<string> {
-  ensureModuleIsLoaded();
   if (
     view &&
     typeof view === "object" &&
@@ -128,22 +104,22 @@ export function captureRef<T: React$ElementType>(
     const node = findNodeHandle(view);
     if (!node) {
       return Promise.reject(
-        new Error("findNodeHandle failed to resolve view=" + String(view))
+        new Error("findNodeHandle failed to resolve view=" + String(view)),
       );
     }
     view = node;
   }
-  const { options, errors } = validateOptions(optionsObject);
+  const {options, errors} = validateOptions(optionsObject);
   if (__DEV__ && errors.length > 0) {
     console.warn(
       "react-native-view-shot: bad options:\n" +
-        errors.map((e) => `- ${e}`).join("\n")
+        errors.map(e => `- ${e}`).join("\n"),
     );
   }
   return RNViewShot.captureRef(view, options);
 }
 
-export function releaseCapture(uri: string): void {
+export function releaseCapture(uri) {
   if (typeof uri !== "string") {
     if (__DEV__) {
       console.warn("Invalid argument to releaseCapture. Got: " + uri);
@@ -153,34 +129,33 @@ export function releaseCapture(uri: string): void {
   }
 }
 
-export function captureScreen(optionsObject?: Options): Promise<string> {
-  ensureModuleIsLoaded();
-  const { options, errors } = validateOptions(optionsObject);
+export function captureScreen(optionsObject) {
+  if (!RNViewShot) {
+    console.warn(
+      "react-native-view-shot: RNViewShot is undefined. Make sure the library is linked on the native side.",
+    );
+    throw new Error(
+      "react-native-view-shot: NativeModules.RNViewShot is undefined. Make sure the library is linked on the native side.",
+    );
+  }
+  const {options, errors} = validateOptions(optionsObject);
   if (__DEV__ && errors.length > 0) {
     console.warn(
       "react-native-view-shot: bad options:\n" +
-        errors.map((e) => `- ${e}`).join("\n")
+        errors.map(e => `- ${e}`).join("\n"),
     );
   }
   return RNViewShot.captureScreen(options);
 }
 
-type Props = {
-  options?: Object,
-  captureMode?: "mount" | "continuous" | "update",
-  children: React$Node,
-  onLayout?: (e: *) => void,
-  onCapture?: (uri: string) => void,
-  onCaptureFailure?: (e: Error) => void,
-  style?: StyleProp<ViewStyleProp>,
-};
+// Props for ViewShot component
 
-function checkCompatibleProps(props: Props) {
+function checkCompatibleProps(props) {
   if (!props.captureMode && props.onCapture) {
     // in that case, it's authorized if you call capture() yourself
   } else if (props.captureMode && !props.onCapture) {
     console.warn(
-      "react-native-view-shot: captureMode prop is defined but onCapture prop callback is missing"
+      "react-native-view-shot: captureMode prop is defined but onCapture prop callback is missing",
     );
   } else if (
     (props.captureMode === "continuous" || props.captureMode === "update") &&
@@ -190,61 +165,60 @@ function checkCompatibleProps(props: Props) {
   ) {
     console.warn(
       "react-native-view-shot: result=tmpfile is recommended for captureMode=" +
-        props.captureMode
+        props.captureMode,
     );
   }
 }
 
-export default class ViewShot extends Component<Props> {
+export default class ViewShot extends Component {
   static captureRef = captureRef;
   static releaseCapture = releaseCapture;
 
-  root: ?View;
+  root = null;
+  _raf = null;
+  lastCapturedURI = null;
 
-  _raf: *;
-  lastCapturedURI: ?string;
-
-  resolveFirstLayout: (layout: Object) => void;
-  firstLayoutPromise: Promise<Object> = new Promise((resolve) => {
+  resolveFirstLayout = null;
+  firstLayoutPromise = new Promise(resolve => {
     this.resolveFirstLayout = resolve;
   });
 
-  capture = (): Promise<string> =>
+  capture = () =>
     this.firstLayoutPromise
       .then(() => {
-        const { root } = this;
+        const {root} = this;
         if (!root) return neverEndingPromise; // component is unmounted, you never want to hear back from the promise
         return captureRef(root, this.props.options);
       })
       .then(
-        (uri: string) => {
+        uri => {
           this.onCapture(uri);
           return uri;
         },
-        (e: Error) => {
+        e => {
           this.onCaptureFailure(e);
           throw e;
-        }
+        },
       );
 
-  onCapture = (uri: string) => {
+  onCapture = uri => {
     if (!this.root) return;
     if (this.lastCapturedURI) {
       // schedule releasing the previous capture
       setTimeout(releaseCapture, 500, this.lastCapturedURI);
     }
     this.lastCapturedURI = uri;
-    const { onCapture } = this.props;
+    const {onCapture} = this.props;
     if (onCapture) onCapture(uri);
   };
 
-  onCaptureFailure = (e: Error) => {
+  onCaptureFailure = e => {
     if (!this.root) return;
-    const { onCaptureFailure } = this.props;
+    const {onCaptureFailure} = this.props;
     if (onCaptureFailure) onCaptureFailure(e);
   };
 
-  syncCaptureLoop = (captureMode: ?string) => {
+  syncCaptureLoop = captureMode => {
     cancelAnimationFrame(this._raf);
     if (captureMode === "continuous") {
       let previousCaptureURI = "-"; // needs to capture at least once at first, so we use "-" arbitrary string
@@ -258,12 +232,12 @@ export default class ViewShot extends Component<Props> {
     }
   };
 
-  onRef = (ref: React$ElementRef<*>) => {
+  onRef = ref => {
     this.root = ref;
   };
 
-  onLayout = (e: LayoutEvent) => {
-    const { onLayout } = this.props;
+  onLayout = e => {
+    const {onLayout} = this.props;
     this.resolveFirstLayout(e.nativeEvent.layout);
     if (onLayout) onLayout(e);
   };
@@ -277,7 +251,7 @@ export default class ViewShot extends Component<Props> {
     }
   }
 
-  componentDidUpdate(prevProps: Props) {
+  componentDidUpdate(prevProps) {
     if (this.props.captureMode !== undefined) {
       if (this.props.captureMode !== prevProps.captureMode) {
         this.syncCaptureLoop(this.props.captureMode);
@@ -293,7 +267,7 @@ export default class ViewShot extends Component<Props> {
   }
 
   render() {
-    const { children } = this.props;
+    const {children} = this.props;
     return (
       <View
         ref={this.onRef}

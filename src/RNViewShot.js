@@ -1,3 +1,2 @@
-//@flow
-import RNViewShot from './specs/NativeRNViewShot'
-export default RNViewShot
+import RNViewShot from "./specs/NativeRNViewShot";
+export default RNViewShot;

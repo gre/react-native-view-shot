@@ -2,7 +2,13 @@
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup Label="ReactNativeWindowsProps">
-    <ReactNativeWindowsDir Condition="'$(ReactNativeWindowsDir)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(SolutionDir), 'node_modules\react-native-windows\package.json'))\node_modules\react-native-windows\</ReactNativeWindowsDir>
+    <ReactNativeWindowsDir Condition="'$(ReactNativeWindowsDir)' == ''">..\..\node_modules\react-native-windows\</ReactNativeWindowsDir>
+    <!-- Support for different react-native-windows versions -->
+    <ReactNativeWindowsPropsFile Condition="Exists('$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.Uwp.CSharpLib.props')">$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.Uwp.CSharpLib.props</ReactNativeWindowsPropsFile>
+    <ReactNativeWindowsTargetsFile Condition="Exists('$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.Uwp.CSharpLib.targets')">$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.Uwp.CSharpLib.targets</ReactNativeWindowsTargetsFile>
+    <!-- Fallback for newer versions -->
+    <ReactNativeWindowsPropsFile Condition="'$(ReactNativeWindowsPropsFile)' == '' AND Exists('$(ReactNativeWindowsDir)\Microsoft.ReactNative.Uwp.CSharpLib.props')">$(ReactNativeWindowsDir)\Microsoft.ReactNative.Uwp.CSharpLib.props</ReactNativeWindowsPropsFile>
+    <ReactNativeWindowsTargetsFile Condition="'$(ReactNativeWindowsTargetsFile)' == '' AND Exists('$(ReactNativeWindowsDir)\Microsoft.ReactNative.Uwp.CSharpLib.targets')">$(ReactNativeWindowsDir)\Microsoft.ReactNative.Uwp.CSharpLib.targets</ReactNativeWindowsTargetsFile>
   </PropertyGroup>
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -142,17 +148,17 @@
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
   <ImportGroup Label="ReactNativeWindowsPropertySheets">
-    <Import Project="$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.Uwp.CSharpLib.props" Condition="Exists('$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.Uwp.CSharpLib.props')" />
+    <Import Project="$(ReactNativeWindowsPropsFile)" Condition="'$(ReactNativeWindowsPropsFile)' != '' AND Exists('$(ReactNativeWindowsPropsFile)')" />
   </ImportGroup>
   <ImportGroup Label="ReactNativeWindowsTargets">
-    <Import Project="$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.Uwp.CSharpLib.targets" Condition="Exists('$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.Uwp.CSharpLib.targets')" />
+    <Import Project="$(ReactNativeWindowsTargetsFile)" Condition="'$(ReactNativeWindowsTargetsFile)' != '' AND Exists('$(ReactNativeWindowsTargetsFile)')" />
   </ImportGroup>
   <Target Name="EnsureReactNativeWindowsTargets" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
-      <ErrorText>This project references targets in your node_modules\react-native-windows folder that are missing. The missing file is {0}.</ErrorText>
+      <ErrorText>This project references react-native-windows targets that are missing. Please ensure react-native-windows is properly installed. Missing file: {0}</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.Uwp.CSharpLib.props')" Text="$([System.String]::Format('$(ErrorText)', '$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.Uwp.CSharpLib.props'))" />
-    <Error Condition="!Exists('$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.Uwp.CSharpLib.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.Uwp.CSharpLib.targets'))" />
+    <Error Condition="'$(ReactNativeWindowsPropsFile)' == ''" Text="Could not find Microsoft.ReactNative.Uwp.CSharpLib.props in react-native-windows package. Please check your react-native-windows installation." />
+    <Error Condition="'$(ReactNativeWindowsTargetsFile)' == ''" Text="Could not find Microsoft.ReactNative.Uwp.CSharpLib.targets in react-native-windows package. Please check your react-native-windows installation." />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.

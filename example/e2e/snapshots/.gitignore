@@ -1,0 +1,10 @@
+# Ignore output snapshots (generated during test runs)
+output/*
+
+# Keep reference snapshots (golden images for comparison)
+!reference/
+!reference/.gitkeep
+
+# Keep directory structure
+!.gitignore
+
