@@ -1,0 +1,25 @@
+{
+  "name": "ViewShotWindowsExample",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "windows": "react-native run-windows",
+    "start": "react-native start"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-native": "0.75.4",
+    "react-native-view-shot": "file:..",
+    "react-native-windows": "^0.75.19"
+  },
+  "devDependencies": {
+    "@react-native/babel-preset": "0.75.4",
+    "@react-native/metro-config": "0.75.4",
+    "@react-native/typescript-config": "0.75.4",
+    "metro-config": "^0.80.12",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

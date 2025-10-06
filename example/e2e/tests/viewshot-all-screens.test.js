@@ -106,9 +106,18 @@ describe('📸 ViewShot - All Screens', () => {
       }
     }
 
-    // Navigate to screen
+    // Navigate to screen using testID (more reliable than text)
     console.log(`🔄 Navigating to: ${screenTitle}`);
-    await element(by.text(screenTitle)).atIndex(0).tap();
+    const testId = `nav-${screenTitle.toLowerCase().replace(/\s+/g, '-')}`;
+    console.log(`   Using testID: ${testId}`);
+
+    try {
+      await element(by.id(testId)).tap();
+    } catch (e) {
+      // Fallback to text if testID fails
+      console.log(`⚠️  testID failed, falling back to text: ${e.message}`);
+      await element(by.text(screenTitle)).atIndex(0).tap();
+    }
     await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for navigation
 
     // Wait for screen to load and check if button is visible
@@ -118,9 +127,9 @@ describe('📸 ViewShot - All Screens', () => {
     // Try to find button with scrolling if needed
     let buttonVisible = false;
 
-    // First check if button is already visible
+    // First check if button is already visible using testID
     try {
-      await expect(element(by.text(captureButtonText))).toBeVisible();
+      await expect(element(by.id('capture-button'))).toBeVisible();
       buttonVisible = true;
       console.log(`✅ Button already visible`);
     } catch {
@@ -130,9 +139,9 @@ describe('📸 ViewShot - All Screens', () => {
 
         // First try to scroll to the button element directly
         try {
-          await element(by.text(captureButtonText)).scrollTo('bottom');
+          await element(by.id('capture-button')).scrollTo('bottom');
           await new Promise(resolve => setTimeout(resolve, 1000));
-          await expect(element(by.text(captureButtonText))).toBeVisible();
+          await expect(element(by.id('capture-button'))).toBeVisible();
           buttonVisible = true;
           console.log(`✅ Button found using scrollTo`);
         } catch {
@@ -144,7 +153,7 @@ describe('📸 ViewShot - All Screens', () => {
               await new Promise(resolve => setTimeout(resolve, 800));
 
               // Check if visible now
-              await expect(element(by.text(captureButtonText))).toBeVisible();
+              await expect(element(by.id('capture-button'))).toBeVisible();
               buttonVisible = true;
               console.log(`✅ Button found after ${i + 1} down swipes`);
               break;
@@ -162,7 +171,7 @@ describe('📸 ViewShot - All Screens', () => {
                 await element(by.id(scrollViewId)).swipe('down', 'slow', 0.5);
                 await new Promise(resolve => setTimeout(resolve, 800));
 
-                await expect(element(by.text(captureButtonText))).toBeVisible();
+                await expect(element(by.id('capture-button'))).toBeVisible();
                 buttonVisible = true;
                 console.log(`✅ Button found after ${i + 1} up swipes`);
                 break;
@@ -178,12 +187,12 @@ describe('📸 ViewShot - All Screens', () => {
     }
 
     // Final wait for button to be visible
-    await waitFor(element(by.text(captureButtonText)))
+    await waitFor(element(by.id('capture-button')))
       .toBeVisible()
       .withTimeout(5000);
 
     // Tap capture button
-    await element(by.text(captureButtonText)).tap();
+    await element(by.id('capture-button')).tap();
     await new Promise(resolve => setTimeout(resolve, 3000)); // Wait for capture to complete
 
     // Scroll down to reveal success message if needed
@@ -285,7 +294,11 @@ describe('📸 ViewShot - All Screens', () => {
       await goBackToHome();
 
       console.log(`🔄 Navigating to: Transparency`);
-      await element(by.text('Transparency')).atIndex(0).tap();
+      try {
+        await element(by.id('nav-transparency')).tap();
+      } catch {
+        await element(by.text('Transparency')).atIndex(0).tap();
+      }
       await new Promise(resolve => setTimeout(resolve, 3000)); // Wait for auto-capture
 
       // Check for success message
@@ -356,7 +369,11 @@ describe('📸 ViewShot - All Screens', () => {
       await goBackToHome();
 
       console.log(`🔄 Navigating to: Image Capture`);
-      await element(by.text('Image Capture')).atIndex(0).tap();
+      try {
+        await element(by.id('nav-image-capture')).tap();
+      } catch {
+        await element(by.text('Image Capture')).atIndex(0).tap();
+      }
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Try to find button with either format, with scrolling

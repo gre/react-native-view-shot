@@ -52,6 +52,9 @@ lib/
 *.tgz
 *.tar.gz
 
+# Web example build
+example-web/dist/
+
 # Runtime data
 pids
 *.pid

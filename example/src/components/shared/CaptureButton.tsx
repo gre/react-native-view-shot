@@ -36,6 +36,9 @@ export const CaptureButton: React.FC<CaptureButtonProps> = ({
       style={[styles.button, { backgroundColor: getButtonColor() }]}
       onPress={onPress}
       disabled={isCapturing || disabled}
+      testID="capture-button"
+      accessible={true}
+      accessibilityLabel="capture-button"
     >
       <Text style={styles.buttonText}>{getButtonText()}</Text>
     </TouchableOpacity>

@@ -1,0 +1,4 @@
+# Playwright snapshots directory
+# reference/ contains golden snapshots
+# output/ contains test results (git ignored)
+

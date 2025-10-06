@@ -3,6 +3,22 @@ import js from "@eslint/js";
 import prettier from "eslint-config-prettier";
 
 export default [
+  // Global ignores
+  {
+    ignores: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/lib/**",
+      "**/.expo/**",
+      "**/android/build/**",
+      "**/android/app/build/**",
+      "**/ios/build/**",
+      "**/ios/Pods/**",
+      "**/example-web/dist/**",
+      "**/*.min.js",
+    ],
+  },
   js.configs.recommended,
   prettier,
   {
@@ -52,7 +68,12 @@ export default [
   },
   // Node.js files (metro.config.js, etc.)
   {
-    files: ["**/metro.config.js", "**/babel.config.js", "**/.detoxrc.js"],
+    files: [
+      "**/metro.config.js",
+      "**/babel.config.js",
+      "**/webpack.config.js",
+      "**/.detoxrc.js",
+    ],
     languageOptions: {
       globals: {
         __dirname: "readonly",

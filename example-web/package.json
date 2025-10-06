@@ -1,0 +1,42 @@
+{
+  "name": "viewshot-web-example",
+  "version": "1.0.0",
+  "description": "Web example for react-native-view-shot demonstrating html2canvas integration",
+  "private": true,
+  "scripts": {
+    "start": "webpack serve --mode development --open",
+    "build": "webpack --mode production",
+    "clean": "rm -rf dist",
+    "test:e2e": "playwright test --reporter=list",
+    "test:e2e:headed": "playwright test --headed --reporter=list",
+    "test:e2e:debug": "playwright test --headed --debug",
+    "test:e2e:update-snapshots": "playwright test --update-snapshots"
+  },
+  "dependencies": {
+    "html2canvas": "^1.4.1",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "react-native-web": "^0.19.13"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0",
+    "@babel/preset-react": "^7.25.0",
+    "@babel/preset-typescript": "^7.26.0",
+    "@playwright/test": "^1.48.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "babel-loader": "^9.2.1",
+    "css-loader": "^7.1.2",
+    "html-webpack-plugin": "^5.6.0",
+    "serve": "^14.2.4",
+    "style-loader": "^4.0.0",
+    "typescript": "^5.8.3",
+    "webpack": "^5.97.1",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

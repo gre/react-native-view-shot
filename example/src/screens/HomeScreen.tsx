@@ -152,6 +152,9 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         key={testCase.key}
         style={[styles.testCase, { borderLeftColor: priorityColor }]}
         onPress={() => navigation.navigate(testCase.key)}
+        testID={`nav-${testCase.title.toLowerCase().replace(/\s+/g, '-')}`}
+        accessible={true}
+        accessibilityLabel={testCase.title}
       >
         <View style={styles.testCaseContent}>
           <Text style={styles.testEmoji}>{testCase.emoji}</Text>

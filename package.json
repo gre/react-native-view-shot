@@ -63,5 +63,14 @@
       "javaPackageName": "fr.greweb.reactnativeviewshot"
     }
   },
+  "react-native": {
+    "windows": {
+      "sourceDir": "windows",
+      "solutionFile": "RNViewShot.sln",
+      "project": {
+        "projectFile": "RNViewShot\\RNViewShot.csproj"
+      }
+    }
+  },
   "stableVersion": "4.0.2"
 }

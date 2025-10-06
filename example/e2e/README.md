@@ -9,27 +9,47 @@
 - Comprehensive coverage of all ViewShot features
 - Robust navigation and error handling
 
-### 🚧 Android - Build Working, Runtime Issue
+### 🚧 Android - Working with Known Issues
 
 - **APK builds:** ✅ Both debug and test APKs build successfully
 - **libfbjni.so fix:** ✅ Duplicate library conflicts resolved
-- **Detox runtime:** ❌ Crashes on launch with `NullPointerException` in `NetworkIdlingResource`
+- **Detox runtime:** ✅ App launches without Fabric crashes (newArchEnabled=false)
+- **Test execution:** ⚠️ Tests run but have element detection issues
+  - Button testIDs not always detected by Detox
+  - Screen navigation sometimes fails
+  - App occasionally crashes between tests
 
 ## Running Tests
 
-### iOS
+### iOS (Fully Working)
 
 ```bash
 cd example
 npm run test:e2e:ios
 ```
 
-### Android (Build Only)
+To update iOS reference snapshots:
 
 ```bash
-cd example/android
-./gradlew assembleDebug assembleAndroidTest
+cd example
+UPDATE_SNAPSHOTS=true npm run test:e2e:ios
 ```
+
+### Android (Working with Issues)
+
+```bash
+cd example
+npm run test:e2e:android
+```
+
+To update Android reference snapshots:
+
+```bash
+cd example
+UPDATE_SNAPSHOTS=true npm run test:e2e:android
+```
+
+**Note:** Android tests may fail intermittently due to element detection issues. See "Known Issues" section below.
 
 ## Test Coverage
 
@@ -56,29 +76,36 @@ All tests cover the same scenarios on both platforms:
 
 ## Known Issues
 
-### Android Detox Runtime
+### Android Detox Element Detection
 
-The Android Detox tests crash at launch with:
+Android tests run but have intermittent element detection issues:
 
-```
-java.lang.NullPointerException
-  at com.wix.detox.reactnative.idlingresources.network.NetworkIdlingResource.<init>
-```
+**Problems:**
 
-**Root Cause:** Compatibility issue between Detox 20.x and React Native 0.81 with Fabric (New Architecture).
+- `testID` attributes not always detected by Detox on Android
+- `by.text()` matchers sometimes fail with emoji-containing text
+- App crashes with "No activities found" after some test failures
+- Navigation between screens can fail intermittently
 
-**Workarounds Attempted:**
+**Root Causes:**
 
-- ✅ Fixed libfbjni.so duplicates (builds now work)
-- ✅ Increased timeouts
-- ❌ Disabling network sync (API not available)
-- ❌ Using black-box mode (still requires test APK)
+1. **testID mapping:** React Native Android doesn't automatically map `testID` to accessibility identifiers like iOS does
+2. **Emoji rendering:** Android text matching with emojis is unreliable
+3. **Activity lifecycle:** React Native Android activity can be destroyed between tests
 
-**Recommended Path Forward:**
+**Fixes Applied:**
 
-1. Use iOS Detox for CI/CD (fully working)
-2. Manual testing for Android features
-3. Wait for Detox 21.x or React Native 0.82+ with better Fabric support
+- ✅ Added `accessible={true}` and `accessibilityLabel` to buttons
+- ✅ Disabled Fabric (`newArchEnabled=false`) to avoid Detox crashes
+- ✅ Increased Detox timeouts for React Native initialization
+- ✅ Fixed libfbjni.so duplicate library conflicts
+
+**Recommended Actions:**
+
+1. Use iOS Detox for primary CI/CD validation (fully stable)
+2. Run Android Detox tests as supplementary checks
+3. Consider adding more explicit testIDs to all interactive elements
+4. Investigate using `by.id()` with resource IDs instead of text matchers
 
 ## Android Build Fix
 
@@ -177,6 +204,22 @@ UPDATE_SNAPSHOTS=true npm run test:e2e:android
 This will save new screenshots to `snapshots/reference/{platform}/`.
 
 ## CI Integration
+
+iOS and Android tests run automatically in GitHub Actions:
+
+**When snapshots differ:**
+
+- The CI will show a clear message in the GitHub Actions summary
+- Download the `detox-snapshots-ios` or `detox-snapshots-android` artifact
+- Replace `example/e2e/snapshots/reference/` with the downloaded files
+- Commit the updated snapshots
+
+**Artifacts available:**
+
+- `detox-snapshots-ios`: iOS reference snapshots (30 days)
+- `detox-snapshots-android`: Android reference snapshots (30 days)
+- `detox-test-results-ios`: iOS test results (7 days)
+- `detox-test-results-android`: Android test results (7 days)
 
 iOS tests run automatically in GitHub Actions:
 

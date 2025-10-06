@@ -65,7 +65,13 @@ const BasicTestScreen: React.FC = () => {
         </ViewShot>
 
         <View style={styles.controls}>
-          <TouchableOpacity style={styles.button} onPress={captureScreenshot}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={captureScreenshot}
+            testID="capture-button"
+            accessible={true}
+            accessibilityLabel="capture-button"
+          >
             <Text style={styles.buttonText}>📸 Test ViewShot Capture</Text>
           </TouchableOpacity>
 

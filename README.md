@@ -175,9 +175,15 @@ Returns a Promise of the image URI.
 
 - **`options`**: the same options as in `captureRef` method.
 
-### Advanced Examples
+## Examples
 
-[Checkout react-native-view-shot-example](example)
+### Native Example (iOS & Android)
+
+[Checkout react-native-view-shot-example](example) - Comprehensive example app demonstrating all features on iOS and Android.
+
+### Web Example
+
+[Checkout react-native-view-shot-web-example](example-web) - Web example demonstrating how the library works in browsers using html2canvas.
 
 ## Interoperability Table
 
@@ -185,15 +191,15 @@ Returns a Promise of the image URI.
 
 Model tested: iPhone 6 (iOS), Nexus 5 (Android).
 
-| System                | iOS              | Android           | Windows                |
-| --------------------- | ---------------- | ----------------- | ---------------------- |
-| View,Text,Image,..    | YES              | YES               | YES                    |
-| WebView               | YES              | YES<sup>1</sup>   | YES                    |
-| gl-react v2           | YES              | NO<sup>2</sup>    | NO<sup>3</sup>         |
-| react-native-video    | NO               | NO                | NO                     |
-| react-native-maps     | YES              | NO<sup>4</sup>    | NO<sup>3</sup>         |
-| react-native-svg      | YES              | YES               | maybe?                 |
-| react-native-camera   | NO               | YES               | NO <sup>3</sup>        |
+| System              | iOS | Android         | Windows         | Web                 |
+| ------------------- | --- | --------------- | --------------- | ------------------- |
+| View,Text,Image,..  | YES | YES             | YES             | YES                 |
+| WebView             | YES | YES<sup>1</sup> | YES             | N/A                 |
+| gl-react v2         | YES | NO<sup>2</sup>  | NO<sup>3</sup>  | NO<sup>3</sup>      |
+| react-native-video  | NO  | NO              | NO              | NO                  |
+| react-native-maps   | YES | NO<sup>4</sup>  | NO<sup>3</sup>  | NO<sup>3</sup>      |
+| react-native-svg    | YES | YES             | maybe?          | LIMITED<sup>5</sup> |
+| react-native-camera | NO  | YES             | NO <sup>3</sup> | NO<sup>3</sup>      |
 
 >
 
@@ -201,6 +207,7 @@ Model tested: iPhone 6 (iOS), Nexus 5 (Android).
 2. It returns an empty image (not a failure Promise).
 3. Component itself lacks platform support.
 4. But you can just use the react-native-maps snapshot function: https://github.com/airbnb/react-native-maps#take-snapshot-of-map
+5. Web support via html2canvas has limitations with SVG rendering. Basic SVG works, complex SVG may have issues.
 
 ## Performance Optimization
 
