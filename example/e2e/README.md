@@ -130,8 +130,51 @@ This removes duplicate `libfbjni.so` files from `react-native-gesture-handler` b
 ### Validation
 
 - `SnapshotMatcher` - Image comparison with tolerance
+- **Platform-specific snapshots** - Separate reference images for iOS/Android
 - Platform-specific timeouts (`getPlatformTimeout`)
 - Auto-capture detection and handling
+
+## Snapshot Testing
+
+### Platform-Specific References
+
+Screenshot references are **separated by platform** to account for rendering differences:
+
+```
+snapshots/
+  ├── reference/
+  │   ├── ios/           # iOS reference images
+  │   │   ├── basic_viewshot.png
+  │   │   ├── fullscreen_viewshot.png
+  │   │   └── ...
+  │   └── android/       # Android reference images
+  │       ├── basic_viewshot.png
+  │       └── ...
+  └── output/            # Test outputs (gitignored)
+      ├── ios/
+      └── android/
+```
+
+**Why separate?** iOS and Android render differently:
+
+- Different fonts and antialiasing
+- Different native components
+- Different screen densities
+
+### Updating Reference Images
+
+To regenerate reference images for a platform:
+
+```bash
+# iOS
+cd example
+UPDATE_SNAPSHOTS=true npm run test:e2e:ios
+
+# Android (when working)
+UPDATE_SNAPSHOTS=true npm run test:e2e:android
+```
+
+This will save new screenshots to `snapshots/reference/{platform}/`.
 
 ## CI Integration
 

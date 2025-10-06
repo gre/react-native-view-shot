@@ -2,7 +2,12 @@
 output/*
 
 # Keep reference snapshots (golden images for comparison)
+# Platform-specific: reference/ios/ and reference/android/
 !reference/
+!reference/ios/
+!reference/ios/*.png
+!reference/android/
+!reference/android/*.png
 !reference/.gitkeep
 
 # Keep directory structure

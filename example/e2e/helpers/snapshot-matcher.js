@@ -3,11 +3,20 @@ const path = require('path');
 
 /**
  * Helper to validate captured screenshots against reference snapshots
+ * Snapshots are platform-specific (iOS vs Android) to account for rendering differences
  */
 class SnapshotMatcher {
   constructor() {
-    this.referenceDir = path.join(__dirname, '../snapshots/reference');
-    this.outputDir = path.join(__dirname, '../snapshots/output');
+    // Get platform from Detox device
+    const platform = device.getPlatform(); // 'ios' or 'android'
+
+    // Platform-specific directories to handle rendering differences
+    this.referenceDir = path.join(
+      __dirname,
+      '../snapshots/reference',
+      platform,
+    );
+    this.outputDir = path.join(__dirname, '../snapshots/output', platform);
 
     // Ensure directories exist
     if (!fs.existsSync(this.referenceDir)) {
@@ -16,6 +25,10 @@ class SnapshotMatcher {
     if (!fs.existsSync(this.outputDir)) {
       fs.mkdirSync(this.outputDir, { recursive: true });
     }
+
+    console.log(`📸 SnapshotMatcher initialized for ${platform}`);
+    console.log(`   Reference: ${this.referenceDir}`);
+    console.log(`   Output: ${this.outputDir}`);
   }
 
   /**

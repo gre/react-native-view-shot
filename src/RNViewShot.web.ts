@@ -1,6 +1,10 @@
 import html2canvas from "html2canvas";
+import type {CaptureOptions} from "./index";
 
-async function captureRef(view, options) {
+async function captureRef(
+  view: HTMLElement,
+  options: CaptureOptions,
+): Promise<string> {
   if (options.result === "tmpfile") {
     console.warn(
       "Tmpfile is not implemented for web. Try base64 or file.\n" +
@@ -17,6 +21,9 @@ async function captureRef(view, options) {
     // Resize result
     const resizedCanvas = document.createElement("canvas");
     const resizedContext = resizedCanvas.getContext("2d");
+    if (!resizedContext) {
+      throw new Error("Failed to get 2d context from canvas");
+    }
     resizedCanvas.height = options.height;
     resizedCanvas.width = options.width;
     resizedContext.drawImage(
@@ -38,11 +45,11 @@ async function captureRef(view, options) {
   return dataUrl.replace(/data:image\/(\w+);base64,/, "");
 }
 
-function captureScreen(options) {
+function captureScreen(options: CaptureOptions): Promise<string> {
   return captureRef(window.document.body, options);
 }
 
-function releaseCapture(_uri) {
+function releaseCapture(_uri: string): void {
   throw new Error("Tmpfile is not implemented for web. Try base64 or file");
 }
 
