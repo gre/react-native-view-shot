@@ -524,7 +524,7 @@ jobs:
         run: |
           # Install applesimutils from GitHub (brew formula doesn't exist)
           curl -L https://github.com/wix/AppleSimulatorUtils/releases/download/0.9.6/AppleSimulatorUtils-0.9.6.tar.gz | tar -xz
-          sudo xcode-select -s /Applications/Xcode_15.0.app/Contents/Developer
+          # Use the default Xcode path (don't override it)
           xcodebuild -project AppleSimulatorUtils.xcodeproj -scheme AppleSimulatorUtils -configuration Release -derivedDataPath ./build clean build
           sudo cp ./build/Build/Products/Release/applesimutils /usr/local/bin/
 
@@ -715,7 +715,7 @@ jobs:
             sleep 45
             
             echo "🧪 Running Detox E2E tests..."
-            npm run test:e2e:android || echo "⚠️  Detox tests completed with issues, but continuing..."
+            npx detox test --configuration android || echo "⚠️  Detox tests completed with issues, but continuing..."
             
             echo "🛑 Stopping Metro bundler..."
             kill $METRO_PID || true
