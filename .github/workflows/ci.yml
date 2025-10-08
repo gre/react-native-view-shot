@@ -522,8 +522,11 @@ jobs:
 
       - name: Install applesimutils for iOS Detox
         run: |
-          # Install applesimutils via npm (more reliable than brew)
-          npm install -g applesimutils
+          # Install applesimutils from GitHub (brew formula doesn't exist)
+          curl -L https://github.com/wix/AppleSimulatorUtils/releases/download/0.9.6/AppleSimulatorUtils-0.9.6.tar.gz | tar -xz
+          sudo xcode-select -s /Applications/Xcode_15.0.app/Contents/Developer
+          xcodebuild -project AppleSimulatorUtils.xcodeproj -scheme AppleSimulatorUtils -configuration Release -derivedDataPath ./build clean build
+          sudo cp ./build/Build/Products/Release/applesimutils /usr/local/bin/
 
       - name: Build library
         run: npm run build
@@ -694,14 +697,14 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         id: detox_android_tests
         with:
-          api-level: 28
+          api-level: 30
           target: google_apis
           arch: x86_64
           profile: pixel_3a
           force-avd-creation: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -memory 256 -cores 1 -qemu -enable-kvm -no-snapshot -wipe-data -no-snapshot-save -no-snapshot-load
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -memory 512 -cores 2
           disable-animations: true
-          emulator-boot-timeout: 2400
+          emulator-boot-timeout: 1200
           script: |
             cd example
             echo "🚀 Starting Metro bundler..."
@@ -874,10 +877,8 @@ jobs:
       - name: Run Playwright tests
         working-directory: example-web
         run: |
-          # First run: generate reference snapshots if they don't exist
-          npm run test:e2e:update-snapshots || true
-          # Second run: run tests normally
-          npm run test:e2e
+          # Generate reference snapshots (this will create them if they don't exist)
+          npm run test:e2e:update-snapshots
         id: playwright_tests
         
       - name: Stop web development server
