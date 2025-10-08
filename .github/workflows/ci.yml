@@ -520,6 +520,10 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
+      - name: Install applesimutils for iOS Detox
+        run: |
+          brew install applesimutils
+
       - name: Build library
         run: npm run build
 
@@ -689,14 +693,14 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         id: detox_android_tests
         with:
-          api-level: 29
+          api-level: 28
           target: google_apis
           arch: x86_64
-          profile: Nexus_6
+          profile: pixel_3a
           force-avd-creation: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -memory 512 -cores 1 -qemu -enable-kvm -no-snapshot -wipe-data
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -memory 256 -cores 1 -qemu -enable-kvm -no-snapshot -wipe-data -no-snapshot-save -no-snapshot-load -partition-size 2048
           disable-animations: true
-          emulator-boot-timeout: 1800
+          emulator-boot-timeout: 2400
           script: |
             cd example
             echo "🚀 Starting Metro bundler..."
@@ -850,11 +854,35 @@ jobs:
         working-directory: example-web
         run: npx playwright install chromium --with-deps
 
+      - name: Start web development server
+        working-directory: example-web
+        run: |
+          npm start &
+          echo $! > web-server.pid
+          sleep 30
+          # Wait for server to be ready
+          for i in {1..30}; do
+            if curl -s http://localhost:3000 > /dev/null; then
+              echo "✅ Web server is ready"
+              break
+            fi
+            echo "⏳ Waiting for web server... ($i/30)"
+            sleep 2
+          done
+          
       - name: Run Playwright tests
         working-directory: example-web
         run: npm run test:e2e
-        continue-on-error: true
         id: playwright_tests
+        
+      - name: Stop web development server
+        if: always()
+        working-directory: example-web
+        run: |
+          if [ -f web-server.pid ]; then
+            kill $(cat web-server.pid) || true
+            rm web-server.pid
+          fi
 
       - name: Check for snapshot differences
         if: failure() && steps.playwright_tests.outcome == 'failure'
