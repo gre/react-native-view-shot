@@ -524,8 +524,12 @@ jobs:
         run: |
           # Install applesimutils from GitHub (brew formula doesn't exist)
           curl -L https://github.com/wix/AppleSimulatorUtils/releases/download/0.9.6/AppleSimulatorUtils-0.9.6.tar.gz | tar -xz
-          # The archive contains a directory, navigate to it
-          cd AppleSimulatorUtils-0.9.6
+          # List contents to see what was extracted
+          ls -la
+          # Find the project file
+          find . -name "*.xcodeproj" -type d
+          # Navigate to the directory containing the project
+          cd $(find . -name "*.xcodeproj" -type d | head -1 | xargs dirname)
           # Use the default Xcode path (don't override it)
           xcodebuild -project AppleSimulatorUtils.xcodeproj -scheme AppleSimulatorUtils -configuration Release -derivedDataPath ./build clean build
           sudo cp ./build/Build/Products/Release/applesimutils /usr/local/bin/
