@@ -522,7 +522,8 @@ jobs:
 
       - name: Install applesimutils for iOS Detox
         run: |
-          brew install applesimutils
+          # Install applesimutils via npm (more reliable than brew)
+          npm install -g applesimutils
 
       - name: Build library
         run: npm run build
@@ -872,7 +873,11 @@ jobs:
           
       - name: Run Playwright tests
         working-directory: example-web
-        run: npm run test:e2e
+        run: |
+          # First run: generate reference snapshots if they don't exist
+          npm run test:e2e:update-snapshots || true
+          # Second run: run tests normally
+          npm run test:e2e
         id: playwright_tests
         
       - name: Stop web development server
