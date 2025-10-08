@@ -698,7 +698,7 @@ jobs:
           arch: x86_64
           profile: pixel_3a
           force-avd-creation: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -memory 256 -cores 1 -qemu -enable-kvm -no-snapshot -wipe-data -no-snapshot-save -no-snapshot-load -partition-size 2048
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -memory 256 -cores 1 -qemu -enable-kvm -no-snapshot -wipe-data -no-snapshot-save -no-snapshot-load
           disable-animations: true
           emulator-boot-timeout: 2400
           script: |
@@ -857,7 +857,7 @@ jobs:
       - name: Start web development server
         working-directory: example-web
         run: |
-          npm start &
+          npx webpack serve --mode development --port 3000 &
           echo $! > web-server.pid
           sleep 30
           # Wait for server to be ready
