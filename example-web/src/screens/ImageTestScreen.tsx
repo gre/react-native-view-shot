@@ -25,8 +25,10 @@ const ImageTestScreen: React.FC<Props> = ({goBack}) => {
       if (viewShotRef.current) {
         const uri = await captureRef(viewShotRef.current, {
           format,
-          quality: 0.9,
+          quality: 1.0, // Maximum quality
           result: "data-uri",
+          // For web, we can add pixelRatio for higher resolution
+          ...(typeof window !== "undefined" && {pixelRatio: 4}),
         });
         setCapturedUri(uri);
         console.log("Captured with format:", format);
@@ -257,8 +259,8 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   testImage: {
-    width: 50,
-    height: 50,
+    width: 200,
+    height: 200,
     borderRadius: 8,
     marginRight: 16,
   },

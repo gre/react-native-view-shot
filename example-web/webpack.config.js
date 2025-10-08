@@ -1,6 +1,7 @@
 /* eslint-env node */
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const CopyWebpackPlugin = require("copy-webpack-plugin");
 const webpack = require("webpack");
 
 module.exports = {
@@ -63,6 +64,14 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: "./public/index.html",
       title: "React Native View Shot - Web Example",
+    }),
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: "public/images",
+          to: "images",
+        },
+      ],
     }),
     new webpack.DefinePlugin({
       __DEV__: JSON.stringify(process.env.NODE_ENV !== "production"),

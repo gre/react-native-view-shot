@@ -549,11 +549,12 @@ jobs:
 
       - name: Run Detox Tests
         working-directory: example
-        run: npm run test:e2e:ios || true
+        run: npm run test:e2e:ios
+        continue-on-error: true
         id: detox_ios_tests
 
       - name: Check for iOS snapshot differences
-        if: always()
+        if: failure() && steps.detox_ios_tests.outcome == 'failure'
         working-directory: example
         run: |
           if [ -d "e2e/snapshots/output" ] && [ "$(ls -A e2e/snapshots/output 2>/dev/null)" ]; then
@@ -602,6 +603,12 @@ jobs:
           path: |
             example/e2e/test-results/**/*
             example/artifacts/**/*.xml
+
+      - name: Fail CI if iOS tests failed
+        if: steps.detox_ios_tests.outcome == 'failure'
+        run: |
+          echo "❌ iOS Detox tests failed - failing CI"
+          exit 1
 
   test-detox-android:
     name: Detox E2E Tests (Android)
@@ -680,15 +687,16 @@ jobs:
 
       - name: Create AVD and run Detox tests
         uses: reactivecircus/android-emulator-runner@v2
+        id: detox_android_tests
         with:
-          api-level: 28
+          api-level: 29
           target: google_apis
           arch: x86_64
-          profile: pixel_3a
-          force-avd-creation: false
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-snapshot-save -no-snapshot-load -memory 768 -cores 1 -qemu -enable-kvm -no-snapshot -wipe-data
+          profile: Nexus_6
+          force-avd-creation: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -memory 512 -cores 1 -qemu -enable-kvm -no-snapshot -wipe-data
           disable-animations: true
-          emulator-boot-timeout: 900
+          emulator-boot-timeout: 1800
           script: |
             cd example
             echo "🚀 Starting Metro bundler..."
@@ -746,6 +754,12 @@ jobs:
           path: |
             example/e2e/test-results/**/*
             example/artifacts/**/*.xml
+
+      - name: Fail CI if Android tests failed
+        if: steps.detox_android_tests.outcome == 'failure'
+        run: |
+          echo "❌ Android Detox tests failed - failing CI"
+          exit 1
 
   build-web-example:
     name: Build Web Example
@@ -865,12 +879,12 @@ jobs:
             done
           fi
 
-      - name: Upload reference snapshots (for updates)
+      - name: Upload generated snapshots (for updates)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: web-snapshots-reference
-          path: example-web/e2e/snapshots/reference/
+          name: web-snapshots-generated
+          path: example-web/e2e/snapshots/output/
           retention-days: 30
 
       - name: Upload snapshot diffs (if any)

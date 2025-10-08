@@ -35,7 +35,7 @@ module.exports = {
     emulator: {
       type: 'android.emulator',
       device: {
-        avdName: 'pixel_3a_API_28_extension_level_7_x86_64',
+        avdName: 'pixel_3a_API_30_extension_level_7_x86_64',
       },
     },
   },

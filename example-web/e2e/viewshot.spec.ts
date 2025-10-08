@@ -147,4 +147,66 @@ test.describe("ViewShot Web Example", () => {
     // Verify download button appears
     await expect(page.locator("text=⬇️ Download Image")).toBeVisible();
   });
+
+  test("should capture ImageTestScreen with real images", async ({page}) => {
+    await page.goto("/");
+    await page.click("text=Image Capture");
+
+    // Wait for page to be ready
+    await page.waitForSelector("text=🖼️ Image Gallery");
+
+    // Wait for all images to load and be visible
+    await page.waitForLoadState("networkidle");
+
+    // Wait for any images to be loaded (more flexible selector)
+    await page.waitForSelector('img[src*="test-image"]', {timeout: 10000});
+
+    // Additional wait to ensure images are fully rendered
+    await page.waitForTimeout(5000);
+
+    // Click PNG capture button
+    await page.click("text=📸 Capture as PNG");
+
+    // Wait for capture to complete
+    await page.waitForSelector("text=✅ Captured Result:", {timeout: 10000});
+
+    // Verify preview image appears
+    const previewImage = page.locator('img[src^="data:image/png"]');
+    await expect(previewImage).toBeVisible();
+
+    // Visual snapshot of the captured image with real images (high resolution)
+    await expect(previewImage).toHaveScreenshot(
+      "image-test-screen-capture.png",
+      {
+        threshold: 0.2,
+        maxDiffPixels: 1000,
+        // Increase snapshot resolution
+        scale: "css",
+        animations: "disabled",
+      },
+    );
+  });
+
+  test("should capture ComplexLayoutScreen", async ({page}) => {
+    await page.goto("/");
+    await page.click("text=Complex Layout");
+
+    // Wait for page to be ready
+    await page.waitForSelector("text=Complex Layout Test");
+
+    // Click PNG capture button
+    await page.click("text=📸 Capture This Layout");
+
+    // Wait for capture to complete
+    await page.waitForSelector("text=✅ Captured Successfully!", {
+      timeout: 10000,
+    });
+
+    // Verify preview image appears
+    const previewImage = page.locator('img[src^="data:image/png"]');
+    await expect(previewImage).toBeVisible();
+
+    // Visual snapshot of the complex layout
+    await expect(previewImage).toHaveScreenshot("complex-layout-capture.png");
+  });
 });

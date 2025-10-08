@@ -14,6 +14,9 @@ export default defineConfig({
     toHaveScreenshot: {
       maxDiffPixels: 100,
       threshold: 0.2,
+      // Higher quality snapshots
+      scale: "css",
+      animations: "disabled",
     },
   },
 
