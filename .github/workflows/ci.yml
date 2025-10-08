@@ -522,16 +522,17 @@ jobs:
 
       - name: Install applesimutils for iOS Detox
         run: |
-            # Try to install via brew first (might work on GitHub runners)
-            if brew install applesimutils 2>/dev/null; then
-              echo "✅ Installed applesimutils via brew"
+            # Try to install via brew tap first
+            if brew tap wix/brew && brew install applesimutils 2>/dev/null; then
+              echo "✅ Installed applesimutils via brew tap"
             else
-              echo "⚠️  Brew install failed, trying manual installation..."
-              # Download and install pre-compiled binary
-              curl -L https://github.com/wix/AppleSimulatorUtils/releases/download/0.9.6/applesimutils -o /tmp/applesimutils
-              chmod +x /tmp/applesimutils
-              sudo mv /tmp/applesimutils /usr/local/bin/
-              echo "✅ Installed applesimutils manually"
+              echo "⚠️  Brew install failed, trying manual compilation..."
+              # Download source and compile
+              curl -L https://github.com/wix/AppleSimulatorUtils/archive/0.9.6.tar.gz | tar -xz
+              cd AppleSimulatorUtils-0.9.6
+              xcodebuild -project applesimutils.xcodeproj -scheme applesimutils -configuration Release -derivedDataPath ./build clean build
+              sudo cp ./build/Build/Products/Release/applesimutils /usr/local/bin/
+              echo "✅ Installed applesimutils via compilation"
             fi
 
       - name: Build library
