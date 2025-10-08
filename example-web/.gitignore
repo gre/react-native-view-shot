@@ -31,3 +31,4 @@ Thumbs.db
 .env
 .env.local
 
+example-web/test-results/
