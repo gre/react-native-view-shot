@@ -54,6 +54,7 @@ lib/
 
 # Web example build
 example-web/dist/
+web-build/
 
 # Runtime data
 pids
