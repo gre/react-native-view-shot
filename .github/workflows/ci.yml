@@ -600,14 +600,29 @@ jobs:
             rm metro.pid
           fi
 
+      - name: Organize iOS Snapshots
+        if: always()
+        run: |
+          # Create platform-specific snapshot directories
+          mkdir -p example/e2e/snapshots/ios-output
+          mkdir -p example/e2e/snapshots/ios-reference
+          
+          # Copy snapshots to platform-specific directories
+          if [ -d "example/e2e/snapshots/output" ]; then
+            cp -r example/e2e/snapshots/output/* example/e2e/snapshots/ios-output/ 2>/dev/null || true
+          fi
+          if [ -d "example/e2e/snapshots/reference" ]; then
+            cp -r example/e2e/snapshots/reference/* example/e2e/snapshots/ios-reference/ 2>/dev/null || true
+          fi
+
       - name: Upload Detox Snapshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: detox-snapshots-ios
           path: |
-            example/e2e/snapshots/output/**/*.png
-            example/e2e/snapshots/reference/**/*.png
+            example/e2e/snapshots/ios-output/**/*.png
+            example/e2e/snapshots/ios-reference/**/*.png
             example/artifacts/**/*.png
 
       - name: Upload Detox Test Results
@@ -751,14 +766,29 @@ jobs:
             done
           fi
 
+      - name: Organize Android Snapshots
+        if: always()
+        run: |
+          # Create platform-specific snapshot directories
+          mkdir -p example/e2e/snapshots/android-output
+          mkdir -p example/e2e/snapshots/android-reference
+          
+          # Copy snapshots to platform-specific directories
+          if [ -d "example/e2e/snapshots/output" ]; then
+            cp -r example/e2e/snapshots/output/* example/e2e/snapshots/android-output/ 2>/dev/null || true
+          fi
+          if [ -d "example/e2e/snapshots/reference" ]; then
+            cp -r example/e2e/snapshots/reference/* example/e2e/snapshots/android-reference/ 2>/dev/null || true
+          fi
+
       - name: Upload Detox Snapshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: detox-snapshots-android
           path: |
-            example/e2e/snapshots/output/**/*.png
-            example/e2e/snapshots/reference/**/*.png
+            example/e2e/snapshots/android-output/**/*.png
+            example/e2e/snapshots/android-reference/**/*.png
             example/artifacts/**/*.png
 
       - name: Upload Detox Test Results
