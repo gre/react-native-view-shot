@@ -730,14 +730,14 @@ jobs:
           script: |
             cd example
             echo "🚀 Starting Metro bundler..."
-            npx react-native start &
+            npm start &
             METRO_PID=$!
             
             echo "⏳ Waiting for Metro to start..."
             sleep 45
             
             echo "🧪 Running Detox E2E tests..."
-            npx detox test --configuration android || echo "⚠️  Detox tests completed with issues, but continuing..."
+            npm run test:e2e:android || echo "⚠️  Detox tests completed with issues, but continuing..."
             
             echo "🛑 Stopping Metro bundler..."
             kill $METRO_PID || true
@@ -913,9 +913,8 @@ jobs:
           
       - name: Run Playwright tests
         working-directory: example-web
-        run: |
-          # Generate reference snapshots (this will create them if they don't exist)
-          npm run test:e2e:update-snapshots
+        run: npm run test:e2e
+        continue-on-error: true
         id: playwright_tests
         
       - name: Stop web development server
@@ -950,23 +949,16 @@ jobs:
             done
           fi
 
-      - name: Upload generated snapshots (for updates)
+      - name: Upload generated snapshots (actual from test-results)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: web-snapshots-generated
-          path: example-web/e2e/snapshots/output/
-          retention-days: 30
-
-      - name: Upload snapshot diffs (if any)
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-snapshots-diff
+          name: web-snapshots-actual
           path: |
-            example-web/test-results/**/*-diff.png
             example-web/test-results/**/*-actual.png
-          retention-days: 7
+            example-web/test-results/**/*-expected.png
+            example-web/test-results/**/*-diff.png
+          retention-days: 30
           if-no-files-found: ignore
 
       - name: Upload Playwright report

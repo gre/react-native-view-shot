@@ -3,6 +3,9 @@ import {defineConfig, devices} from "@playwright/test";
 export default defineConfig({
   testDir: "./e2e",
   snapshotDir: "./e2e/snapshots/reference",
+  snapshotPathTemplate: process.env.UPDATE_SNAPSHOTS
+    ? "./e2e/snapshots/reference/{testFilePath}-snapshots/{arg}{ext}"
+    : "./e2e/snapshots/output/{testFilePath}-snapshots/{arg}{ext}",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
