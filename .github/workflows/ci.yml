@@ -724,7 +724,7 @@ jobs:
           arch: x86_64
           profile: pixel_3a
           force-avd-creation: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -memory 512 -cores 2
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -memory 2048 -cores 2
           disable-animations: true
           emulator-boot-timeout: 1200
           script: |
