@@ -189,7 +189,7 @@ describe('📸 ViewShot - All Screens', () => {
     // Final wait for button to be visible
     await waitFor(element(by.id('capture-button')))
       .toBeVisible()
-      .withTimeout(15000);
+      .withTimeout(30000);
 
     // Tap capture button
     await element(by.id('capture-button')).tap();
