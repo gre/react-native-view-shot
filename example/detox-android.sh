@@ -15,6 +15,7 @@ echo "⏳ Waiting for Metro to start..."
 sleep 45
 
 echo "🧪 Running Detox E2E tests..."
+export ANDROID_AVD_NAME=test
 npm run test:e2e:android
 TEST_EXIT_CODE=$?
 
