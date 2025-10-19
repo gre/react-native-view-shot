@@ -16,6 +16,12 @@ describe('📸 ViewShot - All Screens', () => {
       newInstance: true,
       permissions: { photos: 'YES', camera: 'YES' },
     });
+
+    // Wait for home screen to load
+    await waitFor(element(by.text('🚀 React Native ViewShot')))
+      .toBeVisible()
+      .withTimeout(30000);
+    console.log('✅ Home screen loaded');
   });
 
   /**
