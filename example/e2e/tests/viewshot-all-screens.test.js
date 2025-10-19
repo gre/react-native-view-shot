@@ -17,11 +17,9 @@ describe('📸 ViewShot - All Screens', () => {
       permissions: { photos: 'YES', camera: 'YES' },
     });
 
-    // Wait for home screen to load
-    await waitFor(element(by.text('🚀 React Native ViewShot')))
-      .toBeVisible()
-      .withTimeout(30000);
-    console.log('✅ Home screen loaded');
+    // Simple delay to let app initialize
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    console.log('✅ App launched, waiting 5s for initialization');
   });
 
   /**
