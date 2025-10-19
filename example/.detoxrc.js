@@ -26,12 +26,12 @@ module.exports = {
     },
   },
   devices: {
-    simulator: {
-      type: 'ios.simulator',
-      device: {
-        type: 'iPhone 16',
+      simulator: {
+        type: 'ios.simulator',
+        device: {
+          type: 'iPhone 15 Pro',
+        },
       },
-    },
     emulator: {
       type: 'android.emulator',
       device: {
