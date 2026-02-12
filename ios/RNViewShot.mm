@@ -92,9 +92,9 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
     UIScrollView* scrollView;
     if (snapshotContentContainer) {
       if (![view isKindOfClass:[RNSnapshotScrollViewHost class]]) {
-        reject(@"E_INVALID_VIEW",
-               [NSString stringWithFormat:@"snapshotContentContainer can only be used on a ScrollView, got: %@", view],
-               nil);
+         reject(RCTErrorUnspecified,
+                [NSString stringWithFormat:@"snapshotContentContainer can only be used on a ScrollView host. instead got: %@", view],
+                nil);
         return;
       }
 
