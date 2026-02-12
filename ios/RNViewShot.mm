@@ -17,7 +17,7 @@
 
 // Add these imports near the top:
 
-#if RCT_NEW_ARCH_ENABLED
+#if RCT_REMOVE_LEGACY_ARCH
 #import <React/RCTScrollViewComponentView.h>
 typedef RCTScrollViewComponentView RNSnapshotScrollViewHost;
 #else
@@ -92,9 +92,9 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
     UIScrollView* scrollView;
     if (snapshotContentContainer) {
       if (![view isKindOfClass:[RNSnapshotScrollViewHost class]]) {
-         reject(RCTErrorUnspecified,
-                [NSString stringWithFormat:@"snapshotContentContainer can only be used on a ScrollView host. instead got: %@", view],
-                nil);
+        reject(@"E_INVALID_VIEW",
+               [NSString stringWithFormat:@"snapshotContentContainer can only be used on a ScrollView, got: %@", view],
+               nil);
         return;
       }
 
