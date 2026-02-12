@@ -15,7 +15,7 @@
 #import <rnviewshot/rnviewshot.h>
 #endif
 
-#if RCT_REMOVE_LEGACY_ARCH
+#if RCT_NEW_ARCH_ENABLED
 #import <React/RCTScrollViewComponentView.h>
 typedef RCTScrollViewComponentView RNSnapshotScrollViewHost;
 #else
