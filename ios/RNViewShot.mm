@@ -15,12 +15,18 @@
 #import <rnviewshot/rnviewshot.h>
 #endif
 
-#if RCT_NEW_ARCH_ENABLED
-#import <React/RCTScrollViewComponentView.h>
-typedef RCTScrollViewComponentView RNSnapshotScrollViewHost;
+#if __has_include(<React/RCTScrollViewComponentView.h>)
+
+  // Fabric available
+  #import <React/RCTScrollViewComponentView.h>
+  typedef RCTScrollViewComponentView RNSnapshotScrollViewHost;
+
 #else
-#import <React/RCTScrollView.h>
-typedef RCTScrollView RNSnapshotScrollViewHost;
+
+  // Fallback to legacy
+  #import <React/RCTScrollView.h>
+  typedef RCTScrollView RNSnapshotScrollViewHost;
+
 #endif
 
 
