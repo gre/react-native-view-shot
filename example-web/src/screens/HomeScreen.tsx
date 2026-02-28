@@ -7,7 +7,7 @@ import {
   StyleSheet,
 } from "react-native";
 
-type Screen = "Home" | "BasicTest" | "Transparency" | "Image" | "ComplexLayout";
+type Screen = "Home" | "BasicTest" | "Image" | "ComplexLayout";
 
 interface Props {
   navigate: (screen: Screen) => void;
@@ -26,12 +26,6 @@ const testCases: TestCase[] = [
     title: "Basic ViewShot",
     description: "Simple view capture using html2canvas on web",
     emoji: "📸",
-  },
-  {
-    key: "Transparency",
-    title: "Transparency Test",
-    description: "PNG capture with transparent background",
-    emoji: "⚪",
   },
   {
     key: "Image",

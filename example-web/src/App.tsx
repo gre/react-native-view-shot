@@ -2,11 +2,10 @@ import React, {useState} from "react";
 import {View, StyleSheet} from "react-native";
 import HomeScreen from "./screens/HomeScreen";
 import BasicTestScreen from "./screens/BasicTestScreen";
-import TransparencyTestScreen from "./screens/TransparencyTestScreen";
 import ImageTestScreen from "./screens/ImageTestScreen";
 import ComplexLayoutScreen from "./screens/ComplexLayoutScreen";
 
-type Screen = "Home" | "BasicTest" | "Transparency" | "Image" | "ComplexLayout";
+type Screen = "Home" | "BasicTest" | "Image" | "ComplexLayout";
 
 const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>("Home");
@@ -25,8 +24,6 @@ const App: React.FC = () => {
         return <HomeScreen navigate={navigate} />;
       case "BasicTest":
         return <BasicTestScreen goBack={goBack} />;
-      case "Transparency":
-        return <TransparencyTestScreen goBack={goBack} />;
       case "Image":
         return <ImageTestScreen goBack={goBack} />;
       case "ComplexLayout":

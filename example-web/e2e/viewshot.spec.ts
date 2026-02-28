@@ -79,49 +79,11 @@ test.describe("ViewShot Web Example", () => {
     await expect(page.locator("text=✅ Capture Success!")).toBeVisible();
   });
 
-  test("should navigate to transparency test", async ({page}) => {
-    await page.goto("/");
-    await page.click("text=Transparency Test");
-
-    await expect(page.locator("text=Transparency Test")).toBeVisible();
-    await expect(page.locator("text=About Transparency")).toBeVisible();
-  });
-
-  test("should capture solid background view", async ({page}) => {
-    await page.goto("/");
-    await page.click("text=Transparency Test");
-
-    // Wait for page to load
-    await page.waitForSelector("text=With Background Color");
-
-    // Click capture solid button (simpler selector)
-    await page.click("text=📸 Capture Solid");
-
-    // Wait for result
-    await page.waitForSelector("text=Result (on checkered bg):", {
-      timeout: 10000,
-    });
-
-    // Verify image appears
-    const resultImages = page.locator('img[src^="data:image"]');
-    await expect(resultImages.first()).toBeVisible();
-
-    // Visual snapshot
-    await expect(resultImages.first()).toHaveScreenshot(
-      "transparency-solid-capture.png",
-    );
-  });
-
   test("should test all screens load", async ({page}) => {
     await page.goto("/");
 
     // Test each screen
-    const screens = [
-      "Basic ViewShot",
-      "Transparency Test",
-      "Image Capture",
-      "Complex Layout",
-    ];
+    const screens = ["Basic ViewShot", "Image Capture", "Complex Layout"];
 
     for (const screen of screens) {
       await page.goto("/");
