@@ -150,7 +150,7 @@ jobs:
           xcodebuild -workspace ios/ViewShotExample.xcworkspace \
             -scheme ViewShotExample \
             -configuration Debug \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.4' \
+            -destination 'generic/platform=iOS Simulator' \
             build CODE_SIGNING_ALLOWED=NO
 
       - name: Upload iOS Build Logs
