@@ -174,6 +174,9 @@ const VideoTestScreen: React.FC = () => {
             ]}
             onPress={startCapture}
             disabled={isCapturing || !videoLoaded}
+            testID="capture-button"
+            accessible={true}
+            accessibilityLabel="capture-button"
           >
             <Text style={styles.buttonText}>
               {isCapturing

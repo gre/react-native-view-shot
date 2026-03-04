@@ -151,6 +151,9 @@ const ImageTestScreen: React.FC = () => {
             ]}
             onPress={handleCapture}
             disabled={isCapturing}
+            testID="capture-button"
+            accessible={true}
+            accessibilityLabel="capture-button"
           >
             <Text style={styles.buttonText}>
               {isCapturing

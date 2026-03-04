@@ -290,7 +290,7 @@ describe('📸 ViewShot - All Screens', () => {
       await captureScreenWithScroll(
         'Full Screen',
         '📸 Capture Full Screen',
-        '✅ Capture Success:',
+        '✅ Full Screen Captured:',
         'fullscreen_viewshot',
         'fullScreenScrollView',
       );
@@ -365,103 +365,27 @@ describe('📸 ViewShot - All Screens', () => {
       await captureScreenWithScroll(
         'Video Capture',
         '📹 Capture Video Frame',
-        '✅ Capture Success:',
+        '✅ Video Frame Captured:',
         'video_viewshot',
         'videoScrollView',
       );
     });
 
     it('should capture Image screen', async () => {
-      // Image screen button text varies (PNG/JPG), so we need special handling
-      await goBackToHome();
-
-      console.log(`🔄 Navigating to: Image Capture`);
-      try {
-        await element(by.id('nav-image-capture')).tap();
-      } catch {
-        await element(by.text('Image Capture')).atIndex(0).tap();
-      }
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Try to find button with either format, with scrolling
-      let buttonFound = false;
-      const buttonTexts = ['📸 Capture as PNG', '📸 Capture as JPG'];
-
-      for (const buttonText of buttonTexts) {
-        // First try without scrolling
-        try {
-          await expect(element(by.text(buttonText))).toBeVisible();
-          buttonFound = true;
-          console.log(`✅ Found button: ${buttonText}`);
-
-          // Tap it
-          await element(by.text(buttonText)).tap();
-          await new Promise(resolve => setTimeout(resolve, 3000));
-          break;
-        } catch {
-          // Try scrolling down to find it
-          try {
-            console.log(`📜 Scrolling to find: ${buttonText}`);
-            await element(by.id('imageScrollView')).swipe('up', 'slow', 0.5);
-            await new Promise(resolve => setTimeout(resolve, 800));
-
-            await expect(element(by.text(buttonText))).toBeVisible();
-            buttonFound = true;
-            console.log(`✅ Found button after scroll: ${buttonText}`);
-
-            // Tap it
-            await element(by.text(buttonText)).tap();
-            await new Promise(resolve => setTimeout(resolve, 3000));
-            break;
-          } catch {
-            // Try next format
-          }
-        }
-      }
-
-      if (!buttonFound) {
-        console.log(
-          `⚠️  Could not find Image capture button, skipping screenshot`,
-        );
-        return;
-      }
-
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      await device.takeScreenshot('image_viewshot');
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      try {
-        const result = await snapshotMatcher.captureAndValidate(
-          'image_viewshot',
-          null,
-          UPDATE_REFERENCES,
-        );
-
-        if (UPDATE_REFERENCES) {
-          console.log(
-            `📸 Reference snapshot created/updated for image_viewshot`,
-          );
-        } else if (result.matched !== null) {
-          if (!result.matched) {
-            console.log(
-              `⚠️  Snapshot mismatch for image_viewshot, but test continues`,
-            );
-          } else {
-            console.log(`✅ image_viewshot matches reference`);
-          }
-        }
-      } catch (error) {
-        console.log(
-          `⚠️  Screenshot validation failed for image_viewshot: ${error.message}`,
-        );
-      }
+      await captureScreenWithScroll(
+        'Image Capture',
+        '📸 Capture as PNG',
+        '✅ Captured Image:',
+        'image_viewshot',
+        'imageScrollView',
+      );
     });
 
     it('should capture WebView', async () => {
       await captureScreenWithScroll(
         'WebView Capture',
         '📸 Capture WebView',
-        '✅ Capture Success:',
+        '✅ WebView Captured:',
         'webview_viewshot',
         'webviewScrollView',
       );
@@ -473,7 +397,7 @@ describe('📸 ViewShot - All Screens', () => {
       await captureScreenWithScroll(
         'SVG Inline',
         '📸 Capture SVG',
-        '✅ Capture Success:',
+        '✅ SVG Captured:',
         'svg_viewshot',
         'svgScrollView',
       );
@@ -483,7 +407,7 @@ describe('📸 ViewShot - All Screens', () => {
       await captureScreenWithScroll(
         'SVG URI',
         '📸 Capture SVG URI',
-        '✅ Capture Success:',
+        '✅ SVG URI Captured:',
         'svguri_viewshot',
         'svgUriScrollView',
       );
@@ -493,7 +417,7 @@ describe('📸 ViewShot - All Screens', () => {
       await captureScreenWithScroll(
         'Modal',
         '📸 Capture Modal',
-        '✅ Capture Success:',
+        '✅ Modal Captured:',
         'modal_viewshot',
         'modalScrollView',
       );

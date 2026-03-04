@@ -56,6 +56,8 @@ function App(): React.JSX.Element {
           headerTitleStyle: {
             fontWeight: 'bold',
           },
+          headerBackTitle: 'Back',
+          headerBackAccessibilityLabel: 'Back',
         }}
       >
         <Stack.Screen

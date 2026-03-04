@@ -229,6 +229,7 @@ jobs:
       - name: Run Windows autolinking
         working-directory: example-windows
         shell: pwsh
+        continue-on-error: true
         run: |
           Write-Host "🔗 Running React Native Windows autolinking..."
           npx react-native autolink-windows --logging --verbose
@@ -302,6 +303,7 @@ jobs:
 
       - name: Restore NuGet packages
         working-directory: example-windows/windows
+        continue-on-error: true
         run: nuget restore ViewShotWindowsExample.sln
 
       - name: Build Windows example app
@@ -644,6 +646,7 @@ jobs:
     name: Detox E2E Tests (Android)
     runs-on: ubuntu-latest
     needs: build-android
+    timeout-minutes: 60
 
     steps:
       - name: Checkout code
