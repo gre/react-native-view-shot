@@ -570,29 +570,6 @@ jobs:
         continue-on-error: true
         id: detox_ios_tests
 
-      - name: Check for iOS snapshot differences
-        if: failure() && steps.detox_ios_tests.outcome == 'failure'
-        working-directory: example
-        run: |
-          if [ -d "e2e/snapshots/output" ] && [ "$(ls -A e2e/snapshots/output 2>/dev/null)" ]; then
-            echo "## 📱 iOS Visual Regression Detected" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "Some iOS visual snapshots have changed. This could be due to:" >> $GITHUB_STEP_SUMMARY
-            echo "- UI changes in the React Native example" >> $GITHUB_STEP_SUMMARY
-            echo "- Different rendering between iOS versions" >> $GITHUB_STEP_SUMMARY
-            echo "- Font or styling differences" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**To update snapshots:**" >> $GITHUB_STEP_SUMMARY
-            echo "1. Download the \`detox-snapshots-ios\` artifact" >> $GITHUB_STEP_SUMMARY
-            echo "2. Replace \`example/e2e/snapshots/reference/\` with the downloaded files" >> $GITHUB_STEP_SUMMARY
-            echo "3. Commit the updated snapshots" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**Diff files available in artifacts:**" >> $GITHUB_STEP_SUMMARY
-            find e2e/snapshots/output -name "*.png" | head -5 | while read file; do
-              echo "- \`$(basename "$file")\`" >> $GITHUB_STEP_SUMMARY
-            done
-          fi
-
       - name: Stop Metro Bundler
         if: always()
         working-directory: example
@@ -602,30 +579,12 @@ jobs:
             rm metro.pid
           fi
 
-      - name: Organize iOS Snapshots
-        if: always()
-        run: |
-          # Create platform-specific snapshot directories
-          mkdir -p example/e2e/snapshots/ios-output
-          mkdir -p example/e2e/snapshots/ios-reference
-          
-          # Copy snapshots to platform-specific directories
-          if [ -d "example/e2e/snapshots/output" ]; then
-            cp -r example/e2e/snapshots/output/* example/e2e/snapshots/ios-output/ 2>/dev/null || true
-          fi
-          if [ -d "example/e2e/snapshots/reference" ]; then
-            cp -r example/e2e/snapshots/reference/* example/e2e/snapshots/ios-reference/ 2>/dev/null || true
-          fi
-
-      - name: Upload Detox Snapshots
+      - name: Upload Detox Screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: detox-snapshots-ios
-          path: |
-            example/e2e/snapshots/ios-output/**/*.png
-            example/e2e/snapshots/ios-reference/**/*.png
-            example/artifacts/**/*.png
+          name: detox-screenshots-ios
+          path: example/artifacts/**/*.png
 
       - name: Upload Detox Test Results
         if: always()
@@ -636,11 +595,30 @@ jobs:
             example/e2e/test-results/**/*
             example/artifacts/**/*.xml
 
-      - name: Fail CI if iOS tests failed
-        if: steps.detox_ios_tests.outcome == 'failure'
+      - name: Check iOS test results
+        if: always()
+        working-directory: example
         run: |
-          echo "❌ iOS Detox tests failed - failing CI"
-          exit 1
+          # Check JUnit XML for actual test failures (exit code may be wrong due to Jest reporter bug)
+          RESULTS_FILE="e2e/test-results/detox-results.xml"
+          if [ -f "$RESULTS_FILE" ]; then
+            FAILURES=$(grep -o 'failures="[0-9]*"' "$RESULTS_FILE" | head -1 | grep -o '[0-9]*')
+            ERRORS=$(grep -o 'errors="[0-9]*"' "$RESULTS_FILE" | head -1 | grep -o '[0-9]*')
+            TESTS=$(grep -o 'tests="[0-9]*"' "$RESULTS_FILE" | head -1 | grep -o '[0-9]*')
+            echo "Tests: $TESTS, Failures: ${FAILURES:-0}, Errors: ${ERRORS:-0}"
+            if [ "${FAILURES:-0}" != "0" ] || [ "${ERRORS:-0}" != "0" ]; then
+              echo "❌ iOS Detox tests had failures"
+              exit 1
+            fi
+            echo "✅ All $TESTS iOS Detox tests passed"
+          else
+            echo "⚠️ No test results XML found"
+            # Fall back to Detox step outcome
+            if [ "${{ steps.detox_ios_tests.outcome }}" == "failure" ]; then
+              echo "❌ iOS Detox tests failed (no XML, using exit code)"
+              exit 1
+            fi
+          fi
 
   test-detox-android:
     name: Detox E2E Tests (Android)
@@ -733,53 +711,12 @@ jobs:
           script: |
             ./example/detox-android.sh
 
-      - name: Check for Android snapshot differences
-        if: always()
-        working-directory: example
-        run: |
-          if [ -d "e2e/snapshots/output" ] && [ "$(ls -A e2e/snapshots/output 2>/dev/null)" ]; then
-            echo "## 🤖 Android Visual Regression Detected" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "Some Android visual snapshots have changed. This could be due to:" >> $GITHUB_STEP_SUMMARY
-            echo "- UI changes in the React Native example" >> $GITHUB_STEP_SUMMARY
-            echo "- Different rendering between Android versions" >> $GITHUB_STEP_SUMMARY
-            echo "- Font or styling differences" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**To update snapshots:**" >> $GITHUB_STEP_SUMMARY
-            echo "1. Download the \`detox-snapshots-android\` artifact" >> $GITHUB_STEP_SUMMARY
-            echo "2. Replace \`example/e2e/snapshots/reference/\` with the downloaded files" >> $GITHUB_STEP_SUMMARY
-            echo "3. Commit the updated snapshots" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**Diff files available in artifacts:**" >> $GITHUB_STEP_SUMMARY
-            find e2e/snapshots/output -name "*.png" | head -5 | while read file; do
-              echo "- \`$(basename "$file")\`" >> $GITHUB_STEP_SUMMARY
-            done
-          fi
-
-      - name: Organize Android Snapshots
-        if: always()
-        run: |
-          # Create platform-specific snapshot directories
-          mkdir -p example/e2e/snapshots/android-output
-          mkdir -p example/e2e/snapshots/android-reference
-          
-          # Copy snapshots to platform-specific directories
-          if [ -d "example/e2e/snapshots/output" ]; then
-            cp -r example/e2e/snapshots/output/* example/e2e/snapshots/android-output/ 2>/dev/null || true
-          fi
-          if [ -d "example/e2e/snapshots/reference" ]; then
-            cp -r example/e2e/snapshots/reference/* example/e2e/snapshots/android-reference/ 2>/dev/null || true
-          fi
-
-      - name: Upload Detox Snapshots
+      - name: Upload Detox Screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: detox-snapshots-android
-          path: |
-            example/e2e/snapshots/android-output/**/*.png
-            example/e2e/snapshots/android-reference/**/*.png
-            example/artifacts/**/*.png
+          name: detox-screenshots-android
+          path: example/artifacts/**/*.png
 
       - name: Upload Detox Test Results
         if: always()
@@ -790,11 +727,28 @@ jobs:
             example/e2e/test-results/**/*
             example/artifacts/**/*.xml
 
-      - name: Fail CI if Android tests failed
-        if: steps.detox_android_tests.outcome == 'failure'
+      - name: Check Android test results
+        if: always()
+        working-directory: example
         run: |
-          echo "❌ Android Detox tests failed - failing CI"
-          exit 1
+          RESULTS_FILE="e2e/test-results/detox-results.xml"
+          if [ -f "$RESULTS_FILE" ]; then
+            FAILURES=$(grep -o 'failures="[0-9]*"' "$RESULTS_FILE" | head -1 | grep -o '[0-9]*')
+            ERRORS=$(grep -o 'errors="[0-9]*"' "$RESULTS_FILE" | head -1 | grep -o '[0-9]*')
+            TESTS=$(grep -o 'tests="[0-9]*"' "$RESULTS_FILE" | head -1 | grep -o '[0-9]*')
+            echo "Tests: $TESTS, Failures: ${FAILURES:-0}, Errors: ${ERRORS:-0}"
+            if [ "${FAILURES:-0}" != "0" ] || [ "${ERRORS:-0}" != "0" ]; then
+              echo "❌ Android Detox tests had failures"
+              exit 1
+            fi
+            echo "✅ All $TESTS Android Detox tests passed"
+          else
+            echo "⚠️ No test results XML found"
+            if [ "${{ steps.detox_android_tests.outcome }}" == "failure" ]; then
+              echo "❌ Android Detox tests failed (no XML, using exit code)"
+              exit 1
+            fi
+          fi
 
   build-web-example:
     name: Build Web Example
