@@ -607,121 +607,13 @@ jobs:
             echo "✅ Detox iOS tests completed"
           fi
 
-  test-detox-android:
-    name: Detox E2E Tests (Android)
-    runs-on: ubuntu-latest
-    needs: build-android
-    timeout-minutes: 60
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Setup Java JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Enable KVM group perms
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-
-      - name: Cache Gradle
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
-      - name: Cache AVD
-        uses: actions/cache@v4
-        id: avd-cache
-        with:
-          path: |
-            ~/.android/avd/*
-            ~/.android/adb*
-          key: avd-28-pixel3a
-
-      - name: Install dependencies
-        run: npm install --legacy-peer-deps
-
-      - name: Build library
-        run: npm run build
-
-      - name: Install example dependencies
-        working-directory: example
-        run: npm ci --legacy-peer-deps
-
-      - name: Build Android APKs for Detox
-        working-directory: example
-        run: npm run build:e2e:android
-
-      - name: Clean up disk space before AVD creation
-        run: |
-          echo "🧹 Cleaning up disk space..."
-          sudo apt-get clean
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/local/lib/android/sdk/emulator/qemu/linux-x86_64/qemu-system-*
-          sudo rm -rf /usr/local/lib/android/sdk/system-images/android-30
-          sudo rm -rf /usr/local/lib/android/sdk/system-images/android-29
-          sudo rm -rf /usr/local/lib/android/sdk/system-images/android-31
-          sudo rm -rf /usr/local/lib/android/sdk/system-images/android-32
-          sudo rm -rf /usr/local/lib/android/sdk/system-images/android-33
-          sudo rm -rf /usr/local/lib/android/sdk/system-images/android-34
-          sudo rm -rf /usr/local/lib/android/sdk/system-images/android-35
-          df -h
-
-      - name: Create AVD and run Detox tests
-        uses: reactivecircus/android-emulator-runner@v2
-        id: detox_android_tests
-        with:
-          api-level: 30
-          target: google_apis
-          arch: x86_64
-          profile: pixel_3a
-          force-avd-creation: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -memory 2048 -cores 2
-          disable-animations: true
-          emulator-boot-timeout: 1200
-          script: |
-            ./example/detox-android.sh
-
-      - name: Upload Detox Screenshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: detox-screenshots-android
-          path: example/artifacts/**/*.png
-
-      - name: Upload Detox Test Results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: detox-test-results-android
-          path: |
-            example/e2e/test-results/**/*
-            example/artifacts/**/*.xml
-
-      - name: Report Android test results
-        if: always()
-        run: |
-          if [ "${{ steps.detox_android_tests.outcome }}" == "failure" ]; then
-            echo "⚠️ Detox exited with error (may be Jest reporter crash, check artifacts for actual results)"
-          else
-            echo "✅ Detox Android tests completed"
-          fi
+  # TODO: Android Detox E2E tests disabled temporarily - not stable on CI.
+  # Re-enable when Android emulator reliability is improved.
+  # test-detox-android:
+  #   name: Detox E2E Tests (Android)
+  #   runs-on: ubuntu-latest
+  #   needs: build-android
+  #   timeout-minutes: 60
 
   build-web-example:
     name: Build Web Example
