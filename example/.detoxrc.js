@@ -29,7 +29,7 @@ module.exports = {
     simulator: {
       type: 'ios.simulator',
       device: {
-        type: 'iPhone 16 Pro',
+        type: process.env.IOS_SIMULATOR || 'iPhone 16 Pro',
       },
     },
     emulator: {

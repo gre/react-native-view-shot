@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
   },
   webviewCapture: {
     width: 300,
-    height: 300,
+    height: 200,
     borderRadius: 8,
     overflow: 'hidden',
     borderWidth: 1,
