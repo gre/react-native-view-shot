@@ -1,9 +1,11 @@
 {
   "name": "react-native-view-shot",
-  "version": "4.0.0-alpha.3",
+  "version": "4.0.3",
   "description": "Capture a React Native view to an image",
-  "main": "src/index.js",
-  "types": "src/index.d.ts",
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "react-native": "src/index.tsx",
   "keywords": [
     "react-native",
     "screenshot",
@@ -19,25 +21,56 @@
     "type": "git",
     "url": "https://github.com/gre/react-native-view-shot.git"
   },
+  "scripts": {
+    "test": "echo 'Run tests in example directory: cd example && npm test'",
+    "lint": "eslint .",
+    "lint:ci": "eslint . --max-warnings 0",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "type-check": "tsc --noEmit",
+    "build": "tsc",
+    "prepare": "npm run build"
+  },
   "dependencies": {
     "html2canvas": "^1.4.1"
   },
   "peerDependencies": {
-    "react": "*",
-    "react-native": "*"
+    "react": ">=18.0.0",
+    "react-native": ">=0.76.0"
   },
   "devDependencies": {
-    "flow-bin": "^0.170.0",
-    "html-webpack-plugin": "^5.5.1",
-    "react-native-windows": "^0.63.16"
+    "@babel/preset-env": "^7.28.3",
+    "@babel/preset-react": "^7.27.1",
+    "@eslint/js": "^10",
+    "@types/react": "^18.3.0",
+    "babel-jest": "^30.2.0",
+    "eslint": "^9.17.0",
+    "eslint-config-prettier": "^9.1.2",
+    "html-webpack-plugin": "^5.6.0",
+    "prettier": "^3.4.2",
+    "react-native": "^0.76.5",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=20",
+    "npm": ">=10"
   },
   "codegenConfig": {
-    "name": "RNViewShot",
-    "type": "all",
+    "name": "rnviewshot",
+    "type": "modules",
     "jsSrcsDir": "./src/specs",
     "android": {
       "javaPackageName": "fr.greweb.reactnativeviewshot"
     }
   },
-  "stableVersion": "4.0.0-alpha.2"
+  "react-native": {
+    "windows": {
+      "sourceDir": "windows",
+      "solutionFile": "RNViewShot.sln",
+      "project": {
+        "projectFile": "RNViewShot\\RNViewShot.csproj"
+      }
+    }
+  },
+  "stableVersion": "4.0.2"
 }
