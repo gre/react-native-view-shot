@@ -24,7 +24,7 @@ npm install react-native-view-shot
 yarn add react-native-view-shot
 
 # In Expo
-expo install react-native-view-shot
+npx expo install react-native-view-shot
 ```
 
 **Since React Native 0.60+, [autolink](https://github.com/react-native-community/cli/blob/master/docs/autolinking.md) handles the linking automatically.** On iOS, install the CocoaPods dependencies:
