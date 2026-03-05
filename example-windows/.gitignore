@@ -1,0 +1,32 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Metro
+.metro-health-check*
+
+# OSX
+.DS_Store
+
+# Windows
+windows/x64/
+windows/ARM64/
+windows/x86/
+windows/packages/
+windows/.vs/
+windows/BundleBuilder/
+windows/ViewShotWindowsExample/Generated Files/
+windows/ViewShotWindowsExample/BundleBuilder/
+windows/ViewShotWindowsExample/Bundle/
+*.appx
+*.msix
+*.pfx
+
+# Generated
+*.jsbundle
+
+# Lock files (keep package-lock for CI)
+# package-lock.json
+
+

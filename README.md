@@ -1,28 +1,33 @@
-# react-native-view-shot ![](https://img.shields.io/npm/v/react-native-view-shot.svg) ![](https://img.shields.io/badge/react--native-%2040+-05F561.svg)
+# react-native-view-shot ![](https://img.shields.io/npm/v/react-native-view-shot.svg) ![](https://img.shields.io/badge/react--native-0.76%2B-05F561.svg)
 
 Capture a React Native view to an image.
 
 <img src="./.readme/recursive.gif" width=300 />
 
+## New Architecture Support
+
+This library fully supports React Native's **new architecture** (Fabric + TurboModules) from version 4.0+.
+
+**Requirements:**
+
+- React Native >= 0.76.0
+- Node.js >= 20
+
+Both old and new architectures are supported for seamless migration.
+
 ## Install
 
 ```bash
+npm install react-native-view-shot
+
+# or with Yarn
 yarn add react-native-view-shot
 
 # In Expo
-
 expo install react-native-view-shot
 ```
 
-Make sure `react-native-view-shot` is correctly linked in Xcode (might require a manual installation, refer to [React Native doc](https://reactnative.dev/docs/linking-libraries-ios.html)).
-
-**Before React Native 0.60.x you would have to:**
-
-```bash
-react-native link react-native-view-shot
-```
-
-**Since 0.60.x, [autolink](https://github.com/react-native-community/cli/blob/master/docs/autolinking.md) should just work**, on iOS, you'll need to ensure the CocoaPods are installed with:
+**Since React Native 0.60+, [autolink](https://github.com/react-native-community/cli/blob/master/docs/autolinking.md) handles the linking automatically.** On iOS, install the CocoaPods dependencies:
 
 ```bash
 npx pod-install
@@ -118,14 +123,14 @@ function ExampleCaptureOnMountSimpler {
 ## `captureRef(view, options)` lower level imperative API
 
 ```js
-import { captureRef } from "react-native-view-shot";
+import {captureRef} from "react-native-view-shot";
 
 captureRef(viewRef, {
   format: "jpg",
   quality: 0.8,
 }).then(
-  (uri) => console.log("Image saved to", uri),
-  (error) => console.error("Oops, snapshot failed", error)
+  uri => console.log("Image saved to", uri),
+  error => console.error("Oops, snapshot failed", error),
 );
 ```
 
@@ -153,14 +158,14 @@ NB: the tmpfile captures are automatically cleaned out after the app closes, so 
 ## `captureScreen()` Android and iOS Only
 
 ```js
-import { captureScreen } from "react-native-view-shot";
+import {captureScreen} from "react-native-view-shot";
 
 captureScreen({
   format: "jpg",
   quality: 0.8,
 }).then(
-  (uri) => console.log("Image saved to", uri),
-  (error) => console.error("Oops, snapshot failed", error)
+  uri => console.log("Image saved to", uri),
+  error => console.error("Oops, snapshot failed", error),
 );
 ```
 
@@ -170,9 +175,15 @@ Returns a Promise of the image URI.
 
 - **`options`**: the same options as in `captureRef` method.
 
-### Advanced Examples
+## Examples
 
-[Checkout react-native-view-shot-example](example)
+### Native Example (iOS & Android)
+
+[Checkout react-native-view-shot-example](example) - Comprehensive example app demonstrating all features on iOS and Android.
+
+### Web Example
+
+[Checkout react-native-view-shot-web-example](example-web) - Web example demonstrating how the library works in browsers using html2canvas.
 
 ## Interoperability Table
 
@@ -180,15 +191,15 @@ Returns a Promise of the image URI.
 
 Model tested: iPhone 6 (iOS), Nexus 5 (Android).
 
-| System                | iOS              | Android           | Windows                |
-| --------------------- | ---------------- | ----------------- | ---------------------- |
-| View,Text,Image,..    | YES              | YES               | YES                    |
-| WebView               | YES              | YES<sup>1</sup>   | YES                    |
-| gl-react v2           | YES              | NO<sup>2</sup>    | NO<sup>3</sup>         |
-| react-native-video    | NO               | NO                | NO                     |
-| react-native-maps     | YES              | NO<sup>4</sup>    | NO<sup>3</sup>         |
-| react-native-svg      | YES              | YES               | maybe?                 |
-| react-native-camera   | NO               | YES               | NO <sup>3</sup>        |
+| System              | iOS | Android         | Windows         | Web                 |
+| ------------------- | --- | --------------- | --------------- | ------------------- |
+| View,Text,Image,..  | YES | YES             | YES             | YES                 |
+| WebView             | YES | YES<sup>1</sup> | YES             | N/A                 |
+| gl-react v2         | YES | NO<sup>2</sup>  | NO<sup>3</sup>  | NO<sup>3</sup>      |
+| react-native-video  | NO  | NO              | NO              | NO                  |
+| react-native-maps   | YES | NO<sup>4</sup>  | NO<sup>3</sup>  | NO<sup>3</sup>      |
+| react-native-svg    | YES | YES             | maybe?          | LIMITED<sup>5</sup> |
+| react-native-camera | NO  | YES             | NO <sup>3</sup> | NO<sup>3</sup>      |
 
 >
 
@@ -196,6 +207,7 @@ Model tested: iPhone 6 (iOS), Nexus 5 (Android).
 2. It returns an empty image (not a failure Promise).
 3. Component itself lacks platform support.
 4. But you can just use the react-native-maps snapshot function: https://github.com/airbnb/react-native-maps#take-snapshot-of-map
+5. Web support via html2canvas has limitations with SVG rendering. Basic SVG works, complex SVG may have issues.
 
 ## Performance Optimization
 
@@ -243,7 +255,7 @@ const Buffer = require("buffer").Buffer;
 const format = Platform.OS === "android" ? "raw" : "png";
 const result = Platform.OS === "android" ? "zip-base64" : "base64";
 
-captureRef(this.ref, { result, format }).then((data) => {
+captureRef(this.ref, {result, format}).then(data => {
   // expected pattern 'width:height|', example: '1080:1731|'
   const resolution = /^(\d+):(\d+)\|/g.exec(data);
   const width = (resolution || ["", 0, 0])[1];
@@ -255,7 +267,7 @@ captureRef(this.ref, { result, format }).then((data) => {
   // un-compress data
   const inflated = zlib.inflateSync(buffer);
   // compose PNG
-  const png = new PNG({ width, height });
+  const png = new PNG({width, height});
   png.data = inflated;
   const pngData = PNG.sync.write(png);
   // save composed PNG
@@ -271,9 +283,8 @@ Hint: use `process.fork()` approach for converting raw data into PNGs.
 
 > Note #2: Don't forget to add packages into your project:
 >
-> ```js
-> yarn add pngjs
-> yarn add zlib
+> ```bash
+> npm install pngjs zlib
 > ```
 
 ## Troubleshooting / FAQ

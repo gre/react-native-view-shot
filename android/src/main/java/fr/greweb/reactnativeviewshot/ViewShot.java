@@ -26,6 +26,7 @@ import android.widget.ScrollView;
 
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.common.annotations.UnstableReactNativeAPI;
 import com.facebook.react.fabric.interop.UIBlockViewResolver;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.UIBlock;
@@ -58,6 +59,7 @@ import static android.view.View.VISIBLE;
 /**
  * Snapshot utility class allow to screenshot a view.
  */
+@UnstableReactNativeAPI
 public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBlock {
     //region Constants
     /**
