@@ -17,4 +17,5 @@ npm ls react-native react-native-view-shot #<- PASTE CMD RESULT IN HERE
 #### Actual behavior
 
 #### Steps to reproduce the behavior
+
 <!-- Ideally please use the example app to reproduce it, if it does not reproduce, worth PR the example to add a repro case -->

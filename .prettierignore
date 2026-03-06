@@ -1,0 +1,89 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+build/
+dist/
+lib/
+android/build/
+ios/build/
+example/android/build/
+example/ios/build/
+**/build/
+**/.gradle/
+**/.cxx/
+
+# Generated files
+*.log
+*.min.js
+*.bundle.js
+android/.gradle/
+.gradle/
+
+# React Native specific
+*.pbxproj
+*.xcworkspace/
+*.xcodeproj/
+*.xcscheme
+
+# Platform specific
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+
+# IDE
+.vscode/
+.idea/
+
+# Expo
+.expo/
+
+# CocoaPods
+Pods/
+**/Pods/
+Podfile.lock
+*.podspec.json
+
+# Metro
+.metro-health-check*
+
+# Temp files
+*.tmp
+*.temp
+
+# Generated source maps
+*.map
+
+# Android specific generated files
+**/intermediates/
+**/outputs/
+**/generated/
+**/.cxx/
+gradle-wrapper.properties
+output-metadata.json
+compile_commands.json
+metadata_generation_record.json
+build_model.json
+*.json.bak
+
+# iOS specific generated files
+**/DerivedData/
+**/xcuserdata/
+**/*.generated.swift
+**/*.generated.h
+
+# React Native generated
+**/autolinking.json
+
+# README files in dependencies
+**/Pods/**/README.md
+
+# Specific files that shouldn't be formatted
+example/android/gradle/wrapper/gradle-wrapper.properties
+
+# Lockfiles  
+yarn.lock
+package-lock.json
