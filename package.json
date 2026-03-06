@@ -1,11 +1,19 @@
 {
   "name": "react-native-view-shot",
-  "version": "5.0.0-alpha.1",
+  "version": "5.0.0-alpha.2",
   "description": "Capture a React Native view to an image",
   "type": "module",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
-  "react-native": "src/index.tsx",
+  "react-native": {
+    "windows": {
+      "sourceDir": "windows",
+      "solutionFile": "RNViewShot.sln",
+      "project": {
+        "projectFile": "RNViewShot\\RNViewShot.csproj"
+      }
+    }
+  },
   "keywords": [
     "react-native",
     "screenshot",
@@ -61,15 +69,6 @@
     "jsSrcsDir": "./src/specs",
     "android": {
       "javaPackageName": "fr.greweb.reactnativeviewshot"
-    }
-  },
-  "react-native": {
-    "windows": {
-      "sourceDir": "windows",
-      "solutionFile": "RNViewShot.sln",
-      "project": {
-        "projectFile": "RNViewShot\\RNViewShot.csproj"
-      }
     }
   },
   "stableVersion": "4.0.2"
