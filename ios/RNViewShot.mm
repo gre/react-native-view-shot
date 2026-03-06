@@ -15,6 +15,21 @@
 #import <rnviewshot/rnviewshot.h>
 #endif
 
+#if __has_include(<React/RCTScrollViewComponentView.h>)
+
+  // Fabric available
+  #import <React/RCTScrollViewComponentView.h>
+  typedef RCTScrollViewComponentView RNSnapshotScrollViewHost;
+
+#else
+
+  // Fallback to legacy
+  #import <React/RCTScrollView.h>
+  typedef RCTScrollView RNSnapshotScrollViewHost;
+
+#endif
+
+
 @implementation RNViewShot
 
 RCT_EXPORT_MODULE()
@@ -80,12 +95,15 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
     UIView* rendered;
     UIScrollView* scrollView;
     if (snapshotContentContainer) {
-      if (![view isKindOfClass:[RCTScrollView class]]) {
-        reject(RCTErrorUnspecified, [NSString stringWithFormat:@"snapshotContentContainer can only be used on a RCTScrollView. instead got: %@", view], nil);
+      if (![view isKindOfClass:[RNSnapshotScrollViewHost class]]) {
+        reject(RCTErrorUnspecified,
+               [NSString stringWithFormat:@"snapshotContentContainer can only be used on a ScrollView host. instead got: %@", view],
+               nil);
         return;
       }
-      RCTScrollView* rctScrollView = view;
-      scrollView = rctScrollView.scrollView;
+
+      RNSnapshotScrollViewHost *host = (RNSnapshotScrollViewHost *)view;
+      UIScrollView *scrollView = host.scrollView;
       rendered = scrollView;
     }
     else {
