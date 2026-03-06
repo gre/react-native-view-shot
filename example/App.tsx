@@ -14,6 +14,7 @@ export type RootStackParamList = {
   BasicTest: undefined;
   FullScreen: undefined;
   Transparency: undefined;
+  ScrollView: undefined;
   // Media tests
   Video: undefined;
   Image: undefined;
@@ -40,6 +41,7 @@ import SVGTestScreen from './src/screens/SVGTestScreen';
 import SVGUriTestScreen from './src/screens/SVGUriTestScreen';
 import ModalTestScreen from './src/screens/ModalTestScreen';
 import FSTestScreen from './src/screens/FSTestScreen';
+import ScrollViewTestScreen from './src/screens/ScrollViewTestScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -86,6 +88,11 @@ function App(): React.JSX.Element {
           name="Transparency"
           component={TransparencyTestScreen}
           options={{ title: '⚪ Transparency Test' }}
+        />
+        <Stack.Screen
+          name="ScrollView"
+          component={ScrollViewTestScreen}
+          options={{ title: '📜 ScrollView & Lists' }}
         />
 
         {/* MEDIA Test Cases */}

@@ -4,7 +4,6 @@
 #import <React/UIView+React.h>
 #import <React/RCTUtils.h>
 #import <React/RCTConvert.h>
-#import <React/RCTScrollView.h>
 #import <React/RCTUIManager.h>
 #if __has_include(<React/RCTUIManagerUtils.h>)
 #import <React/RCTUIManagerUtils.h>
@@ -80,12 +79,37 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
     UIView* rendered;
     UIScrollView* scrollView;
     if (snapshotContentContainer) {
-      if (![view isKindOfClass:[RCTScrollView class]]) {
-        reject(RCTErrorUnspecified, [NSString stringWithFormat:@"snapshotContentContainer can only be used on a RCTScrollView. instead got: %@", view], nil);
+      // Find the UIScrollView from the view hierarchy
+      UIScrollView* foundScrollView = nil;
+
+      // Check if view itself is a UIScrollView
+      if ([view isKindOfClass:[UIScrollView class]]) {
+        foundScrollView = (UIScrollView *)view;
+      }
+
+      // Try to find UIScrollView in subviews (works for both old and new arch)
+      if (!foundScrollView) {
+        for (UIView *subview in view.subviews) {
+          if ([subview isKindOfClass:[UIScrollView class]]) {
+            foundScrollView = (UIScrollView *)subview;
+            break;
+          }
+        }
+      }
+
+      // Try responding to scrollView selector (old arch RCTScrollView)
+      if (!foundScrollView && [view respondsToSelector:@selector(scrollView)]) {
+        id sv = [view performSelector:@selector(scrollView)];
+        if ([sv isKindOfClass:[UIScrollView class]]) {
+          foundScrollView = (UIScrollView *)sv;
+        }
+      }
+
+      if (!foundScrollView) {
+        reject(RCTErrorUnspecified, [NSString stringWithFormat:@"snapshotContentContainer requires a ScrollView. Got: %@", view], nil);
         return;
       }
-      RCTScrollView* rctScrollView = view;
-      scrollView = rctScrollView.scrollView;
+      scrollView = foundScrollView;
       rendered = scrollView;
     }
     else {
