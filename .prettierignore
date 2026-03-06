@@ -37,6 +37,7 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+**/.claude/
 
 # Expo
 .expo/

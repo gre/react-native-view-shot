@@ -61,6 +61,14 @@ const testCases: { [category: string]: TestCase[] } = {
       priority: 'high',
       status: 'tested',
     },
+    {
+      key: 'ScrollView',
+      title: 'ScrollView & Lists',
+      description: 'ScrollView, FlatList, SectionList capture',
+      emoji: '📜',
+      priority: 'high',
+      status: 'new',
+    },
   ],
   '🟡 MEDIA TESTS': [
     {
