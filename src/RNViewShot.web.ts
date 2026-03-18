@@ -14,7 +14,9 @@ async function captureRef(
 
   // TODO: implement snapshotContentContainer option
 
-  const h2cOptions = {};
+  const h2cOptions = {
+    useCORS: true,
+  };
   let renderedCanvas = await html2canvas(view, h2cOptions);
 
   if (options.width && options.height) {
