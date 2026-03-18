@@ -192,7 +192,7 @@ export function captureRef<T = any>(
       return Promise.reject(new Error("ref.current is null"));
     }
   }
-  if (typeof viewHandle !== "number") {
+  if (Platform.OS !== "web" && typeof viewHandle !== "number") {
     const node = findNodeHandle(viewHandle);
     if (!node) {
       return Promise.reject(

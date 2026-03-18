@@ -69,6 +69,20 @@ A full React Native app demonstrating all features. Each feature has its own scr
 
 E2E snapshot references live in `example/e2e/snapshots/reference/{ios,android}/` — platform-separated because rendering differs. Test outputs go to `example/e2e/snapshots/output/` (gitignored).
 
+### Web Example App (`example-web/`)
+
+A standalone web example using `react-native-web` + `html2canvas` + webpack. Webpack alias resolves `react-native-view-shot` to `../src` (the local lib source). Also has Playwright E2E tests.
+
+```bash
+cd example-web
+npm start              # webpack dev server on port 3000
+npm run build          # Production build → dist/
+```
+
+### Windows Example App (`example-windows/`)
+
+A React Native Windows example app.
+
 ## Key Behaviors
 
 - **Architecture detection**: `src/specs/NativeRNViewShot.ts` checks `global.__turboModuleProxy` at runtime to decide between `TurboModuleRegistry` (new arch) and `NativeModules` (old arch).
