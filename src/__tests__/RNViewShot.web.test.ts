@@ -141,10 +141,8 @@ describe("RNViewShot.web", () => {
   });
 
   describe("releaseCapture", () => {
-    it("throws an error (not supported on web)", () => {
-      expect(() => RNViewShotWeb.releaseCapture("test")).toThrow(
-        "Tmpfile is not implemented",
-      );
+    it("is a no-op on web (does not throw)", () => {
+      expect(() => RNViewShotWeb.releaseCapture("test")).not.toThrow();
     });
   });
 });
