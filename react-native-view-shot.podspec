@@ -14,6 +14,7 @@ Pod::Spec.new do |s|
 
   s.source       = { :git => "https://github.com/gre/react-native-view-shot.git", :tag => "v#{s.version}" }
   s.source_files  = "ios/**/*.{h,m,mm}"
+  s.resource_bundles = { 'RNViewShotPrivacyInfo' => ['ios/PrivacyInfo.xcprivacy'] }
 
   install_modules_dependencies(s)
 end
