@@ -212,14 +212,16 @@ test.describe("ViewShot Web Example", () => {
     // Wait for capture result
     await page.waitForSelector("text=Captured Result:", {timeout: 15000});
 
-    // Verify the captured image is a valid data URI (not blank)
+    // Verify the captured image is a valid data URI
     const previewImage = page.locator('img[src^="data:image/png"]');
     await expect(previewImage).toBeVisible();
 
-    // Verify the image has actual dimensions (not a 0x0 blank)
-    const box = await previewImage.boundingBox();
-    expect(box).toBeTruthy();
-    expect(box!.width).toBeGreaterThan(50);
-    expect(box!.height).toBeGreaterThan(50);
+    // Visual snapshot to verify cross-origin images are actually rendered (not blank)
+    await expect(previewImage).toHaveScreenshot("cors-image-capture.png", {
+      threshold: 0.2,
+      maxDiffPixels: 1000,
+      scale: "css",
+      animations: "disabled",
+    });
   });
 });
