@@ -44,6 +44,12 @@ const testCases: TestCase[] = [
     description: "Capture views with cross-origin images (useCORS)",
     emoji: "🌍",
   },
+  {
+    key: "ViewShotComponent",
+    title: "ViewShot Component",
+    description: "Test ViewShot component with ref.capture() and captureMode",
+    emoji: "🔧",
+  },
 ];
 
 const HomeScreen: React.FC<Props> = ({navigate}) => {

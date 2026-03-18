@@ -3,4 +3,5 @@ export type Screen =
   | "BasicTest"
   | "Image"
   | "ComplexLayout"
-  | "CORSImage";
+  | "CORSImage"
+  | "ViewShotComponent";
