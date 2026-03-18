@@ -171,4 +171,58 @@ test.describe("ViewShot Web Example", () => {
     // Visual snapshot of the complex layout
     await expect(previewImage).toHaveScreenshot("complex-layout-capture.png");
   });
+
+  test("should capture cross-origin images with CORS", async ({
+    page,
+    request,
+  }) => {
+    // Fetch a local test image once, then use it to fulfill cross-origin requests
+    const localImage = await request.get(
+      "http://localhost:3000/images/test-image-1.jpg",
+    );
+    expect(localImage.ok()).toBeTruthy();
+    const imageBody = await localImage.body();
+
+    // Intercept cross-origin image requests and serve local test images
+    // This makes the test deterministic without depending on external servers
+    await page.route("**/picsum.photos/**", async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: "image/jpeg",
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: imageBody,
+      });
+    });
+
+    await page.goto("/");
+    await page.click("text=CORS Image Capture");
+
+    // Wait for the screen
+    await page.waitForSelector("text=Cross-Origin Images");
+
+    // Wait for images to load
+    await page.waitForSelector("text=Capture with CORS images", {
+      timeout: 15000,
+    });
+
+    // Click capture
+    await page.click("text=Capture with CORS images");
+
+    // Wait for capture result
+    await page.waitForSelector("text=Captured Result:", {timeout: 15000});
+
+    // Verify the captured image is a valid data URI
+    const previewImage = page.locator('img[src^="data:image/png"]');
+    await expect(previewImage).toBeVisible();
+
+    // Visual snapshot to verify cross-origin images are actually rendered (not blank)
+    await expect(previewImage).toHaveScreenshot("cors-image-capture.png", {
+      threshold: 0.2,
+      maxDiffPixels: 1000,
+      scale: "css",
+      animations: "disabled",
+    });
+  });
 });

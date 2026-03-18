@@ -4,8 +4,8 @@ import HomeScreen from "./screens/HomeScreen";
 import BasicTestScreen from "./screens/BasicTestScreen";
 import ImageTestScreen from "./screens/ImageTestScreen";
 import ComplexLayoutScreen from "./screens/ComplexLayoutScreen";
-
-type Screen = "Home" | "BasicTest" | "Image" | "ComplexLayout";
+import CORSImageTestScreen from "./screens/CORSImageTestScreen";
+import type {Screen} from "./types";
 
 const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>("Home");
@@ -28,6 +28,8 @@ const App: React.FC = () => {
         return <ImageTestScreen goBack={goBack} />;
       case "ComplexLayout":
         return <ComplexLayoutScreen goBack={goBack} />;
+      case "CORSImage":
+        return <CORSImageTestScreen goBack={goBack} />;
       default:
         return <HomeScreen navigate={navigate} />;
     }

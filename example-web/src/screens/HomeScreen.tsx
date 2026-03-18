@@ -6,8 +6,7 @@ import {
   ScrollView,
   StyleSheet,
 } from "react-native";
-
-type Screen = "Home" | "BasicTest" | "Image" | "ComplexLayout";
+import type {Screen} from "../types";
 
 interface Props {
   navigate: (screen: Screen) => void;
@@ -38,6 +37,12 @@ const testCases: TestCase[] = [
     title: "Complex Layout",
     description: "Capture complex nested layouts with various styles",
     emoji: "🎨",
+  },
+  {
+    key: "CORSImage",
+    title: "CORS Image Capture",
+    description: "Capture views with cross-origin images (useCORS)",
+    emoji: "🌍",
   },
 ];
 
