@@ -268,10 +268,8 @@ test.describe("ViewShot Web Example", () => {
       timeout: 10000,
     });
 
-    // Verify preview image from auto capture
-    const previewImages = page.locator('img[src^="data:image/png"]');
-    // The auto capture result is the second data-uri image on the page
-    const autoPreview = previewImages.nth(0);
-    await expect(autoPreview).toBeVisible();
+    // Verify at least one captured preview image is visible
+    const previewImage = page.locator('img[src^="data:image/png"]').first();
+    await expect(previewImage).toBeVisible();
   });
 });
