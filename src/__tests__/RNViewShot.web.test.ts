@@ -12,8 +12,6 @@ jest.mock("html2canvas", () => {
 
 import html2canvas from "html2canvas";
 
-// We need to import the web module directly
-// Since it's a .web.ts file, Jest won't auto-resolve it, so we import explicitly
 const RNViewShotWeb = require("../RNViewShot.web")
   .default as typeof import("../RNViewShot.web").default;
 
@@ -103,7 +101,7 @@ describe("RNViewShot.web", () => {
       const mockContext = {
         drawImage: jest.fn(),
       };
-      jest.spyOn(document, "createElement").mockReturnValueOnce({
+      const spy = jest.spyOn(document, "createElement").mockReturnValueOnce({
         getContext: () => mockContext,
         width: 0,
         height: 0,
@@ -125,6 +123,7 @@ describe("RNViewShot.web", () => {
         200,
         300,
       );
+      spy.mockRestore();
     });
   });
 

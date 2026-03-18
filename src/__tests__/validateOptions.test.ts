@@ -1,19 +1,5 @@
-// We need to import the function from the module, but it's not exported directly.
-// We'll test it through captureRef/captureScreen behavior, or extract it.
-// For now, let's test via the module's public API indirectly,
-// but first let's test validateOptions by importing the module internals.
-
-// validateOptions is not exported, so we test it through the public API behavior.
-// However, we can also test by importing the module and checking the coerced options.
-
-// Since validateOptions is internal, we'll re-import the source and test via captureRef.
-// Actually, let's just extract and test the validation logic directly.
-
-import {Platform} from "react-native";
-
-// We need to access validateOptions. Since it's not exported, we'll
-// test the validation behavior through captureRef which calls it internally.
-// But a cleaner approach: import the whole module and spy on console.warn.
+// validateOptions is not exported, so we test it indirectly through captureRef
+// which calls it internally and passes the coerced options to the native module.
 
 describe("validateOptions (via captureRef)", () => {
   let captureRef: typeof import("../index").captureRef;
