@@ -180,6 +180,7 @@ test.describe("ViewShot Web Example", () => {
     const localImage = await request.get(
       "http://localhost:3000/images/test-image-1.jpg",
     );
+    expect(localImage.ok()).toBeTruthy();
     const imageBody = await localImage.body();
 
     // Intercept cross-origin image requests and serve local test images

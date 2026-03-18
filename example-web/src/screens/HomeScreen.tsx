@@ -6,8 +6,7 @@ import {
   ScrollView,
   StyleSheet,
 } from "react-native";
-
-type Screen = "Home" | "BasicTest" | "Image" | "ComplexLayout" | "CORSImage";
+import type {Screen} from "../types";
 
 interface Props {
   navigate: (screen: Screen) => void;

@@ -80,7 +80,7 @@ const CORSImageTestScreen: React.FC<Props> = ({goBack}) => {
           <Text style={styles.title}>Cross-Origin Images</Text>
 
           {CROSS_ORIGIN_IMAGES.map((img, index) => (
-            <View key={index} style={styles.imageCard}>
+            <View key={img.uri} style={styles.imageCard}>
               <Image
                 source={{uri: img.uri}}
                 style={styles.testImage}

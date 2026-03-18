@@ -5,8 +5,7 @@ import BasicTestScreen from "./screens/BasicTestScreen";
 import ImageTestScreen from "./screens/ImageTestScreen";
 import ComplexLayoutScreen from "./screens/ComplexLayoutScreen";
 import CORSImageTestScreen from "./screens/CORSImageTestScreen";
-
-type Screen = "Home" | "BasicTest" | "Image" | "ComplexLayout" | "CORSImage";
+import type {Screen} from "./types";
 
 const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>("Home");
