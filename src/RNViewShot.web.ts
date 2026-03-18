@@ -38,10 +38,9 @@ async function captureRef(
     renderedCanvas = resizedCanvas;
   }
 
-  const dataUrl = renderedCanvas.toDataURL(
-    "image/" + options.format,
-    options.quality,
-  );
+  const mimeType =
+    "image/" + (options.format === "jpg" ? "jpeg" : options.format);
+  const dataUrl = renderedCanvas.toDataURL(mimeType, options.quality);
   if (options.result === "data-uri" || options.result === "tmpfile")
     return dataUrl;
   return dataUrl.replace(/data:image\/(\w+);base64,/, "");

@@ -32,7 +32,12 @@ const BasicTestScreen: React.FC<Props> = ({goBack}) => {
           quality: 0.9,
           result,
         });
-        setImageUri(uri);
+        if (result === "base64") {
+          const mime = format === "jpg" ? "jpeg" : format;
+          setImageUri(`data:image/${mime};base64,${uri}`);
+        } else {
+          setImageUri(uri);
+        }
         console.log(
           "Screenshot captured successfully:",
           uri.substring(0, 100) + "...",
