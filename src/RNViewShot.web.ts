@@ -51,7 +51,7 @@ function captureScreen(options: CaptureOptions): Promise<string> {
 }
 
 function releaseCapture(_uri: string): void {
-  throw new Error("Tmpfile is not implemented for web. Try base64 or file");
+  // no-op on web: there are no tmp files to clean up
 }
 
 export default {

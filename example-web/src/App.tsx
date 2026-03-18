@@ -5,6 +5,7 @@ import BasicTestScreen from "./screens/BasicTestScreen";
 import ImageTestScreen from "./screens/ImageTestScreen";
 import ComplexLayoutScreen from "./screens/ComplexLayoutScreen";
 import CORSImageTestScreen from "./screens/CORSImageTestScreen";
+import ViewShotComponentScreen from "./screens/ViewShotComponentScreen";
 import type {Screen} from "./types";
 
 const App: React.FC = () => {
@@ -30,6 +31,8 @@ const App: React.FC = () => {
         return <ComplexLayoutScreen goBack={goBack} />;
       case "CORSImage":
         return <CORSImageTestScreen goBack={goBack} />;
+      case "ViewShotComponent":
+        return <ViewShotComponentScreen goBack={goBack} />;
       default:
         return <HomeScreen navigate={navigate} />;
     }

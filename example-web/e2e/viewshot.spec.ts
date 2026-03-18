@@ -225,4 +225,51 @@ test.describe("ViewShot Web Example", () => {
       animations: "disabled",
     });
   });
+
+  test("should capture via ViewShot component ref", async ({page}) => {
+    await page.goto("/");
+    await page.click("text=ViewShot Component");
+
+    // Wait for screen
+    await page.waitForSelector("text=ViewShot Manual");
+
+    // Click manual capture
+    await page.click("text=Capture via ref");
+
+    // Wait for result
+    await page.waitForSelector("text=Manual Capture Result:", {
+      timeout: 10000,
+    });
+
+    // Verify the captured image
+    const previewImage = page.locator('img[src^="data:image/png"]').first();
+    await expect(previewImage).toBeVisible();
+
+    // Visual snapshot
+    await expect(previewImage).toHaveScreenshot(
+      "viewshot-component-manual.png",
+      {
+        threshold: 0.2,
+        maxDiffPixels: 1000,
+        scale: "css",
+        animations: "disabled",
+      },
+    );
+  });
+
+  test("should auto-capture via ViewShot captureMode='mount'", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.click("text=ViewShot Component");
+
+    // Wait for auto capture result
+    await page.waitForSelector("text=Auto Capture Result:", {
+      timeout: 10000,
+    });
+
+    // Verify at least one captured preview image is visible
+    const previewImage = page.locator('img[src^="data:image/png"]').first();
+    await expect(previewImage).toBeVisible();
+  });
 });
