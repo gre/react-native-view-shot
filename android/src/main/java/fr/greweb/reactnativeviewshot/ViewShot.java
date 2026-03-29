@@ -5,7 +5,9 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
+import android.graphics.drawable.Drawable;
 import android.graphics.Paint;
+import android.graphics.RectF;
 import android.graphics.Point;
 import android.net.Uri;
 import android.os.Build;
@@ -22,6 +24,7 @@ import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.HorizontalScrollView;
 import android.widget.ScrollView;
 
 import com.facebook.react.bridge.Promise;
@@ -30,7 +33,9 @@ import com.facebook.react.common.annotations.UnstableReactNativeAPI;
 import com.facebook.react.fabric.interop.UIBlockViewResolver;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.UIBlock;
+import com.facebook.react.views.view.ReactViewGroup;
 
+import java.lang.reflect.Method;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -38,11 +43,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -82,6 +84,21 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
      * Wait timeout for surface view capture.
      */
     private static final int SURFACE_VIEW_READ_PIXELS_TIMEOUT = 5;
+
+    /** Cached reflection handle for ReactViewGroup.dispatchOverflowDraw (z-index support). */
+    @Nullable
+    private static final Method sDispatchOverflowDraw;
+    static {
+        Method m = null;
+        try {
+            m = ReactViewGroup.class.getDeclaredMethod("dispatchOverflowDraw", Canvas.class);
+            m.setAccessible(true);
+        } catch (Exception ignored) {}
+        sDispatchOverflowDraw = m;
+    }
+
+    /** Reusable matrix to avoid allocation per view during rendering. */
+    private final Matrix tempMatrix = new Matrix();
 
     @SuppressWarnings("WeakerAccess")
     @IntDef({Formats.JPEG, Formats.PNG, Formats.WEBP, Formats.RAW})
@@ -313,28 +330,6 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
         promise.resolve(data);
     }
 
-    @NonNull
-    private List<View> getAllChildren(@NonNull final View v) {
-        if (!(v instanceof ViewGroup)) {
-            final ArrayList<View> viewArrayList = new ArrayList<>();
-            viewArrayList.add(v);
-
-            return viewArrayList;
-        }
-
-        final ArrayList<View> result = new ArrayList<>();
-
-        ViewGroup viewGroup = (ViewGroup) v;
-        for (int i = 0; i < viewGroup.getChildCount(); i++) {
-            View child = viewGroup.getChildAt(i);
-
-            //Do not add any parents, just add child elements
-            result.addAll(getAllChildren(child));
-        }
-
-        return result;
-    }
-
     /**
      * Wrap {@link #captureViewImpl(View, OutputStream)} call and on end close output stream.
      */
@@ -381,62 +376,10 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
         //   Debug.waitForDebugger();
 
         final Canvas c = new Canvas(bitmap);
-        view.draw(c);
-
-        //after view is drawn, go through children
-        final List<View> childrenList = getAllChildren(view);
-
-        for (final View child : childrenList) {
-            // skip any child that we don't know how to process
-            if (child instanceof TextureView) {
-                // skip all invisible to user child views
-                if (child.getVisibility() != VISIBLE) continue;
-
-                final TextureView tvChild = (TextureView) child;
-                tvChild.setOpaque(false); // <-- switch off background fill
-
-                // NOTE (olku): get re-usable bitmap. TextureView should use bitmaps with matching size,
-                // otherwise content of the TextureView will be scaled to provided bitmap dimensions
-                final Bitmap childBitmapBuffer = tvChild.getBitmap(getExactBitmapForScreenshot(child.getWidth(), child.getHeight()));
-
-                final int countCanvasSave = c.save();
-                applyTransformations(c, view, child);
-
-                // due to re-use of bitmaps for screenshot, we can get bitmap that is bigger in size than requested
-                c.drawBitmap(childBitmapBuffer, 0, 0, paint);
-
-                c.restoreToCount(countCanvasSave);
-                recycleBitmap(childBitmapBuffer);
-            } else if (child instanceof SurfaceView && handleGLSurfaceView) {
-                final SurfaceView svChild = (SurfaceView)child;
-                final CountDownLatch latch = new CountDownLatch(1);
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    final Bitmap childBitmapBuffer = getExactBitmapForScreenshot(child.getWidth(), child.getHeight());
-                    try {
-                        PixelCopy.request(svChild, childBitmapBuffer, new PixelCopy.OnPixelCopyFinishedListener() {
-                            @Override
-                            public void onPixelCopyFinished(int copyResult) {
-                                final int countCanvasSave = c.save();
-                                applyTransformations(c, view, child);
-                                c.drawBitmap(childBitmapBuffer, 0, 0, paint);
-                                c.restoreToCount(countCanvasSave);
-                                recycleBitmap(childBitmapBuffer);
-                                latch.countDown();
-                            }
-                        }, new Handler(Looper.getMainLooper()));
-                        latch.await(SURFACE_VIEW_READ_PIXELS_TIMEOUT, TimeUnit.SECONDS);
-                    } catch (Exception e) {
-                        Log.e(TAG, "Cannot PixelCopy for " + svChild, e);
-                    }
-                } else {
-                    Bitmap cache = svChild.getDrawingCache();
-                    if (cache != null) {
-                        c.drawBitmap(svChild.getDrawingCache(), 0, 0, paint);
-                    }
-                }
-            }
-        }
+        c.save();
+        c.translate(-view.getLeft(), -view.getTop());
+        renderViewToCanvas(c, view, paint, 1.0f);
+        c.restore();
 
         if (width != null && height != null && (width != w || height != h)) {
             final Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, width, height, true);
@@ -462,44 +405,141 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
         return resolution; // return image width and height
     }
 
-    /**
-     * Concat all the transformation matrix's from parent to child.
-     */
-    @NonNull
-    @SuppressWarnings("UnusedReturnValue")
-    private Matrix applyTransformations(final Canvas c, @NonNull final View root, @NonNull final View child) {
-        final Matrix transform = new Matrix();
-        final LinkedList<View> ms = new LinkedList<>();
+    //region Recursive rendering (adapted from React Native Skia's ViewScreenshotService)
 
-        // find all parents of the child view
-        View iterator = child;
-        do {
-            ms.add(iterator);
+    private void renderViewToCanvas(Canvas canvas, View view, Paint paint, float parentOpacity) {
+        float combinedOpacity = parentOpacity * view.getAlpha();
+        canvas.save();
+        applyTransformations(canvas, view);
 
-            iterator = (View) iterator.getParent();
-        } while (iterator != root);
-
-        // apply transformations from parent --> child order
-        Collections.reverse(ms);
-
-        for (final View v : ms) {
-            c.save();
-
-            // apply each view transformations, so each child will be affected by them
-            final float dx = v.getLeft() + ((v != child) ? v.getPaddingLeft() : 0) + v.getTranslationX();
-            final float dy = v.getTop() + ((v != child) ? v.getPaddingTop() : 0) + v.getTranslationY();
-            c.translate(dx, dy);
-            c.rotate(v.getRotation(), v.getPivotX(), v.getPivotY());
-            c.scale(v.getScaleX(), v.getScaleY());
-
-            // compute the matrix just for any future use
-            transform.postTranslate(dx, dy);
-            transform.postRotate(v.getRotation(), v.getPivotX(), v.getPivotY());
-            transform.postScale(v.getScaleX(), v.getScaleY());
+        if (view instanceof ScrollView || view instanceof HorizontalScrollView) {
+            canvas.clipRect(
+                    view.getScrollX(),
+                    view.getScrollY(),
+                    view.getScrollX() + view.getWidth(),
+                    view.getScrollY() + view.getHeight());
         }
 
-        return transform;
+        if (view instanceof ViewGroup && !isSvgView(view)) {
+            drawBackgroundIfPresent(canvas, view, combinedOpacity);
+            drawChildren(canvas, (ViewGroup) view, paint, combinedOpacity);
+        } else {
+            drawView(canvas, view, combinedOpacity);
+        }
+
+        canvas.restore();
     }
+
+    private static void drawBackgroundIfPresent(Canvas canvas, View view, float opacity) {
+        Drawable bg = view.getBackground();
+        if (bg != null) {
+            int alpha = Math.round(opacity * 255);
+            if (alpha < 255) {
+                canvas.saveLayerAlpha(new RectF(0, 0, view.getWidth(), view.getHeight()), alpha);
+                bg.draw(canvas);
+                canvas.restore();
+            } else {
+                bg.draw(canvas);
+            }
+        }
+    }
+
+    private void drawChildren(Canvas canvas, ViewGroup group, Paint paint, float parentOpacity) {
+        if (sDispatchOverflowDraw != null && group instanceof ReactViewGroup) {
+            try {
+                sDispatchOverflowDraw.invoke(group, canvas);
+            } catch (Exception e) {
+                Log.e(TAG, "couldn't invoke dispatchOverflowDraw() on ReactViewGroup", e);
+            }
+        }
+        for (int i = 0; i < group.getChildCount(); i++) {
+            View child = group.getChildAt(i);
+            if (child.getVisibility() != VISIBLE) continue;
+
+            if (child instanceof TextureView) {
+                drawTextureView(canvas, (TextureView) child, paint, parentOpacity);
+            } else if (child instanceof SurfaceView) {
+                if (handleGLSurfaceView) {
+                    drawSurfaceView(canvas, (SurfaceView) child, paint, parentOpacity);
+                }
+            } else {
+                renderViewToCanvas(canvas, child, paint, parentOpacity);
+            }
+        }
+    }
+
+    private static void drawView(Canvas canvas, View view, float opacity) {
+        int alpha = Math.round(opacity * 255);
+        if (alpha < 255) {
+            canvas.saveLayerAlpha(new RectF(0, 0, view.getWidth(), view.getHeight()), alpha);
+            view.draw(canvas);
+            canvas.restore();
+        } else {
+            view.draw(canvas);
+        }
+    }
+
+    private void drawBitmapWithTransform(Canvas canvas, View view, Bitmap bmp, Paint paint, float opacity) {
+        canvas.save();
+        applyTransformations(canvas, view);
+        paint.setAlpha(Math.round(opacity * 255));
+        canvas.drawBitmap(bmp, 0, 0, paint);
+        paint.setAlpha(255);
+        canvas.restore();
+    }
+
+    private void drawTextureView(Canvas canvas, TextureView tv, Paint paint, float opacity) {
+        tv.setOpaque(false);
+        final Bitmap childBitmapBuffer = tv.getBitmap(getBitmapForScreenshot(tv.getWidth(), tv.getHeight()));
+        drawBitmapWithTransform(canvas, tv, childBitmapBuffer, paint, opacity);
+        recycleBitmap(childBitmapBuffer);
+    }
+
+    private void drawSurfaceView(Canvas canvas, SurfaceView sv, Paint paint, float opacity) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            final Bitmap childBitmapBuffer = getBitmapForScreenshot(sv.getWidth(), sv.getHeight());
+            final CountDownLatch latch = new CountDownLatch(1);
+            try {
+                PixelCopy.request(sv, childBitmapBuffer, new PixelCopy.OnPixelCopyFinishedListener() {
+                    @Override
+                    public void onPixelCopyFinished(int copyResult) {
+                        drawBitmapWithTransform(canvas, sv, childBitmapBuffer, paint, opacity);
+                        recycleBitmap(childBitmapBuffer);
+                        latch.countDown();
+                    }
+                }, new Handler(Looper.getMainLooper()));
+                latch.await(SURFACE_VIEW_READ_PIXELS_TIMEOUT, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                Log.e(TAG, "Cannot PixelCopy for " + sv, e);
+                recycleBitmap(childBitmapBuffer);
+                drawSurfaceViewFromCache(canvas, sv, paint, opacity);
+            }
+        } else {
+            drawSurfaceViewFromCache(canvas, sv, paint, opacity);
+        }
+    }
+
+    private void drawSurfaceViewFromCache(Canvas canvas, SurfaceView sv, Paint paint, float opacity) {
+        Bitmap cache = sv.getDrawingCache();
+        if (cache != null) {
+            drawBitmapWithTransform(canvas, sv, cache, paint, opacity);
+        }
+    }
+
+    // Detect react-native-svg views to render as leaf nodes (avoids compile-time dependency)
+    private static boolean isSvgView(View view) {
+        return view.getClass().getName().startsWith("com.horcrux.svg");
+    }
+
+    private void applyTransformations(final Canvas c, @NonNull final View view) {
+        c.translate(
+                view.getLeft() + view.getPaddingLeft() - view.getScrollX(),
+                view.getTop() + view.getPaddingTop() - view.getScrollY());
+        tempMatrix.set(view.getMatrix());
+        c.concat(tempMatrix);
+    }
+
+    //endregion
 
     @SuppressWarnings("unchecked")
     private static <T extends A, A> T cast(final A instance) {
@@ -536,30 +576,8 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
         }
     }
 
-    /**
-     * Try to find a bitmap for screenshot in reusable set and if not found create a new one.
-     */
     @NonNull
     private static Bitmap getBitmapForScreenshot(final int width, final int height) {
-        synchronized (guardBitmaps) {
-            for (final Bitmap bmp : weakBitmaps) {
-                if (bmp.getWidth() == width && bmp.getHeight() == height) {
-                    weakBitmaps.remove(bmp);
-                    bmp.eraseColor(Color.TRANSPARENT);
-                    return bmp;
-                }
-            }
-        }
-
-        return Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-    }
-
-    /**
-     * Try to find a bitmap with exact width and height for screenshot in reusable set and if
-     * not found create a new one.
-     */
-    @NonNull
-    private static Bitmap getExactBitmapForScreenshot(final int width, final int height) {
         synchronized (guardBitmaps) {
             for (final Bitmap bmp : weakBitmaps) {
                 if (bmp.getWidth() == width && bmp.getHeight() == height) {
