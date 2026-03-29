@@ -98,14 +98,6 @@ export interface ViewShotProperties {
   style?: StyleProp<ViewStyle>;
 }
 
-const acceptedFormats = ["png", "jpg"].concat(
-  Platform.OS === "android" ? ["webm", "raw"] : [],
-);
-
-const acceptedResults = ["tmpfile", "base64", "data-uri"].concat(
-  Platform.OS === "android" ? ["zip-base64"] : [],
-);
-
 const defaultOptions: CaptureOptions = {
   format: "png",
   quality: 1,
@@ -119,6 +111,12 @@ function validateOptions(input?: CaptureOptions): {
   options: CaptureOptions;
   errors: string[];
 } {
+  const acceptedFormats = ["png", "jpg"].concat(
+    Platform.OS === "android" ? ["webm", "raw"] : [],
+  );
+  const acceptedResults = ["tmpfile", "base64", "data-uri"].concat(
+    Platform.OS === "android" ? ["zip-base64"] : [],
+  );
   const options: CaptureOptions = {
     ...defaultOptions,
     ...input,
