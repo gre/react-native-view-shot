@@ -54,7 +54,7 @@ jobs:
 
       - name: Build release APK
         working-directory: example/android
-        run: ./gradlew assembleRelease --no-daemon --stacktrace
+        run: ./gradlew assembleRelease --no-daemon --stacktrace -PnewArchEnabled=true
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
