@@ -5,15 +5,7 @@
   "type": "module",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
-  "react-native": {
-    "windows": {
-      "sourceDir": "windows",
-      "solutionFile": "RNViewShot.sln",
-      "project": {
-        "projectFile": "RNViewShot\\RNViewShot.csproj"
-      }
-    }
-  },
+  "react-native": "src/index.tsx",
   "keywords": [
     "react-native",
     "screenshot",
