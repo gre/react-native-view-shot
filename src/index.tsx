@@ -1,4 +1,13 @@
-import React, {Component, ReactNode, RefObject} from "react";
+import React, {
+  ReactNode,
+  RefObject,
+  useRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useImperativeHandle,
+  forwardRef,
+} from "react";
 import {
   View,
   Platform,
@@ -262,115 +271,154 @@ function checkCompatibleProps(props: ViewShotProperties): void {
   }
 }
 
-export default class ViewShot extends Component<ViewShotProperties> {
-  static captureRef = captureRef;
-  static releaseCapture = releaseCapture;
+/**
+ * Ref handle exposed by ViewShot component.
+ */
+export type ViewShotRef = {
+  capture: () => Promise<string>;
+};
 
-  root: any = null;
-  _raf: number | null = null;
-  lastCapturedURI: string | null = null;
+const ViewShotComponent = forwardRef<ViewShotRef, ViewShotProperties>(
+  function ViewShot(props, ref) {
+    const {
+      children,
+      options,
+      captureMode,
+      onCapture,
+      onCaptureFailure,
+      onLayout,
+      style,
+    } = props;
 
-  resolveFirstLayout: ((layout: any) => void) | null = null;
-  firstLayoutPromise: Promise<any> = new Promise(resolve => {
-    this.resolveFirstLayout = resolve;
-  });
+    const rootRef = useRef<View>(null);
+    const rafRef = useRef<number | null>(null);
+    const lastCapturedURIRef = useRef<string | null>(null);
+    const resolveFirstLayoutRef = useRef<((layout: any) => void) | null>(null);
 
-  capture = (): Promise<string> =>
-    this.firstLayoutPromise
-      .then(() => {
-        const {root} = this;
-        if (!root) return neverEndingPromise as Promise<never>; // component is unmounted, you never want to hear back from the promise
-        return captureRef(root, this.props.options);
-      })
-      .then(
-        uri => {
-          this.onCapture(uri);
-          return uri;
-        },
-        e => {
-          this.onCaptureFailure(e);
-          throw e;
-        },
-      ) as Promise<string>;
+    const firstLayoutPromise = useMemo(
+      () =>
+        new Promise<any>(resolve => {
+          resolveFirstLayoutRef.current = resolve;
+        }),
+      [],
+    );
 
-  onCapture = (uri: string): void => {
-    if (!this.root) return;
-    if (this.lastCapturedURI) {
-      // schedule releasing the previous capture
-      setTimeout(releaseCapture, 500, this.lastCapturedURI);
-    }
-    this.lastCapturedURI = uri;
-    const {onCapture} = this.props;
-    if (onCapture) onCapture(uri);
-  };
+    // Keep latest props in refs so stable callbacks always see fresh values
+    const onCaptureRef = useRef(onCapture);
+    onCaptureRef.current = onCapture;
+    const onCaptureFailureRef = useRef(onCaptureFailure);
+    onCaptureFailureRef.current = onCaptureFailure;
+    const optionsRef = useRef(options);
+    optionsRef.current = options;
 
-  onCaptureFailure = (e: Error): void => {
-    if (!this.root) return;
-    const {onCaptureFailure} = this.props;
-    if (onCaptureFailure) onCaptureFailure(e);
-  };
+    const capture = useCallback(
+      (): Promise<string> =>
+        firstLayoutPromise
+          .then(() => {
+            if (!rootRef.current) return neverEndingPromise as Promise<never>;
+            return captureRef(rootRef.current, optionsRef.current);
+          })
+          .then(
+            uri => {
+              if (!rootRef.current) return uri;
+              if (lastCapturedURIRef.current) {
+                setTimeout(releaseCapture, 500, lastCapturedURIRef.current);
+              }
+              lastCapturedURIRef.current = uri;
+              if (onCaptureRef.current) onCaptureRef.current(uri);
+              return uri;
+            },
+            e => {
+              if (!rootRef.current) throw e;
+              if (onCaptureFailureRef.current) onCaptureFailureRef.current(e);
+              throw e;
+            },
+          ) as Promise<string>,
+      [firstLayoutPromise],
+    );
 
-  syncCaptureLoop = (captureMode: string | null | undefined): void => {
-    cancelAnimationFrame(this._raf as number);
-    if (captureMode === "continuous") {
-      let previousCaptureURI: string | null = "-"; // needs to capture at least once at first, so we use "-" arbitrary string
-      const loop = (): void => {
-        this._raf = requestAnimationFrame(loop);
-        if (previousCaptureURI === this.lastCapturedURI) return; // previous capture has not finished, don't capture yet
-        previousCaptureURI = this.lastCapturedURI;
-        this.capture();
-      };
-      this._raf = requestAnimationFrame(loop);
-    }
-  };
+    useImperativeHandle(ref, () => ({capture}), [capture]);
 
-  onRef = (ref: any): void => {
-    this.root = ref;
-  };
+    const syncCaptureLoop = useCallback(
+      (mode: string | null | undefined): void => {
+        cancelAnimationFrame(rafRef.current as number);
+        if (mode === "continuous") {
+          let previousCaptureURI: string | null = "-";
+          const loop = (): void => {
+            rafRef.current = requestAnimationFrame(loop);
+            if (previousCaptureURI === lastCapturedURIRef.current) return;
+            previousCaptureURI = lastCapturedURIRef.current;
+            capture();
+          };
+          rafRef.current = requestAnimationFrame(loop);
+        }
+      },
+      [capture],
+    );
 
-  onLayout = (e: LayoutChangeEvent): void => {
-    const {onLayout} = this.props;
-    if (this.resolveFirstLayout) {
-      this.resolveFirstLayout(e.nativeEvent.layout);
-    }
-    if (onLayout) onLayout(e);
-  };
-
-  componentDidMount(): void {
-    if (__DEV__) checkCompatibleProps(this.props);
-    if (this.props.captureMode === "mount") {
-      this.capture();
-    } else {
-      this.syncCaptureLoop(this.props.captureMode);
-    }
-  }
-
-  componentDidUpdate(prevProps: ViewShotProperties): void {
-    if (this.props.captureMode !== undefined) {
-      if (this.props.captureMode !== prevProps.captureMode) {
-        this.syncCaptureLoop(this.props.captureMode);
+    // Mount + unmount lifecycle (equivalent to componentDidMount / componentWillUnmount)
+    useEffect(() => {
+      if (__DEV__) checkCompatibleProps(props);
+      if (captureMode === "mount") {
+        capture();
+      } else {
+        syncCaptureLoop(captureMode);
       }
-    }
-    if (this.props.captureMode === "update") {
-      this.capture();
-    }
-  }
+      return () => syncCaptureLoop(null);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
-  componentWillUnmount(): void {
-    this.syncCaptureLoop(null);
-  }
+    // Update lifecycle (equivalent to componentDidUpdate)
+    const prevCaptureModeRef = useRef(captureMode);
+    const isFirstRender = useRef(true);
+    useEffect(() => {
+      if (isFirstRender.current) {
+        isFirstRender.current = false;
+        prevCaptureModeRef.current = captureMode;
+        return;
+      }
+      if (
+        captureMode !== undefined &&
+        captureMode !== prevCaptureModeRef.current
+      ) {
+        syncCaptureLoop(captureMode);
+      }
+      prevCaptureModeRef.current = captureMode;
+      if (captureMode === "update") {
+        capture();
+      }
+    });
 
-  render(): ReactNode {
-    const {children} = this.props;
+    const onLayoutHandler = useCallback(
+      (e: LayoutChangeEvent): void => {
+        if (resolveFirstLayoutRef.current) {
+          resolveFirstLayoutRef.current(e.nativeEvent.layout);
+          resolveFirstLayoutRef.current = null;
+        }
+        if (onLayout) onLayout(e);
+      },
+      [onLayout],
+    );
+
     return (
       <View
-        ref={this.onRef}
+        ref={rootRef}
         collapsable={false}
-        onLayout={this.onLayout}
-        style={this.props.style}
+        onLayout={onLayoutHandler}
+        style={style}
       >
         {children}
       </View>
     );
-  }
-}
+  },
+);
+
+// Attach static methods for backwards compatibility (ViewShot.captureRef, ViewShot.releaseCapture)
+const ViewShot = ViewShotComponent as typeof ViewShotComponent & {
+  captureRef: typeof captureRef;
+  releaseCapture: typeof releaseCapture;
+};
+ViewShot.captureRef = captureRef;
+ViewShot.releaseCapture = releaseCapture;
+
+export default ViewShot;
