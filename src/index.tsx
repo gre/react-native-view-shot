@@ -12,12 +12,6 @@ import RNViewShot from "./RNViewShot";
 // Global type for React Native's __DEV__ variable
 declare const __DEV__: boolean;
 
-// Force eager loading of View on the main JS thread. Without this, Metro's lazy
-// require system defers loading View until first render, which may happen on the
-// mqt_v_native thread in new arch — triggering NativePlatformConstantsAndroid →
-// TurboModuleRegistry.getEnforcing('PlatformConstants') which crashes on that thread.
-void View;
-
 const neverEndingPromise = new Promise(() => {});
 
 // Options for capture configuration
