@@ -9,6 +9,9 @@ import { useViewShotCapture } from '../components/shared/hooks/useViewShotCaptur
 const CARD_WIDTH = 320;
 const CELL_GAP = 8;
 const CELL_HEIGHT = 110;
+const CARD_ROWS = 5;
+const CARD_HEIGHT =
+  CELL_HEIGHT * CARD_ROWS + CELL_GAP * CARD_ROWS + CELL_GAP * 2;
 
 interface CellProps {
   label: string;
@@ -234,7 +237,7 @@ const RenderingTestScreen: React.FC = () => {
               capturedUri={capturedUri}
               title="✅ Rendering Captured:"
               imageWidth={CARD_WIDTH}
-              imageHeight={CARD_WIDTH * 1.7}
+              imageHeight={CARD_HEIGHT}
             />
           )}
         </View>
@@ -350,6 +353,7 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 4,
     backgroundColor: '#ECF0F1',
+    padding: 8,
   },
   scrolledBand: {
     height: 60,

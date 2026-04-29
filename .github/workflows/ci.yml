@@ -84,17 +84,11 @@ jobs:
         working-directory: example
         run: npm ci --legacy-peer-deps
 
-      - name: Pre-build Skia Prefab packages
-        working-directory: example/android
-        run: |
-          echo "🔨 Pre-building Skia Prefab packages to avoid CMake errors..."
-          ./gradlew :shopify_react-native-skia:prefabDebugConfigurePackage --no-daemon || echo "Skia prefab not needed or already configured"
-
       - name: Build Android APK
         working-directory: example/android
         run: |
           echo "🔨 Building Android APK..."
-          ./gradlew clean assembleDebug --no-daemon --stacktrace
+          ./gradlew assembleDebug --no-daemon --stacktrace -PnewArchEnabled=true
 
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
