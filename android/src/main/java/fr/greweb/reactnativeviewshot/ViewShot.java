@@ -88,9 +88,12 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
     /** Cached reflection handle for ReactViewGroup.dispatchOverflowDraw (overflow visible support). */
     @Nullable
     private static final Method sDispatchOverflowDraw;
-    /** Cached reflection handle for ViewGroup.getChildDrawingOrder (z-index support). */
+    /** Cached reflection handle for ViewGroup.getChildDrawingOrder (z-index support, protected). */
     @Nullable
     private static final Method sGetChildDrawingOrder;
+    /** Cached reflection handle for ViewGroup.isChildrenDrawingOrderEnabled (protected getter). */
+    @Nullable
+    private static final Method sIsChildrenDrawingOrderEnabled;
     static {
         Method m = null;
         try {
@@ -105,6 +108,13 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
             g.setAccessible(true);
         } catch (Exception ignored) {}
         sGetChildDrawingOrder = g;
+
+        Method e = null;
+        try {
+            e = ViewGroup.class.getDeclaredMethod("isChildrenDrawingOrderEnabled");
+            e.setAccessible(true);
+        } catch (Exception ignored) {}
+        sIsChildrenDrawingOrderEnabled = e;
     }
 
     /** Reusable matrix to avoid allocation per view during rendering. */
@@ -466,8 +476,14 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
             }
         }
         int childCount = group.getChildCount();
-        boolean useDrawingOrder =
-                sGetChildDrawingOrder != null && group.isChildrenDrawingOrderEnabled();
+        boolean useDrawingOrder = false;
+        if (sGetChildDrawingOrder != null && sIsChildrenDrawingOrderEnabled != null) {
+            try {
+                useDrawingOrder = (Boolean) sIsChildrenDrawingOrderEnabled.invoke(group);
+            } catch (Exception e) {
+                Log.e(TAG, "couldn't invoke isChildrenDrawingOrderEnabled()", e);
+            }
+        }
         for (int i = 0; i < childCount; i++) {
             int childIndex = i;
             if (useDrawingOrder) {
