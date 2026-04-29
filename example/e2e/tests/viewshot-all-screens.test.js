@@ -228,4 +228,14 @@ describe('ViewShot - All Screens', () => {
       await captureScreen('Modal', '✅ Modal Captured:', 'modalScrollView');
     });
   });
+
+  describe('Rendering Correctness', () => {
+    it('should capture Rendering test card', async () => {
+      await captureScreen(
+        'Rendering test card',
+        '✅ Rendering Captured:',
+        'renderingTestScrollView',
+      );
+    });
+  });
 });
