@@ -85,9 +85,12 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
      */
     private static final int SURFACE_VIEW_READ_PIXELS_TIMEOUT = 5;
 
-    /** Cached reflection handle for ReactViewGroup.dispatchOverflowDraw (z-index support). */
+    /** Cached reflection handle for ReactViewGroup.dispatchOverflowDraw (overflow visible support). */
     @Nullable
     private static final Method sDispatchOverflowDraw;
+    /** Cached reflection handle for ViewGroup.getChildDrawingOrder (z-index support). */
+    @Nullable
+    private static final Method sGetChildDrawingOrder;
     static {
         Method m = null;
         try {
@@ -95,6 +98,13 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
             m.setAccessible(true);
         } catch (Exception ignored) {}
         sDispatchOverflowDraw = m;
+
+        Method g = null;
+        try {
+            g = ViewGroup.class.getDeclaredMethod("getChildDrawingOrder", int.class, int.class);
+            g.setAccessible(true);
+        } catch (Exception ignored) {}
+        sGetChildDrawingOrder = g;
     }
 
     /** Reusable matrix to avoid allocation per view during rendering. */
@@ -378,7 +388,7 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
         final Canvas c = new Canvas(bitmap);
         c.save();
         c.translate(-view.getLeft(), -view.getTop());
-        renderViewToCanvas(c, view, paint, 1.0f);
+        renderViewToCanvas(c, view, paint);
         c.restore();
 
         if (width != null && height != null && (width != w || height != h)) {
@@ -407,44 +417,47 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
 
     //region Recursive rendering (adapted from React Native Skia's ViewScreenshotService)
 
-    private void renderViewToCanvas(Canvas canvas, View view, Paint paint, float parentOpacity) {
-        float combinedOpacity = parentOpacity * view.getAlpha();
+    private void renderViewToCanvas(Canvas canvas, View view, Paint paint) {
+        float alpha = view.getAlpha();
         canvas.save();
         applyTransformations(canvas, view);
 
         if (view instanceof ScrollView || view instanceof HorizontalScrollView) {
-            canvas.clipRect(
-                    view.getScrollX(),
-                    view.getScrollY(),
-                    view.getScrollX() + view.getWidth(),
-                    view.getScrollY() + view.getHeight());
+            canvas.clipRect(0, 0, view.getWidth(), view.getHeight());
         }
 
         if (view instanceof ViewGroup && !isSvgView(view)) {
-            drawBackgroundIfPresent(canvas, view, combinedOpacity);
-            drawChildren(canvas, (ViewGroup) view, paint, combinedOpacity);
+            boolean needsLayer = alpha < 1.0f;
+            if (needsLayer) {
+                canvas.saveLayerAlpha(0, 0, view.getWidth(), view.getHeight(),
+                        Math.round(alpha * 255));
+            }
+            drawBackgroundIfPresent(canvas, view);
+            canvas.save();
+            canvas.translate(
+                    view.getPaddingLeft() - view.getScrollX(),
+                    view.getPaddingTop() - view.getScrollY());
+            drawChildren(canvas, (ViewGroup) view, paint);
+            canvas.restore();
+            if (needsLayer) {
+                canvas.restore();
+            }
         } else {
-            drawView(canvas, view, combinedOpacity);
+            drawView(canvas, view, alpha);
         }
 
         canvas.restore();
     }
 
-    private static void drawBackgroundIfPresent(Canvas canvas, View view, float opacity) {
+    private static void drawBackgroundIfPresent(Canvas canvas, View view) {
         Drawable bg = view.getBackground();
         if (bg != null) {
-            int alpha = Math.round(opacity * 255);
-            if (alpha < 255) {
-                canvas.saveLayerAlpha(new RectF(0, 0, view.getWidth(), view.getHeight()), alpha);
-                bg.draw(canvas);
-                canvas.restore();
-            } else {
-                bg.draw(canvas);
-            }
+            bg.setBounds(0, 0, view.getWidth(), view.getHeight());
+            bg.draw(canvas);
         }
     }
 
-    private void drawChildren(Canvas canvas, ViewGroup group, Paint paint, float parentOpacity) {
+    private void drawChildren(Canvas canvas, ViewGroup group, Paint paint) {
         if (sDispatchOverflowDraw != null && group instanceof ReactViewGroup) {
             try {
                 sDispatchOverflowDraw.invoke(group, canvas);
@@ -452,18 +465,30 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
                 Log.e(TAG, "couldn't invoke dispatchOverflowDraw() on ReactViewGroup", e);
             }
         }
-        for (int i = 0; i < group.getChildCount(); i++) {
-            View child = group.getChildAt(i);
+        int childCount = group.getChildCount();
+        boolean useDrawingOrder =
+                sGetChildDrawingOrder != null && group.isChildrenDrawingOrderEnabled();
+        for (int i = 0; i < childCount; i++) {
+            int childIndex = i;
+            if (useDrawingOrder) {
+                try {
+                    childIndex = (int) sGetChildDrawingOrder.invoke(group, childCount, i);
+                } catch (Exception e) {
+                    Log.e(TAG, "couldn't invoke getChildDrawingOrder()", e);
+                }
+            }
+            View child = group.getChildAt(childIndex);
             if (child.getVisibility() != VISIBLE) continue;
 
+            float childOpacity = child.getAlpha();
             if (child instanceof TextureView) {
-                drawTextureView(canvas, (TextureView) child, paint, parentOpacity);
+                drawTextureView(canvas, (TextureView) child, paint, childOpacity);
             } else if (child instanceof SurfaceView) {
                 if (handleGLSurfaceView) {
-                    drawSurfaceView(canvas, (SurfaceView) child, paint, parentOpacity);
+                    drawSurfaceView(canvas, (SurfaceView) child, paint, childOpacity);
                 }
             } else {
-                renderViewToCanvas(canvas, child, paint, parentOpacity);
+                renderViewToCanvas(canvas, child, paint);
             }
         }
     }
@@ -532,9 +557,7 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
     }
 
     private void applyTransformations(final Canvas c, @NonNull final View view) {
-        c.translate(
-                view.getLeft() + view.getPaddingLeft() - view.getScrollX(),
-                view.getTop() + view.getPaddingTop() - view.getScrollY());
+        c.translate(view.getLeft(), view.getTop());
         tempMatrix.set(view.getMatrix());
         c.concat(tempMatrix);
     }
