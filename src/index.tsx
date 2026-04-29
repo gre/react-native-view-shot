@@ -1,4 +1,12 @@
-import React, {Component, ReactNode, RefObject} from "react";
+import React, {
+  ReactNode,
+  RefObject,
+  useRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  forwardRef,
+} from "react";
 import {
   View,
   Platform,
@@ -262,115 +270,159 @@ function checkCompatibleProps(props: ViewShotProperties): void {
   }
 }
 
-export default class ViewShot extends Component<ViewShotProperties> {
-  static captureRef = captureRef;
-  static releaseCapture = releaseCapture;
+/**
+ * Ref handle exposed by ViewShot component.
+ *
+ * The ref points to the inner host View so that `findNodeHandle(ref.current)`
+ * (used by `captureRef(ref, options)`) keeps working as in v4. A `capture()`
+ * method is attached to that node for the imperative `ref.current.capture()`
+ * usage.
+ */
+export type ViewShotRef = View & {
+  capture: () => Promise<string>;
+};
 
-  root: any = null;
-  _raf: number | null = null;
-  lastCapturedURI: string | null = null;
+const ViewShotComponent = forwardRef<ViewShotRef, ViewShotProperties>(
+  function ViewShot(props, ref) {
+    const {
+      children,
+      options,
+      captureMode,
+      onCapture,
+      onCaptureFailure,
+      onLayout,
+      style,
+    } = props;
 
-  resolveFirstLayout: ((layout: any) => void) | null = null;
-  firstLayoutPromise: Promise<any> = new Promise(resolve => {
-    this.resolveFirstLayout = resolve;
-  });
+    const rootRef = useRef<View>(null);
+    const rafRef = useRef<number | null>(null);
+    const lastCapturedURIRef = useRef<string | null>(null);
+    const resolveFirstLayoutRef = useRef<((layout: any) => void) | null>(null);
 
-  capture = (): Promise<string> =>
-    this.firstLayoutPromise
-      .then(() => {
-        const {root} = this;
-        if (!root) return neverEndingPromise as Promise<never>; // component is unmounted, you never want to hear back from the promise
-        return captureRef(root, this.props.options);
-      })
-      .then(
-        uri => {
-          this.onCapture(uri);
-          return uri;
-        },
-        e => {
-          this.onCaptureFailure(e);
-          throw e;
-        },
-      ) as Promise<string>;
+    const firstLayoutPromise = useMemo(
+      () =>
+        new Promise<any>(resolve => {
+          resolveFirstLayoutRef.current = resolve;
+        }),
+      [],
+    );
 
-  onCapture = (uri: string): void => {
-    if (!this.root) return;
-    if (this.lastCapturedURI) {
-      // schedule releasing the previous capture
-      setTimeout(releaseCapture, 500, this.lastCapturedURI);
-    }
-    this.lastCapturedURI = uri;
-    const {onCapture} = this.props;
-    if (onCapture) onCapture(uri);
-  };
+    // Keep latest props in refs so stable callbacks always see fresh values
+    const onCaptureRef = useRef(onCapture);
+    onCaptureRef.current = onCapture;
+    const onCaptureFailureRef = useRef(onCaptureFailure);
+    onCaptureFailureRef.current = onCaptureFailure;
+    const optionsRef = useRef(options);
+    optionsRef.current = options;
 
-  onCaptureFailure = (e: Error): void => {
-    if (!this.root) return;
-    const {onCaptureFailure} = this.props;
-    if (onCaptureFailure) onCaptureFailure(e);
-  };
+    const capture = useCallback(
+      (): Promise<string> =>
+        firstLayoutPromise
+          .then(() => {
+            if (!rootRef.current) return neverEndingPromise as Promise<never>;
+            return captureRef(rootRef.current, optionsRef.current);
+          })
+          .then(
+            uri => {
+              if (!rootRef.current) return uri;
+              if (lastCapturedURIRef.current) {
+                setTimeout(releaseCapture, 500, lastCapturedURIRef.current);
+              }
+              lastCapturedURIRef.current = uri;
+              if (onCaptureRef.current) onCaptureRef.current(uri);
+              return uri;
+            },
+            e => {
+              if (!rootRef.current) throw e;
+              if (onCaptureFailureRef.current) onCaptureFailureRef.current(e);
+              throw e;
+            },
+          ) as Promise<string>,
+      [firstLayoutPromise],
+    );
 
-  syncCaptureLoop = (captureMode: string | null | undefined): void => {
-    cancelAnimationFrame(this._raf as number);
-    if (captureMode === "continuous") {
-      let previousCaptureURI: string | null = "-"; // needs to capture at least once at first, so we use "-" arbitrary string
-      const loop = (): void => {
-        this._raf = requestAnimationFrame(loop);
-        if (previousCaptureURI === this.lastCapturedURI) return; // previous capture has not finished, don't capture yet
-        previousCaptureURI = this.lastCapturedURI;
-        this.capture();
-      };
-      this._raf = requestAnimationFrame(loop);
-    }
-  };
+    const setRootRef = useCallback(
+      (node: View | null): void => {
+        rootRef.current = node;
+        if (node) (node as ViewShotRef).capture = capture;
+        if (typeof ref === "function") {
+          ref(node as ViewShotRef | null);
+        } else if (ref) {
+          ref.current = node as ViewShotRef | null;
+        }
+      },
+      [capture, ref],
+    );
 
-  onRef = (ref: any): void => {
-    this.root = ref;
-  };
+    const syncCaptureLoop = useCallback(
+      (mode: ViewShotProperties["captureMode"] | null): void => {
+        cancelAnimationFrame(rafRef.current as number);
+        if (mode === "continuous") {
+          let previousCaptureURI: string | null = "-";
+          const loop = (): void => {
+            rafRef.current = requestAnimationFrame(loop);
+            if (previousCaptureURI === lastCapturedURIRef.current) return;
+            previousCaptureURI = lastCapturedURIRef.current;
+            capture();
+          };
+          rafRef.current = requestAnimationFrame(loop);
+        }
+      },
+      [capture],
+    );
 
-  onLayout = (e: LayoutChangeEvent): void => {
-    const {onLayout} = this.props;
-    if (this.resolveFirstLayout) {
-      this.resolveFirstLayout(e.nativeEvent.layout);
-    }
-    if (onLayout) onLayout(e);
-  };
+    useEffect(() => {
+      if (__DEV__) checkCompatibleProps(props);
+      if (captureMode === "mount") capture();
+      // Run once: re-firing on prop changes would double-trigger `mount`
+      // capture; the `[captureMode]` effect below handles loop sync, and the
+      // no-deps effect below handles `update` mode.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
-  componentDidMount(): void {
-    if (__DEV__) checkCompatibleProps(this.props);
-    if (this.props.captureMode === "mount") {
-      this.capture();
-    } else {
-      this.syncCaptureLoop(this.props.captureMode);
-    }
-  }
+    useEffect(() => {
+      syncCaptureLoop(captureMode);
+      return () => syncCaptureLoop(null);
+    }, [captureMode, syncCaptureLoop]);
 
-  componentDidUpdate(prevProps: ViewShotProperties): void {
-    if (this.props.captureMode !== undefined) {
-      if (this.props.captureMode !== prevProps.captureMode) {
-        this.syncCaptureLoop(this.props.captureMode);
+    const isFirstRender = useRef(true);
+    useEffect(() => {
+      if (isFirstRender.current) {
+        isFirstRender.current = false;
+        return;
       }
-    }
-    if (this.props.captureMode === "update") {
-      this.capture();
-    }
-  }
+      if (captureMode === "update") capture();
+    });
 
-  componentWillUnmount(): void {
-    this.syncCaptureLoop(null);
-  }
+    const onLayoutHandler = useCallback(
+      (e: LayoutChangeEvent): void => {
+        if (resolveFirstLayoutRef.current) {
+          resolveFirstLayoutRef.current(e.nativeEvent.layout);
+          resolveFirstLayoutRef.current = null;
+        }
+        if (onLayout) onLayout(e);
+      },
+      [onLayout],
+    );
 
-  render(): ReactNode {
-    const {children} = this.props;
     return (
       <View
-        ref={this.onRef}
+        ref={setRootRef}
         collapsable={false}
-        onLayout={this.onLayout}
-        style={this.props.style}
+        onLayout={onLayoutHandler}
+        style={style}
       >
         {children}
       </View>
     );
-  }
-}
+  },
+);
+
+const ViewShot = ViewShotComponent as typeof ViewShotComponent & {
+  captureRef: typeof captureRef;
+  releaseCapture: typeof releaseCapture;
+};
+ViewShot.captureRef = captureRef;
+ViewShot.releaseCapture = releaseCapture;
+
+export default ViewShot;

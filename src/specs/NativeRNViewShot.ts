@@ -1,5 +1,5 @@
 import type {TurboModule} from "react-native";
-import {TurboModuleRegistry, NativeModules, Platform} from "react-native";
+import {TurboModuleRegistry, NativeModules} from "react-native";
 import {Int32, WithDefault} from "react-native/Libraries/Types/CodegenTypes";
 
 export interface Spec extends TurboModule {

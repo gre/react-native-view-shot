@@ -265,6 +265,53 @@ describe("ViewShot component", () => {
     await act(async () => tree!.unmount());
   });
 
+  it("forwards ref to the inner View node with capture() attached", async () => {
+    const ref = React.createRef<any>();
+    let tree: renderer.ReactTestRenderer;
+    await act(async () => {
+      tree = renderer.create(<ViewShot ref={ref} />);
+    });
+    expect(ref.current).toBeTruthy();
+    // Inner View mock exposes _nativeTag via useImperativeHandle, so
+    // findNodeHandle(ref.current) keeps working as in v4.
+    expect(ref.current._nativeTag).toBe(1);
+    expect(typeof ref.current.capture).toBe("function");
+    await act(async () => tree!.unmount());
+  });
+
+  it("supports a function ref forwarded to the inner View", async () => {
+    const refFn = jest.fn();
+    let tree: renderer.ReactTestRenderer;
+    await act(async () => {
+      tree = renderer.create(<ViewShot ref={refFn} />);
+    });
+    const calls = refFn.mock.calls.filter(([n]) => n);
+    expect(calls.length).toBeGreaterThan(0);
+    const node = calls[calls.length - 1][0];
+    expect(node._nativeTag).toBe(1);
+    expect(typeof node.capture).toBe("function");
+    await act(async () => tree!.unmount());
+  });
+
+  it("ref.current.capture() resolves via native captureRef after first layout", async () => {
+    const ref = React.createRef<any>();
+    let tree: renderer.ReactTestRenderer;
+    await act(async () => {
+      tree = renderer.create(<ViewShot ref={ref} />);
+    });
+
+    const json = tree!.toJSON() as any;
+    await act(async () => {
+      json.props.onLayout({
+        nativeEvent: {layout: {x: 0, y: 0, width: 100, height: 100}},
+      });
+    });
+
+    await expect(ref.current.capture()).resolves.toBe("/tmp/captured.png");
+    expect(mockCaptureRef).toHaveBeenCalled();
+    await act(async () => tree!.unmount());
+  });
+
   it("forwards onLayout to props.onLayout", async () => {
     const onLayout = jest.fn();
     let tree: renderer.ReactTestRenderer;
