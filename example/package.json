@@ -22,16 +22,19 @@
     "@react-navigation/native": "^7.1.33",
     "@react-navigation/native-stack": "^7.14.4",
     "@react-navigation/stack": "^7.8.4",
+    "@shopify/react-native-skia": "^2.6.2",
     "buffer": "^6.0.3",
     "react": "19.2.3",
     "react-native": "0.84.1",
     "react-native-gesture-handler": "^2.30.0",
+    "react-native-reanimated": "^4.3.0",
     "react-native-safe-area-context": "^5.7.0",
     "react-native-screens": "^4.24.0",
     "react-native-svg": "^15.15.3",
     "react-native-video": "^6.19.0",
     "react-native-view-shot": "file:..",
-    "react-native-webview": "^13.16.1"
+    "react-native-webview": "^13.16.1",
+    "react-native-worklets": "^0.8.1"
   },
   "devDependencies": {
     "@babel/core": "^7.28.4",

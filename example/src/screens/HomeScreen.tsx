@@ -96,6 +96,17 @@ const testCases: { [category: string]: TestCase[] } = {
       status: 'tested',
     },
   ],
+  '🔴 RENDERING CORRECTNESS': [
+    {
+      key: 'Rendering',
+      title: 'Rendering test card',
+      description:
+        'Transforms / nested opacity / z-index / scroll / overflow / Skia',
+      emoji: '🧪',
+      priority: 'high',
+      status: 'new',
+    },
+  ],
   '🟠 ADVANCED TESTS': [
     // {
     //   key: 'MapView',

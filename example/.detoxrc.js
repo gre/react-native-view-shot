@@ -8,6 +8,12 @@ module.exports = {
       setupTimeout: 300000,
     },
   },
+  artifacts: {
+    rootDir: 'artifacts',
+    plugins: {
+      screenshot: 'manual',
+    },
+  },
   apps: {
     'ios.debug': {
       type: 'ios.app',

@@ -27,6 +27,8 @@ export type RootStackParamList = {
   Modal: undefined;
   // Edge cases
   FS: undefined;
+  // Rendering correctness
+  Rendering: undefined;
 };
 
 // Import all test screens
@@ -42,6 +44,7 @@ import SVGUriTestScreen from './src/screens/SVGUriTestScreen';
 import ModalTestScreen from './src/screens/ModalTestScreen';
 import FSTestScreen from './src/screens/FSTestScreen';
 import ScrollViewTestScreen from './src/screens/ScrollViewTestScreen';
+import RenderingTestScreen from './src/screens/RenderingTestScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -134,6 +137,13 @@ function App(): React.JSX.Element {
           name="FS"
           component={FSTestScreen}
           options={{ title: '💾 File System Test' }}
+        />
+
+        {/* RENDERING CORRECTNESS */}
+        <Stack.Screen
+          name="Rendering"
+          component={RenderingTestScreen}
+          options={{ title: '🧪 Rendering correctness' }}
         />
       </Stack.Navigator>
     </NavigationContainer>
