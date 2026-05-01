@@ -212,12 +212,24 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
     private void executeImpl(final NativeViewHierarchyManager nativeViewHierarchyManager, final UIBlockViewResolver uiBlockViewResolver) {
         final View view;
 
-        if (tag == -1) {
-            view = currentActivity.getWindow().getDecorView().findViewById(android.R.id.content);
-        } else if (uiBlockViewResolver != null) {
-            view = uiBlockViewResolver.resolveView(tag);
-        } else {
-            view = nativeViewHierarchyManager.resolveView(tag);
+        try {
+            if (tag == -1) {
+                view = currentActivity.getWindow().getDecorView().findViewById(android.R.id.content);
+            } else if (uiBlockViewResolver != null) {
+                view = uiBlockViewResolver.resolveView(tag);
+            } else {
+                view = nativeViewHierarchyManager.resolveView(tag);
+            }
+        } catch (final Throwable ex) {
+            // currentActivity / getWindow() may be null when the app is
+            // backgrounded, and resolveView can throw on stale tags. Catch
+            // here so we reject the promise instead of crashing the
+            // UIManager queue.
+            Log.e(TAG, "Failed to resolve view for snapshot", ex);
+            final String detail = ex.getMessage() != null ? ex.getMessage() : ex.toString();
+            promise.reject(ERROR_UNABLE_TO_SNAPSHOT,
+                "Failed to resolve view for snapshot: " + detail, ex);
+            return;
         }
 
         if (view == null) {
