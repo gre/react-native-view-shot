@@ -340,8 +340,8 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
         promise.resolve(data);
     }
 
-    private void markSubtreeAlphaLayers(@NonNull final View v,
-                                        @NonNull final List<View> tracked) {
+    static void markSubtreeAlphaLayers(@NonNull final View v,
+                                       @NonNull final List<View> tracked) {
         if (v instanceof ViewGroup) {
             final ViewGroup group = (ViewGroup) v;
             final float alpha = v.getAlpha();
@@ -497,7 +497,7 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
     }
 
     @NonNull
-    private List<View> getAllChildren(@NonNull final View v) {
+    static List<View> getAllChildren(@NonNull final View v) {
         if (!(v instanceof ViewGroup)) {
             final ArrayList<View> viewArrayList = new ArrayList<>();
             viewArrayList.add(v);
@@ -806,7 +806,7 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
     /**
      * Propose allocation size of the array output stream.
      */
-    private static int proposeSize(@NonNull final View view) {
+    static int proposeSize(@NonNull final View view) {
         final int w = view.getWidth();
         final int h = view.getHeight();
 
