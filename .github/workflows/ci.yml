@@ -84,6 +84,12 @@ jobs:
         working-directory: example
         run: npm ci --legacy-peer-deps
 
+      - name: Run library Java unit tests
+        working-directory: example/android
+        run: |
+          echo "🧪 Running library JUnit tests..."
+          ./gradlew :react-native-view-shot:testDebugUnitTest --no-daemon --stacktrace
+
       - name: Build Android APK
         working-directory: example/android
         run: |
