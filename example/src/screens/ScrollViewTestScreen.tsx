@@ -287,6 +287,7 @@ const ScrollViewTestScreen: React.FC = () => {
             <ScrollView
               ref={contentContainerScrollRef}
               style={styles.contentContainerScroll}
+              nestedScrollEnabled
               testID="snapshotContentContainer-scrollview"
             >
               {contentContainerItems.map(item => (
@@ -356,6 +357,7 @@ const ScrollViewTestScreen: React.FC = () => {
               style={styles.contentContainerScroll}
               data={flatListContentContainerItems}
               keyExtractor={item => item.id}
+              nestedScrollEnabled
               testID="snapshotContentContainer-flatlist"
               renderItem={({ item }) => (
                 <View
