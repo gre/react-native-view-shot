@@ -723,8 +723,7 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
     /**
      * Walk the parent chain from {@code child} up to (but not including)
      * {@code root}, returning the visited views in leaf-to-root order.
-     *
-     * <p>Guards against three failure modes that surfaced in #488:
+     * Guards against three failure modes that surfaced in #488:
      * <ul>
      *   <li>{@code child == root}: the captured view is itself a
      *       non-ViewGroup (e.g. a SurfaceView captured directly with
@@ -740,7 +739,7 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
      * {@code iterator.getParent()} and crashed in any of those cases.
      */
     @NonNull
-    static java.util.List<View> walkAncestors(@NonNull final View child, @NonNull final View root) {
+    static List<View> walkAncestors(@NonNull final View child, @NonNull final View root) {
         final LinkedList<View> ms = new LinkedList<>();
         if (child == root) {
             return ms;
