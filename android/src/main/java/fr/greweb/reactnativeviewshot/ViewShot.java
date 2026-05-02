@@ -721,29 +721,50 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
     }
 
     /**
+     * Walk the parent chain from {@code child} up to (but not including)
+     * {@code root}, returning the visited views in leaf-to-root order.
+     *
+     * <p>Guards against three failure modes that surfaced in #488:
+     * <ul>
+     *   <li>{@code child == root}: the captured view is itself a
+     *       non-ViewGroup (e.g. a SurfaceView captured directly with
+     *       {@code handleGLSurfaceView=true}), so {@code getAllChildren}
+     *       returns {@code [v]} and we have no ancestors to walk.</li>
+     *   <li>Null parent encountered mid-walk: the child wasn't (or no
+     *       longer is) a descendant of root.</li>
+     *   <li>Non-View {@link android.view.ViewParent} encountered (e.g.
+     *       {@code ViewRootImpl} when walking past root): casting it to
+     *       {@code View} would throw {@code ClassCastException}.</li>
+     * </ul>
+     * The original {@code do/while} loop blindly cast and dereferenced
+     * {@code iterator.getParent()} and crashed in any of those cases.
+     */
+    @NonNull
+    static java.util.List<View> walkAncestors(@NonNull final View child, @NonNull final View root) {
+        final LinkedList<View> ms = new LinkedList<>();
+        if (child == root) {
+            return ms;
+        }
+        View iterator = child;
+        while (iterator != null && iterator != root) {
+            ms.add(iterator);
+            final android.view.ViewParent parent = iterator.getParent();
+            iterator = (parent instanceof View) ? (View) parent : null;
+        }
+        return ms;
+    }
+
+    /**
      * Concat all the transformation matrix's from parent to child.
      */
     @NonNull
     @SuppressWarnings("UnusedReturnValue")
     private Matrix applyTransformations(final Canvas c, @NonNull final View root, @NonNull final View child) {
         final Matrix transform = new Matrix();
-        // When the captured view itself is the child (e.g. a SurfaceView
-        // captured directly with handleGLSurfaceView=true, where
-        // getAllChildren returns [v] for non-ViewGroups), there are no
-        // ancestor transforms to walk and the parent walk below would
-        // run past root and dereference null. See #488.
-        if (child == root) {
+        final LinkedList<View> ms = new LinkedList<>(walkAncestors(child, root));
+        if (ms.isEmpty()) {
             return transform;
         }
-        final LinkedList<View> ms = new LinkedList<>();
-
-        // find all parents of the child view
-        View iterator = child;
-        do {
-            ms.add(iterator);
-
-            iterator = (View) iterator.getParent();
-        } while (iterator != null && iterator != root);
 
         // apply transformations from parent --> child order
         Collections.reverse(ms);
