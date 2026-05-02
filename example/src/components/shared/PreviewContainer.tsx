@@ -1,5 +1,11 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  type ImageResizeMode,
+} from 'react-native';
 
 interface PreviewContainerProps {
   capturedUri: string;
@@ -7,6 +13,7 @@ interface PreviewContainerProps {
   noteText?: string;
   imageWidth?: number;
   imageHeight?: number;
+  resizeMode?: ImageResizeMode;
 }
 
 export const PreviewContainer: React.FC<PreviewContainerProps> = ({
@@ -15,6 +22,10 @@ export const PreviewContainer: React.FC<PreviewContainerProps> = ({
   noteText,
   imageWidth = 200,
   imageHeight = 150,
+  // Default to "contain" so the captured image keeps its aspect ratio in
+  // the preview frame (full content visible, letterboxed if needed)
+  // instead of being cropped/stretched by the platform default ("cover").
+  resizeMode = 'contain',
 }) => {
   return (
     <View style={styles.container}>
@@ -22,6 +33,7 @@ export const PreviewContainer: React.FC<PreviewContainerProps> = ({
       <Image
         source={{ uri: capturedUri }}
         style={[styles.image, { width: imageWidth, height: imageHeight }]}
+        resizeMode={resizeMode}
         fadeDuration={0}
       />
       <Text style={styles.uriText} numberOfLines={2}>
