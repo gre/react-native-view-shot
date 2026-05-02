@@ -266,9 +266,10 @@ public class MarkSubtreeAlphaLayersTest {
     }
 
     // ---- Mockito helpers ----
-    // Static imports for any() / anyInt() avoid clutter at the top
-    // (we import them via fully-qualified calls below to dodge the
-    // import-order checkstyle).
+    // Local wrappers around Mockito ArgumentMatchers.any() / anyInt()
+    // implemented via fully-qualified calls to keep the static-import
+    // block at the top focused on org.junit.Assert / Mockito.* and avoid
+    // import-order churn.
     private static int anyInt() {
         return org.mockito.ArgumentMatchers.anyInt();
     }
