@@ -727,6 +727,14 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
     @SuppressWarnings("UnusedReturnValue")
     private Matrix applyTransformations(final Canvas c, @NonNull final View root, @NonNull final View child) {
         final Matrix transform = new Matrix();
+        // When the captured view itself is the child (e.g. a SurfaceView
+        // captured directly with handleGLSurfaceView=true, where
+        // getAllChildren returns [v] for non-ViewGroups), there are no
+        // ancestor transforms to walk and the parent walk below would
+        // run past root and dereference null. See #488.
+        if (child == root) {
+            return transform;
+        }
         final LinkedList<View> ms = new LinkedList<>();
 
         // find all parents of the child view
@@ -735,7 +743,7 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
             ms.add(iterator);
 
             iterator = (View) iterator.getParent();
-        } while (iterator != root);
+        } while (iterator != null && iterator != root);
 
         // apply transformations from parent --> child order
         Collections.reverse(ms);
