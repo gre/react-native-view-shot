@@ -11,6 +11,7 @@ import {
   SectionList,
 } from 'react-native';
 import ViewShot, { captureRef } from 'react-native-view-shot';
+import { PreviewContainer } from '../components/shared';
 
 const COLORS = [
   '#FF6B6B',
@@ -42,6 +43,22 @@ const flatListData = Array.from({ length: 30 }, (_, i) => ({
   color: COLORS[i % COLORS.length],
 }));
 
+// Items used to demo `snapshotContentContainer`. Six items at 80px tall (>= 480px
+// of total content) inside a 200px viewport — items 3..6 are off-screen until
+// the user scrolls. With `snapshotContentContainer: true` the capture should
+// contain ALL six items, not just the visible viewport.
+const contentContainerItems = Array.from({ length: 6 }, (_, i) => ({
+  id: i,
+  color: COLORS[i % COLORS.length],
+  label: `Item ${i + 1}`,
+}));
+
+const flatListContentContainerItems = Array.from({ length: 8 }, (_, i) => ({
+  id: String(i),
+  color: COLORS[(i + 3) % COLORS.length],
+  title: `Row ${i + 1}`,
+}));
+
 const sectionListData = [
   {
     title: 'Fruits',
@@ -63,6 +80,10 @@ const ScrollViewTestScreen: React.FC = () => {
   const scrollViewRef = useRef<ViewShot>(null);
   const flatListRef = useRef<ViewShot>(null);
   const sectionListRef = useRef<ViewShot>(null);
+  // Refs for the `snapshotContentContainer` demo — these point at the raw
+  // ScrollView / FlatList so the native module can read their content size.
+  const contentContainerScrollRef = useRef<ScrollView>(null);
+  const contentContainerFlatListRef = useRef<FlatList>(null);
 
   const [scrollViewCapture, setScrollViewCapture] = useState<SectionState>({
     uri: null,
@@ -76,6 +97,16 @@ const ScrollViewTestScreen: React.FC = () => {
     uri: null,
     error: null,
   });
+  const [contentContainerCapture, setContentContainerCapture] =
+    useState<SectionState>({
+      uri: null,
+      error: null,
+    });
+  const [flatListContentCapture, setFlatListContentCapture] =
+    useState<SectionState>({
+      uri: null,
+      error: null,
+    });
 
   const capture = async (
     ref: React.RefObject<ViewShot | null>,
@@ -86,6 +117,28 @@ const ScrollViewTestScreen: React.FC = () => {
         const uri = await captureRef(ref.current, {
           format: 'png',
           quality: 0.8,
+        });
+        setter({ uri, error: null });
+      }
+    } catch (error: any) {
+      setter({ uri: null, error: error.message });
+      console.error('Capture failed:', error);
+    }
+  };
+
+  // Capture a raw ScrollView / FlatList ref using the `snapshotContentContainer`
+  // option so the resulting image contains the full scrollable content, not
+  // just the visible viewport.
+  const captureContentContainer = async (
+    ref: React.RefObject<ScrollView | FlatList | null>,
+    setter: (s: SectionState) => void,
+  ) => {
+    try {
+      if (ref.current) {
+        const uri = await captureRef(ref.current, {
+          format: 'png',
+          quality: 1,
+          snapshotContentContainer: true,
         });
         setter({ uri, error: null });
       }
@@ -212,6 +265,140 @@ const ScrollViewTestScreen: React.FC = () => {
           </TouchableOpacity>
           {renderPreview(sectionListCapture)}
         </View>
+
+        {/* snapshotContentContainer ScrollView demo */}
+        <View style={styles.section} testID="snapshotContentContainer-section">
+          <Text style={styles.sectionTitle}>
+            snapshotContentContainer (ScrollView)
+          </Text>
+          <View style={styles.hintBox}>
+            <Text style={styles.hintText}>
+              Pass{' '}
+              <Text style={styles.hintCode}>
+                snapshotContentContainer: true
+              </Text>{' '}
+              to capture the entire scrollable content of a ScrollView, not just
+              the visible viewport. The viewport below is 200px tall but holds
+              six 80px items — after capture you should see ALL six items
+              (including the off-screen ones), stacked top to bottom.
+            </Text>
+          </View>
+          <View style={styles.captureArea}>
+            <ScrollView
+              ref={contentContainerScrollRef}
+              style={styles.contentContainerScroll}
+              testID="snapshotContentContainer-scrollview"
+            >
+              {contentContainerItems.map(item => (
+                <View
+                  key={item.id}
+                  style={[styles.tallItem, { backgroundColor: item.color }]}
+                >
+                  <Text style={styles.itemText}>{item.label}</Text>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() =>
+              captureContentContainer(
+                contentContainerScrollRef,
+                setContentContainerCapture,
+              )
+            }
+            testID="snapshotContentContainer-capture"
+            accessible={true}
+            accessibilityLabel="snapshotContentContainer-capture"
+          >
+            <Text style={styles.buttonText}>
+              ✅ Capture full content (ScrollView)
+            </Text>
+          </TouchableOpacity>
+          {contentContainerCapture.error && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>
+                Error: {contentContainerCapture.error}
+              </Text>
+            </View>
+          )}
+          {contentContainerCapture.uri && (
+            <View
+              style={styles.contentPreviewWrapper}
+              testID="snapshotContentContainer-preview"
+            >
+              <PreviewContainer
+                capturedUri={contentContainerCapture.uri}
+                title="✅ snapshotContentContainer Captured:"
+                noteText="Expect all 6 items to be visible in this image."
+                imageWidth={300}
+                imageHeight={500}
+              />
+            </View>
+          )}
+        </View>
+
+        {/* snapshotContentContainer FlatList demo */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
+            snapshotContentContainer (FlatList)
+          </Text>
+          <View style={styles.hintBox}>
+            <Text style={styles.hintText}>
+              The same option also works with FlatList (which renders a
+              ScrollView internally). The viewport is 200px tall with eight 80px
+              rows — the capture should include every row.
+            </Text>
+          </View>
+          <View style={styles.captureArea}>
+            <FlatList
+              ref={contentContainerFlatListRef}
+              style={styles.contentContainerScroll}
+              data={flatListContentContainerItems}
+              keyExtractor={item => item.id}
+              testID="snapshotContentContainer-flatlist"
+              renderItem={({ item }) => (
+                <View
+                  style={[styles.tallItem, { backgroundColor: item.color }]}
+                >
+                  <Text style={styles.itemText}>{item.title}</Text>
+                </View>
+              )}
+            />
+          </View>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() =>
+              captureContentContainer(
+                contentContainerFlatListRef,
+                setFlatListContentCapture,
+              )
+            }
+            testID="snapshotContentContainer-flatlist-capture"
+          >
+            <Text style={styles.buttonText}>
+              Capture full content (FlatList)
+            </Text>
+          </TouchableOpacity>
+          {flatListContentCapture.error && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>
+                Error: {flatListContentCapture.error}
+              </Text>
+            </View>
+          )}
+          {flatListContentCapture.uri && (
+            <View style={styles.contentPreviewWrapper}>
+              <PreviewContainer
+                capturedUri={flatListContentCapture.uri}
+                title="Captured (full content):"
+                noteText="Expect all 8 rows to be visible in this image."
+                imageWidth={300}
+                imageHeight={500}
+              />
+            </View>
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -332,6 +519,39 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#C62828',
     fontSize: 13,
+  },
+  hintBox: {
+    padding: 10,
+    marginBottom: 8,
+    backgroundColor: '#FFF8E1',
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: '#F9A825',
+  },
+  hintText: {
+    fontSize: 12,
+    color: '#5D4037',
+    lineHeight: 17,
+  },
+  hintCode: {
+    fontFamily: 'monospace',
+    fontSize: 12,
+    color: '#3E2723',
+  },
+  contentContainerScroll: {
+    height: 200,
+    backgroundColor: '#fff',
+  },
+  tallItem: {
+    height: 80,
+    paddingHorizontal: 16,
+    justifyContent: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+  },
+  contentPreviewWrapper: {
+    marginTop: 10,
+    alignItems: 'center',
   },
 });
 
