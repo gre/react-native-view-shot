@@ -257,13 +257,35 @@ jobs:
       - name: Ensure Windows SDK 10.0.22621
         shell: pwsh
         run: |
-          if (Test-Path "C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0") {
+          $sdkPath = "C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0"
+          if (Test-Path $sdkPath) {
             Write-Host "Windows SDK 10.0.22621 already installed"
-          } else {
-            Write-Host "Installing Windows SDK 10.0.22621 via winget"
-            winget install --id Microsoft.WindowsSDK.10.0.22621 `
-              --silent --accept-package-agreements --accept-source-agreements
+            exit 0
           }
+          Write-Host "Installed SDKs:"
+          Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\Include" -ErrorAction SilentlyContinue | Select-Object Name | ForEach-Object { Write-Host "  $($_.Name)" }
+
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $info = & $vswhere -latest -prerelease -products * -format json | ConvertFrom-Json
+          if (-not $info) { throw "vswhere returned no VS install" }
+          Write-Host "VS productId: $($info.productId)"
+
+          $vsInstaller = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vs_installer.exe"
+          $args = @(
+            'modify',
+            '--channelId', $info.channelId,
+            '--productId', $info.productId,
+            '--add', 'Microsoft.VisualStudio.Component.Windows11SDK.22621',
+            '--quiet', '--norestart'
+          )
+          Write-Host "Running: $vsInstaller $($args -join ' ')"
+          $proc = Start-Process -FilePath $vsInstaller -ArgumentList $args -Wait -PassThru
+          Write-Host "vs_installer exit code: $($proc.ExitCode)"
+
+          if (-not (Test-Path $sdkPath)) {
+            throw "Windows SDK 10.0.22621 still missing after install attempt"
+          }
+          Write-Host "Windows SDK 10.0.22621 installed"
 
       - name: Cache NuGet packages
         uses: actions/cache@v4
