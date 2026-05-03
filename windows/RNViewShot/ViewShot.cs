@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -8,142 +8,111 @@ using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 
 namespace RNViewShot
 {
-    internal class ViewShot: Control
+    internal static class ViewShot
     {
         public const string ErrorUnableToSnapshot = "E_UNABLE_TO_SNAPSHOT";
-        private string extension;
-        private double quality;
-        private int? width;
-        private int? height;
-        private string path;
 
-        public ViewShot()
+        public static async Task<string> Execute(FrameworkElement view, string extension, double quality, int width, int height, string path, string result)
         {
-            DefaultStyleKey = typeof(ViewShot);
-        }
-
-        public async Task<string> Execute(FrameworkElement view, string extension, double quality, int width, int height, string path, string result)
-        {
-            this.extension = extension;
-            this.quality = quality;
-            this.width = width;
-            this.height = height;
-            this.path = path;
-
-            string output = string.Empty;
-
             try
             {
-                if ("tmpfile" == result)
+                using (var ras = new InMemoryRandomAccessStream())
                 {
-                    using (var ras = new InMemoryRandomAccessStream())
+                    await CaptureView(view, ras, extension, quality, width, height);
+
+                    if (result == "tmpfile")
                     {
-                        await CaptureView(view, ras);
-                        var file = await GetStorageFile();
+                        var file = await GetStorageFile(path, extension);
                         using (var fileStream = await file.OpenAsync(FileAccessMode.ReadWrite))
                         {
                             await RandomAccessStream.CopyAndCloseAsync(ras.GetInputStreamAt(0), fileStream.GetOutputStreamAt(0));
-                            output = file.Path;
+                            return file.Path;
                         }
                     }
-                }
-                else if ("base64" == result)
-                {
-                    using (var ras = new InMemoryRandomAccessStream())
+
+                    if (ras.Size > int.MaxValue)
                     {
-                        await CaptureView(view, ras);
-                        var imageBytes = new byte[ras.Size];
-                        await ras.AsStream().ReadAsync(imageBytes, 0, imageBytes.Length);
-                        string data = Convert.ToBase64String(imageBytes);
-                        output = data;
+                        throw new InvalidOperationException("Capture is too large to base64-encode (" + ras.Size + " bytes)");
                     }
-                }
-                else if ("data-uri" == result)
-                {
-                    using (var ras = new InMemoryRandomAccessStream())
+                    var imageBytes = new byte[(int)ras.Size];
+                    await ras.AsStream().ReadAsync(imageBytes, 0, imageBytes.Length);
+                    var data = Convert.ToBase64String(imageBytes);
+                    if (result == "data-uri")
                     {
-                        await CaptureView(view, ras);
-                        var imageBytes = new byte[ras.Size];
-                        await ras.AsStream().ReadAsync(imageBytes, 0, imageBytes.Length);
-                        string data = Convert.ToBase64String(imageBytes);
-                        data = "data:image/" + extension + ";base64," + data;
-                        output = data;
+                        var mime = extension == "jpg" ? "jpeg" : extension;
+                        return "data:image/" + mime + ";base64," + data;
                     }
+                    return data;
                 }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.ToString());
-                throw ex;
+                throw;
             }
-
-            return output;
         }
 
-        private async Task<BitmapEncoder> CaptureView(FrameworkElement view, IRandomAccessStream stream)
+        private static async Task CaptureView(FrameworkElement view, IRandomAccessStream stream, string extension, double quality, int width, int height)
         {
-            int w = (int)view.ActualWidth;
-            int h = (int)view.ActualHeight;
-
-            if (w <= 0 || h <= 0)
+            if (view.ActualWidth <= 0 || view.ActualHeight <= 0)
             {
                 throw new InvalidOperationException("Impossible to snapshot the view: view is invalid");
             }
 
-            RenderTargetBitmap targetBitmap = new RenderTargetBitmap();
-            await targetBitmap.RenderAsync(view, w, h);
+            var dpi = DisplayInformation.GetForCurrentView().LogicalDpi;
+            var scale = dpi / 96.0;
+
+            var targetBitmap = new RenderTargetBitmap();
+            await targetBitmap.RenderAsync(view);
 
             BitmapEncoder encoder;
-            if (extension != "png")
-            {
-                var propertySet = new BitmapPropertySet();
-                var qualityValue = new BitmapTypedValue(quality, Windows.Foundation.PropertyType.Single);
-                propertySet.Add("ImageQuality", qualityValue);
-                encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream, propertySet);
-            }
-            else
+            if (extension == "png")
             {
                 encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, stream);
             }
+            else
+            {
+                var propertySet = new BitmapPropertySet
+                {
+                    { "ImageQuality", new BitmapTypedValue(quality, Windows.Foundation.PropertyType.Single) },
+                };
+                encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream, propertySet);
+            }
 
-            var displayInformation = DisplayInformation.GetForCurrentView();
             var pixelBuffer = await targetBitmap.GetPixelsAsync();
+            var alphaMode = extension == "png" ? BitmapAlphaMode.Premultiplied : BitmapAlphaMode.Ignore;
 
             encoder.SetPixelData(
                 BitmapPixelFormat.Bgra8,
-                BitmapAlphaMode.Ignore,
+                alphaMode,
                 (uint)targetBitmap.PixelWidth,
                 (uint)targetBitmap.PixelHeight,
-                displayInformation.LogicalDpi,
-                displayInformation.LogicalDpi,
-                pixelBuffer.ToArray());                
+                dpi,
+                dpi,
+                pixelBuffer.ToArray());
 
-
-            if (width != null && height != null && (width != w || height != h))
+            if (width > 0 && height > 0)
             {
-                encoder.BitmapTransform.ScaledWidth = (uint)width;
-                encoder.BitmapTransform.ScaledWidth = (uint)height;
-            }
-
-            if (encoder == null)
-            {
-                throw new InvalidOperationException("Impossible to snapshot the view");
+                var targetW = (uint)Math.Round(width * scale);
+                var targetH = (uint)Math.Round(height * scale);
+                if (targetW != (uint)targetBitmap.PixelWidth || targetH != (uint)targetBitmap.PixelHeight)
+                {
+                    encoder.BitmapTransform.ScaledWidth = targetW;
+                    encoder.BitmapTransform.ScaledHeight = targetH;
+                }
             }
 
             await encoder.FlushAsync();
-
-            return encoder;            
         }
 
-        private async Task<StorageFile> GetStorageFile()
+        private static async Task<StorageFile> GetStorageFile(string path, string extension)
         {
             var storageFolder = ApplicationData.Current.LocalFolder;
-            var fileName = !string.IsNullOrEmpty(path) ? path : Path.ChangeExtension(Guid.NewGuid().ToString(), extension);                
+            var fileName = !string.IsNullOrEmpty(path) ? path : Path.ChangeExtension(Guid.NewGuid().ToString(), extension);
             return await storageFolder.CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
         }
     }

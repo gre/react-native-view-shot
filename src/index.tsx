@@ -58,6 +58,8 @@ export interface CaptureOptions {
   /**
    * if true and when view is a ScrollView, the "content container" height will be evaluated instead of the
    * container height.
+   *
+   * Not supported on Windows.
    */
   snapshotContentContainer?: boolean;
   /**
@@ -214,6 +216,15 @@ export function captureRef<T = any>(
     console.warn(
       "react-native-view-shot: bad options:\n" +
         errors.map(e => `- ${e}`).join("\n"),
+    );
+  }
+  if (
+    __DEV__ &&
+    Platform.OS === "windows" &&
+    optionsObject?.snapshotContentContainer
+  ) {
+    console.warn(
+      "react-native-view-shot: `snapshotContentContainer` is not supported on Windows. The option is ignored; only the visible viewport will be captured.",
     );
   }
   return RNViewShot.captureRef(viewHandle, options);

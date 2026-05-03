@@ -1,91 +1,113 @@
-import React, {useRef, useState} from "react";
-import {View, Text, StyleSheet, Button, Image} from "react-native";
-import ViewShot from "react-native-view-shot";
+import React from "react";
+import {NavigationContainer} from "@react-navigation/native";
+import {createStackNavigator} from "@react-navigation/stack";
 
-export default function App() {
-  const viewShotRef = useRef<ViewShot>(null);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+export type RootStackParamList = {
+  Home: undefined;
+  BasicTest: undefined;
+  FullScreen: undefined;
+  Transparency: undefined;
+  ScrollView: undefined;
+  Image: undefined;
+  Modal: undefined;
+  FS: undefined;
+  Rendering: undefined;
+  StyleFilters: undefined;
+};
 
-  const captureView = async () => {
-    try {
-      if (viewShotRef.current) {
-        const uri = await viewShotRef.current.capture();
-        setCapturedImage(uri);
-        console.log("Captured image:", uri);
-      }
-    } catch (error) {
-      console.error("Capture failed:", error);
-    }
-  };
+import HomeScreen from "./src/screens/HomeScreen";
+import BasicTestScreen from "./src/screens/BasicTestScreen";
+import FullScreenTestScreen from "./src/screens/FullScreenTestScreen";
+import TransparencyTestScreen from "./src/screens/TransparencyTestScreen";
+import ImageTestScreen from "./src/screens/ImageTestScreen";
+import ModalTestScreen from "./src/screens/ModalTestScreen";
+import FSTestScreen from "./src/screens/FSTestScreen";
+import ScrollViewTestScreen from "./src/screens/ScrollViewTestScreen";
+import RenderingTestScreen from "./src/screens/RenderingTestScreen";
+import StyleFiltersTestScreen from "./src/screens/StyleFiltersTestScreen";
 
+const Stack = createStackNavigator<RootStackParamList>();
+
+function App(): React.JSX.Element {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Windows ViewShot Test</Text>
+    <NavigationContainer>
+      <Stack.Navigator
+        initialRouteName="Home"
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: "#007AFF",
+          },
+          headerTintColor: "#fff",
+          headerTitleStyle: {
+            fontWeight: "bold",
+          },
+          headerBackTitle: "Back",
+          headerBackAccessibilityLabel: "Back",
+        }}
+      >
+        <Stack.Screen
+          name="Home"
+          component={HomeScreen}
+          options={{
+            title: "react-native-view-shot 4.0.3",
+            headerStyle: {
+              backgroundColor: "#007AFF",
+            },
+          }}
+        />
 
-      <ViewShot ref={viewShotRef} style={styles.captureArea}>
-        <View style={styles.testContent}>
-          <Text style={styles.testText}>Test Content</Text>
-          <View style={styles.colorBox} />
-        </View>
-      </ViewShot>
+        <Stack.Screen
+          name="BasicTest"
+          component={BasicTestScreen}
+          options={{title: "📸 Basic ViewShot Test"}}
+        />
+        <Stack.Screen
+          name="FullScreen"
+          component={FullScreenTestScreen}
+          options={{title: "🖥️ Full Screen Capture"}}
+        />
+        <Stack.Screen
+          name="Transparency"
+          component={TransparencyTestScreen}
+          options={{title: "⚪ Transparency Test"}}
+        />
+        <Stack.Screen
+          name="ScrollView"
+          component={ScrollViewTestScreen}
+          options={{title: "📜 ScrollView & Lists"}}
+        />
 
-      <Button title="Capture ViewShot" onPress={captureView} />
+        <Stack.Screen
+          name="Image"
+          component={ImageTestScreen}
+          options={{title: "🖼️ Image Capture"}}
+        />
 
-      {capturedImage && (
-        <View style={styles.previewContainer}>
-          <Text style={styles.previewText}>Captured:</Text>
-          <Image source={{uri: capturedImage}} style={styles.preview} />
-        </View>
-      )}
-    </View>
+        <Stack.Screen
+          name="Modal"
+          component={ModalTestScreen}
+          options={{title: "📱 Modal Capture"}}
+        />
+
+        <Stack.Screen
+          name="FS"
+          component={FSTestScreen}
+          options={{title: "💾 File System Test"}}
+        />
+
+        <Stack.Screen
+          name="Rendering"
+          component={RenderingTestScreen}
+          options={{title: "🧪 Rendering correctness"}}
+        />
+        <Stack.Screen
+          name="StyleFilters"
+          component={StyleFiltersTestScreen}
+          options={{title: "🎨 Style filters (Bug #578)"}}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#F5F5F5",
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-  },
-  captureArea: {
-    marginBottom: 20,
-  },
-  testContent: {
-    backgroundColor: "white",
-    padding: 20,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  testText: {
-    fontSize: 18,
-    marginBottom: 10,
-  },
-  colorBox: {
-    width: 100,
-    height: 100,
-    backgroundColor: "#4CAF50",
-    borderRadius: 10,
-  },
-  previewContainer: {
-    marginTop: 20,
-    alignItems: "center",
-  },
-  previewText: {
-    fontSize: 16,
-    marginBottom: 10,
-  },
-  preview: {
-    width: 200,
-    height: 200,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#ddd",
-  },
-});
+export default App;

@@ -2,14 +2,11 @@
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup Label="ReactNativeWindowsProps">
-    <ReactNativeWindowsDir Condition="'$(ReactNativeWindowsDir)' == ''">..\..\node_modules\react-native-windows\</ReactNativeWindowsDir>
-    <!-- Support for different react-native-windows versions -->
-    <ReactNativeWindowsPropsFile Condition="Exists('$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.Uwp.CSharpLib.props')">$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.Uwp.CSharpLib.props</ReactNativeWindowsPropsFile>
-    <ReactNativeWindowsTargetsFile Condition="Exists('$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.Uwp.CSharpLib.targets')">$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.Uwp.CSharpLib.targets</ReactNativeWindowsTargetsFile>
-    <!-- Fallback for newer versions -->
-    <ReactNativeWindowsPropsFile Condition="'$(ReactNativeWindowsPropsFile)' == '' AND Exists('$(ReactNativeWindowsDir)\Microsoft.ReactNative.Uwp.CSharpLib.props')">$(ReactNativeWindowsDir)\Microsoft.ReactNative.Uwp.CSharpLib.props</ReactNativeWindowsPropsFile>
-    <ReactNativeWindowsTargetsFile Condition="'$(ReactNativeWindowsTargetsFile)' == '' AND Exists('$(ReactNativeWindowsDir)\Microsoft.ReactNative.Uwp.CSharpLib.targets')">$(ReactNativeWindowsDir)\Microsoft.ReactNative.Uwp.CSharpLib.targets</ReactNativeWindowsTargetsFile>
+    <ReactNativeWindowsDir Condition="'$(ReactNativeWindowsDir)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'node_modules\react-native-windows\package.json'))\node_modules\react-native-windows\</ReactNativeWindowsDir>
+    <ReactNativeWindowsPropsFile Condition="Exists('$(ReactNativeWindowsDir)PropertySheets\External\Microsoft.ReactNative.Uwp.CSharpLib.props')">$(ReactNativeWindowsDir)PropertySheets\External\Microsoft.ReactNative.Uwp.CSharpLib.props</ReactNativeWindowsPropsFile>
+    <ReactNativeWindowsTargetsFile Condition="Exists('$(ReactNativeWindowsDir)PropertySheets\External\Microsoft.ReactNative.Uwp.CSharpLib.targets')">$(ReactNativeWindowsDir)PropertySheets\External\Microsoft.ReactNative.Uwp.CSharpLib.targets</ReactNativeWindowsTargetsFile>
   </PropertyGroup>
+  <Import Project="$(ReactNativeWindowsDir)PropertySheets\External\Microsoft.ReactNative.WindowsSdk.Default.props" Condition="Exists('$(ReactNativeWindowsDir)PropertySheets\External\Microsoft.ReactNative.WindowsSdk.Default.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -20,7 +17,7 @@
     <AssemblyName>RNViewShot</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
-    <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0</TargetPlatformVersion>
+    <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' OR '$(TargetPlatformVersion)' == '10.0' ">10.0.22621.0</TargetPlatformVersion>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <MinimumVisualStudioVersion>16</MinimumVisualStudioVersion>
     <FileAlignment>512</FileAlignment>

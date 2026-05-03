@@ -1,36 +1,44 @@
 const {getDefaultConfig, mergeConfig} = require("@react-native/metro-config");
-
 const fs = require("fs");
 const path = require("path");
 const exclusionList = require("metro-config/src/defaults/exclusionList");
+
+const projectRoot = __dirname;
+const monorepoRoot = path.resolve(projectRoot, "..");
 
 const rnwPath = fs.realpathSync(
   path.resolve(require.resolve("react-native-windows/package.json"), ".."),
 );
 
-//
-
-/**
- * Metro configuration
- * https://facebook.github.io/metro/docs/configuration
- *
- * @type {import('metro-config').MetroConfig}
- */
+// Block the lib's own node_modules/{react,react-native} so Metro doesn't bundle
+// duplicate copies (the lib's devDeps + this example's deps), which breaks hooks
+// in React 19 because only one copy gets its dispatcher set by the renderer.
+const blockedParentModule = name =>
+  new RegExp(
+    path
+      .resolve(monorepoRoot, "node_modules", name, ".*")
+      .replace(/[/\\]/g, "[/\\\\]"),
+  );
 
 const config = {
-  //
+  projectRoot,
+  watchFolders: [monorepoRoot],
   resolver: {
+    nodeModulesPaths: [path.resolve(projectRoot, "node_modules")],
+    alias: {
+      "react-native-view-shot": monorepoRoot,
+    },
     blockList: exclusionList([
-      // This stops "react-native run-windows" from causing the metro server to crash if its already running
+      // run-windows produces files Metro must not crash on
       new RegExp(
         `${path.resolve(__dirname, "windows").replace(/[/\\]/g, "/")}.*`,
       ),
-      // This prevents "react-native run-windows" from hitting: EBUSY: resource busy or locked, open msbuild.ProjectImports.zip or other files produced by msbuild
       new RegExp(`${rnwPath}/build/.*`),
       new RegExp(`${rnwPath}/target/.*`),
       /.*\.ProjectImports\.zip/,
+      blockedParentModule("react-native"),
+      blockedParentModule("react"),
     ]),
-    //
   },
   transformer: {
     getTransformOptions: async () => ({
@@ -42,4 +50,4 @@ const config = {
   },
 };
 
-module.exports = mergeConfig(getDefaultConfig(__dirname), config);
+module.exports = mergeConfig(getDefaultConfig(projectRoot), config);

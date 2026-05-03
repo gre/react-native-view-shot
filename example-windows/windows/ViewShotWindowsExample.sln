@@ -34,6 +34,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.ReactNative.Manag
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.ReactNative.Managed.CodeGen", "..\node_modules\react-native-windows\Microsoft.ReactNative.Managed.CodeGen\Microsoft.ReactNative.Managed.CodeGen.csproj", "{ADED4FBE-887D-4271-AF24-F0823BCE7961}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RNViewShot", "..\node_modules\react-native-view-shot\windows\RNViewShot\RNViewShot.csproj", "{64171807-A036-45AC-84F4-54EB8F6FB1E5}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RNScreens", "..\node_modules\react-native-screens\windows\RNScreens\RNScreens.vcxproj", "{D638F49E-29D2-4699-AC52-FACD82FA7138}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		..\node_modules\react-native-windows\Shared\Shared.vcxitems*{2049dbe9-8d13-42c9-ae4b-413ae38fffd0}*SharedItemsImports = 9
@@ -159,6 +163,30 @@ Global
 		{14B93DC8-FD93-4A6D-81CB-8BC96644501C}.Release|x86.ActiveCfg = Release|Win32
 		{14B93DC8-FD93-4A6D-81CB-8BC96644501C}.Release|x86.Build.0 = Release|Win32
 		{14B93DC8-FD93-4A6D-81CB-8BC96644501C}.Release|x86.Deploy.0 = Release|Win32
+		{64171807-A036-45AC-84F4-54EB8F6FB1E5}.Debug|x64.ActiveCfg = Debug|x64
+		{64171807-A036-45AC-84F4-54EB8F6FB1E5}.Debug|x64.Build.0 = Debug|x64
+		{64171807-A036-45AC-84F4-54EB8F6FB1E5}.Debug|x86.ActiveCfg = Debug|x86
+		{64171807-A036-45AC-84F4-54EB8F6FB1E5}.Debug|x86.Build.0 = Debug|x86
+		{64171807-A036-45AC-84F4-54EB8F6FB1E5}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{64171807-A036-45AC-84F4-54EB8F6FB1E5}.Debug|ARM64.Build.0 = Debug|ARM64
+		{64171807-A036-45AC-84F4-54EB8F6FB1E5}.Release|x64.ActiveCfg = Release|x64
+		{64171807-A036-45AC-84F4-54EB8F6FB1E5}.Release|x64.Build.0 = Release|x64
+		{64171807-A036-45AC-84F4-54EB8F6FB1E5}.Release|x86.ActiveCfg = Release|x86
+		{64171807-A036-45AC-84F4-54EB8F6FB1E5}.Release|x86.Build.0 = Release|x86
+		{64171807-A036-45AC-84F4-54EB8F6FB1E5}.Release|ARM64.ActiveCfg = Release|ARM64
+		{64171807-A036-45AC-84F4-54EB8F6FB1E5}.Release|ARM64.Build.0 = Release|ARM64
+		{D638F49E-29D2-4699-AC52-FACD82FA7138}.Debug|x64.ActiveCfg = Debug|x64
+		{D638F49E-29D2-4699-AC52-FACD82FA7138}.Debug|x64.Build.0 = Debug|x64
+		{D638F49E-29D2-4699-AC52-FACD82FA7138}.Debug|x86.ActiveCfg = Debug|Win32
+		{D638F49E-29D2-4699-AC52-FACD82FA7138}.Debug|x86.Build.0 = Debug|Win32
+		{D638F49E-29D2-4699-AC52-FACD82FA7138}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{D638F49E-29D2-4699-AC52-FACD82FA7138}.Debug|ARM64.Build.0 = Debug|ARM64
+		{D638F49E-29D2-4699-AC52-FACD82FA7138}.Release|x64.ActiveCfg = Release|x64
+		{D638F49E-29D2-4699-AC52-FACD82FA7138}.Release|x64.Build.0 = Release|x64
+		{D638F49E-29D2-4699-AC52-FACD82FA7138}.Release|x86.ActiveCfg = Release|Win32
+		{D638F49E-29D2-4699-AC52-FACD82FA7138}.Release|x86.Build.0 = Release|Win32
+		{D638F49E-29D2-4699-AC52-FACD82FA7138}.Release|ARM64.ActiveCfg = Release|ARM64
+		{D638F49E-29D2-4699-AC52-FACD82FA7138}.Release|ARM64.Build.0 = Release|ARM64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
