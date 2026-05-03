@@ -372,6 +372,19 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
         }
     }
 
+    /**
+     * Force a synchronous measure + layout pass at the given size, preserving
+     * the view's existing position. Used by the snapshotContentContainer path
+     * to expand a ScrollView to its full content size before drawing and to
+     * restore it afterwards.
+     */
+    static void forceExactLayout(@NonNull final View v, final int width, final int height) {
+        v.measure(
+            View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY));
+        v.layout(v.getLeft(), v.getTop(), v.getLeft() + width, v.getTop() + height);
+    }
+
     static final class UiThreadBlockTimeoutException extends RuntimeException {
         UiThreadBlockTimeoutException(String message) {
             super(message);
@@ -536,33 +549,27 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
      * @return screenshot resolution, Width * Height
      */
     private Point captureViewImpl(@NonNull final View view, @NonNull final OutputStream os) {
-        int w = view.getWidth();
-        int h = view.getHeight();
-
-        if (w <= 0 || h <= 0) {
-            throw new RuntimeException("Impossible to snapshot the view: view is invalid");
-        }
-
-        // evaluate real height
-        if (snapshotContentContainer) {
-            h = 0;
-            ScrollView scrollView = (ScrollView) view;
-            for (int i = 0; i < scrollView.getChildCount(); i++) {
-                h += scrollView.getChildAt(i).getHeight();
-            }
-        }
-
-        final Point resolution = new Point(w, h);
-        Bitmap bitmap = getBitmapForScreenshot(w, h);
-        final Bitmap originalBitmap = bitmap;
+        // All view-state reads and the bitmap allocation happen inside the
+        // UI runnable below to avoid a race with concurrent captures of the
+        // same view: another capture's mark/expand window could otherwise
+        // be observed here on the background thread, causing oversized
+        // bitmap allocation (and a blank tail when this capture's draw
+        // later runs at the restored size). Posting through the UI thread
+        // serialises captures of the same view, so each one allocates and
+        // draws at a consistent size.
+        final AtomicReference<Bitmap> originalBitmapRef = new AtomicReference<>();
+        final AtomicReference<Canvas> canvasRef = new AtomicReference<>();
+        final AtomicReference<Point> resolutionRef = new AtomicReference<>();
         // Recycling the canvas-backing bitmap is split between the caller
         // (background thread) and the UI runnable so we can safely return
         // the bitmap to the pool even when the caller times out mid-draw.
         // Both sides do `getAndSet(null)` after the UI task has finished;
         // exactly one wins the CAS and recycles, never returning a bitmap
         // that might still be in use by view.draw() on the UI thread.
-        final AtomicReference<Bitmap> originalToRecycle = new AtomicReference<>(originalBitmap);
+        final AtomicReference<Bitmap> originalToRecycle = new AtomicReference<>();
         final AtomicBoolean uiTaskFinished = new AtomicBoolean(false);
+        Bitmap bitmap = null;
+        Bitmap originalBitmap = null;
         try {
             final Paint paint = new Paint();
             paint.setAntiAlias(true);
@@ -571,8 +578,6 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
 
             // Uncomment next line if you want to wait attached android studio debugger:
             //   Debug.waitForDebugger();
-
-            final Canvas c = new Canvas(bitmap);
 
             // Force every translucent ViewGroup to render as a single offscreen
             // bitmap so view.draw() composites the subtree opaquely and applies
@@ -596,15 +601,117 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
             runOnUiThreadBlocking(new CancellableUiTask() {
                 @Override
                 public void run(@NonNull AtomicBoolean cancelled) {
+                    Bitmap allocatedBitmap = null;
                     try {
                         if (cancelled.get()) return;
+                        // Read the view's current size on the UI thread, after
+                        // any in-flight capture has restored its layout (the
+                        // UI thread is single-threaded so we cannot observe a
+                        // partial mark/expand from another capture).
+                        final int viewWidth = view.getWidth();
+                        final int viewHeight = view.getHeight();
+                        if (viewWidth <= 0 || viewHeight <= 0) {
+                            throw new RuntimeException(
+                                "Impossible to snapshot the view: view is invalid");
+                        }
+
                         final List<View> alphaLayered = new ArrayList<>();
+                        // Mirror iOS snapshotContentContainer behaviour: temporarily
+                        // resize the ScrollView to its full content height and force
+                        // a measure/layout pass so that children below the visible
+                        // viewport are no longer clipped out by the ScrollView's own
+                        // bounds. Without this, view.draw() on the expanded canvas
+                        // still skips off-screen children because ScrollView clips
+                        // its dispatchDraw to its own dimensions.
+                        //
+                        // FlatList caveat: virtualization (removeClippedSubviews,
+                        // windowSize) means off-screen items may not be mounted
+                        // and therefore cannot be drawn. To capture full content
+                        // from a FlatList, set removeClippedSubviews={false} and
+                        // a windowSize large enough to render everything, or use
+                        // ScrollView for content under a few hundred items.
+                        // TODO: HorizontalScrollView does not extend ScrollView,
+                        // so it isn't covered here. iOS's UIScrollView check
+                        // covers both axes; we'd need to widen this guard +
+                        // expand width instead of height for the horizontal
+                        // case to reach parity.
+                        final ScrollView scrollView =
+                            (snapshotContentContainer && view instanceof ScrollView)
+                                ? (ScrollView) view : null;
+                        if (snapshotContentContainer && scrollView == null) {
+                            // Non-ScrollView refs with snapshotContentContainer:true
+                            // can't be expanded; fall back to the visible bounds
+                            // rather than throwing a ClassCastException.
+                            Log.w(TAG, "snapshotContentContainer requested but ref is not a "
+                                + "ScrollView (got " + view.getClass().getName()
+                                + "); capturing the visible bounds instead.");
+                        }
+                        int captureHeight = viewHeight;
+                        if (scrollView != null) {
+                            int totalChildHeight = 0;
+                            for (int i = 0; i < scrollView.getChildCount(); i++) {
+                                totalChildHeight += scrollView.getChildAt(i).getHeight();
+                            }
+                            if (totalChildHeight > 0) {
+                                captureHeight = totalChildHeight;
+                            }
+                        }
+                        resolutionRef.set(new Point(viewWidth, captureHeight));
+                        allocatedBitmap = getBitmapForScreenshot(viewWidth, captureHeight);
+                        originalBitmapRef.set(allocatedBitmap);
+                        originalToRecycle.set(allocatedBitmap);
+                        final Canvas c = new Canvas(allocatedBitmap);
+                        canvasRef.set(c);
+
+                        final ViewGroup.LayoutParams savedLayoutParams =
+                            scrollView != null ? scrollView.getLayoutParams() : null;
+                        // Capture the original LayoutParams width/height so we
+                        // restore special values like MATCH_PARENT/WRAP_CONTENT
+                        // exactly — not the resolved pixel size — to avoid
+                        // permanently freezing the ScrollView at pixel dims
+                        // after capture.
+                        final int savedLpWidth =
+                            savedLayoutParams != null ? savedLayoutParams.width : 0;
+                        final int savedLpHeight =
+                            savedLayoutParams != null ? savedLayoutParams.height : 0;
+                        final int savedScrollX = scrollView != null ? scrollView.getScrollX() : 0;
+                        final int savedScrollY = scrollView != null ? scrollView.getScrollY() : 0;
                         try {
+                            if (scrollView != null) {
+                                if (savedLayoutParams != null) {
+                                    // Mutate width/height in place on the live
+                                    // LayoutParams (they are restored below).
+                                    // Using requestLayout would schedule the
+                                    // change asynchronously; we need it to take
+                                    // effect synchronously before view.draw().
+                                    savedLayoutParams.width = viewWidth;
+                                    savedLayoutParams.height = captureHeight;
+                                    scrollView.setLayoutParams(savedLayoutParams);
+                                }
+                                scrollView.scrollTo(0, 0);
+                                // Force a synchronous measure + layout pass at
+                                // the expanded size so dispatchDraw's clip rect
+                                // covers the full content.
+                                forceExactLayout(scrollView, viewWidth, captureHeight);
+                            }
                             markSubtreeAlphaLayers(view, alphaLayered);
                             view.draw(c);
                         } finally {
                             for (View v : alphaLayered) {
                                 v.setLayerType(View.LAYER_TYPE_NONE, null);
+                            }
+                            if (scrollView != null) {
+                                if (savedLayoutParams != null) {
+                                    // Restore the original LayoutParams values
+                                    // (which may be MATCH_PARENT, WRAP_CONTENT
+                                    // or a pixel size) so the live tree returns
+                                    // to its prior layout policy.
+                                    savedLayoutParams.width = savedLpWidth;
+                                    savedLayoutParams.height = savedLpHeight;
+                                    scrollView.setLayoutParams(savedLayoutParams);
+                                }
+                                forceExactLayout(scrollView, viewWidth, viewHeight);
+                                scrollView.scrollTo(savedScrollX, savedScrollY);
                             }
                         }
                     } finally {
@@ -614,13 +721,26 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
                         // and compression — recycling here would return a live
                         // bitmap to the pool. The caller's own finally CAS-
                         // recycles at the end of captureViewImpl.
-                        if (cancelled.get()) {
+                        if (cancelled.get() && allocatedBitmap != null) {
                             final Bitmap toRecycle = originalToRecycle.getAndSet(null);
                             if (toRecycle != null) recycleBitmap(toRecycle);
                         }
                     }
                 }
             }, uiTaskFinished);
+
+            // The UI task ran successfully (otherwise runOnUiThreadBlocking
+            // would have thrown). Pull out what it produced.
+            originalBitmap = originalBitmapRef.get();
+            bitmap = originalBitmap;
+            final Canvas c = canvasRef.get();
+            final Point resolution = resolutionRef.get();
+            if (originalBitmap == null || c == null || resolution == null) {
+                // Defensive: cancellation path or unexpected state.
+                throw new RuntimeException("Impossible to snapshot the view: capture aborted");
+            }
+            final int w = resolution.x;
+            final int h = resolution.y;
 
             //after view is drawn, go through children
             final List<View> childrenList = getAllChildren(view);
