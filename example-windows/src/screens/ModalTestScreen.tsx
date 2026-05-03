@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, {useState, useCallback, useRef} from "react";
 import {
   View,
   Text,
@@ -11,18 +11,18 @@ import {
   useColorScheme,
   Alert,
   Modal,
-} from 'react-native';
-import ViewShot from 'react-native-view-shot';
-import { captureRef } from 'react-native-view-shot';
+} from "react-native";
+import ViewShot from "react-native-view-shot";
+import {captureRef} from "react-native-view-shot";
 
 const ModalTestScreen: React.FC = () => {
-  const isDarkMode = useColorScheme() === 'dark';
+  const isDarkMode = useColorScheme() === "dark";
   const [capturedUri, setCapturedUri] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalType, setModalType] = useState<
-    'alert' | 'overlay' | 'fullscreen'
-  >('alert');
+    "alert" | "overlay" | "fullscreen"
+  >("alert");
 
   const viewShotRef = useRef<any>(null);
 
@@ -45,7 +45,7 @@ const ModalTestScreen: React.FC = () => {
 
     try {
       const uri = await captureRef(viewShotRef, {
-        format: 'png',
+        format: "png",
         quality: 0.8,
       });
       onCapture(uri);
@@ -55,10 +55,10 @@ const ModalTestScreen: React.FC = () => {
   }, [onCapture, onCaptureFailure]);
 
   const cycleModalType = () => {
-    const types: Array<'alert' | 'overlay' | 'fullscreen'> = [
-      'alert',
-      'overlay',
-      'fullscreen',
+    const types: Array<"alert" | "overlay" | "fullscreen"> = [
+      "alert",
+      "overlay",
+      "fullscreen",
     ];
     const currentIndex = types.indexOf(modalType);
     const nextIndex = (currentIndex + 1) % types.length;
@@ -68,7 +68,7 @@ const ModalTestScreen: React.FC = () => {
 
   const renderModalContent = () => {
     switch (modalType) {
-      case 'alert':
+      case "alert":
         return (
           <View style={styles.alertModal}>
             <Text style={styles.alertTitle}>⚠️ Alert Modal</Text>
@@ -92,7 +92,7 @@ const ModalTestScreen: React.FC = () => {
           </View>
         );
 
-      case 'overlay':
+      case "overlay":
         return (
           <View style={styles.overlayModal}>
             <View style={styles.overlayHeader}>
@@ -106,7 +106,7 @@ const ModalTestScreen: React.FC = () => {
                 This is an overlay modal with custom content.
               </Text>
               <View style={styles.overlayItems}>
-                {['Item 1', 'Item 2', 'Item 3'].map((item, index) => (
+                {["Item 1", "Item 2", "Item 3"].map((item, index) => (
                   <View key={index} style={styles.overlayItem}>
                     <Text style={styles.overlayItemText}>{item}</Text>
                   </View>
@@ -116,7 +116,7 @@ const ModalTestScreen: React.FC = () => {
           </View>
         );
 
-      case 'fullscreen':
+      case "fullscreen":
         return (
           <View style={styles.fullscreenModal}>
             <View style={styles.fullscreenHeader}>
@@ -129,7 +129,7 @@ const ModalTestScreen: React.FC = () => {
               <Text style={styles.fullscreenText}>
                 This is a fullscreen modal with scrollable content.
               </Text>
-              {Array.from({ length: 5 }).map((_, index) => (
+              {Array.from({length: 5}).map((_, index) => (
                 <View key={index} style={styles.fullscreenSection}>
                   <Text style={styles.smallSectionTitle}>
                     Section {index + 1}
@@ -151,13 +151,13 @@ const ModalTestScreen: React.FC = () => {
   };
 
   const backgroundStyle = {
-    backgroundColor: isDarkMode ? '#1C1C1E' : '#F2F2F7',
+    backgroundColor: isDarkMode ? "#1C1C1E" : "#F2F2F7",
   };
 
   return (
     <SafeAreaView style={[styles.container, backgroundStyle]}>
       <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        barStyle={isDarkMode ? "light-content" : "dark-content"}
         backgroundColor={backgroundStyle.backgroundColor}
       />
       <ScrollView style={styles.scrollView} testID="modalScrollView">
@@ -171,8 +171,8 @@ const ModalTestScreen: React.FC = () => {
           <View style={styles.infoCard}>
             <Text style={styles.cardTitle}>🎯 What this tests:</Text>
             <Text style={styles.cardText}>
-              • Modal overlay capture{'\n'}• Different modal types{'\n'}•
-              Z-index and layering{'\n'}• Complex UI compositions
+              • Modal overlay capture{"\n"}• Different modal types{"\n"}•
+              Z-index and layering{"\n"}• Complex UI compositions
             </Text>
           </View>
 
@@ -180,11 +180,11 @@ const ModalTestScreen: React.FC = () => {
             <Text style={styles.cardTitle}>⚙️ Controls:</Text>
 
             <TouchableOpacity
-              style={[styles.toggleButton, { backgroundColor: '#007AFF' }]}
+              style={[styles.toggleButton, {backgroundColor: "#007AFF"}]}
               onPress={cycleModalType}
             >
               <Text style={styles.toggleText}>
-                📱 Modal:{' '}
+                📱 Modal:{" "}
                 {modalType.charAt(0).toUpperCase() + modalType.slice(1)}
               </Text>
             </TouchableOpacity>
@@ -192,12 +192,12 @@ const ModalTestScreen: React.FC = () => {
             <TouchableOpacity
               style={[
                 styles.toggleButton,
-                { backgroundColor: modalVisible ? '#FF3B30' : '#28a745' },
+                {backgroundColor: modalVisible ? "#FF3B30" : "#28a745"},
               ]}
               onPress={() => setModalVisible(!modalVisible)}
             >
               <Text style={styles.toggleText}>
-                {modalVisible ? '🔴 Hide Modal' : '🟢 Show Modal'}
+                {modalVisible ? "🔴 Hide Modal" : "🟢 Show Modal"}
               </Text>
             </TouchableOpacity>
           </View>
@@ -211,14 +211,14 @@ const ModalTestScreen: React.FC = () => {
               <View style={styles.backgroundContent}>
                 <Text style={styles.backgroundText}>Background Content</Text>
                 <View style={styles.backgroundElements}>
-                  {Array.from({ length: 3 }).map((_, index) => (
+                  {Array.from({length: 3}).map((_, index) => (
                     <View
                       key={index}
                       style={[
                         styles.backgroundElement,
                         {
                           backgroundColor:
-                            index % 2 === 0 ? '#E3F2FD' : '#F3E5F5',
+                            index % 2 === 0 ? "#E3F2FD" : "#F3E5F5",
                         },
                       ]}
                     >
@@ -239,7 +239,7 @@ const ModalTestScreen: React.FC = () => {
           <TouchableOpacity
             style={[
               styles.button,
-              { backgroundColor: isCapturing ? '#999' : '#007AFF' },
+              {backgroundColor: isCapturing ? "#999" : "#007AFF"},
             ]}
             onPress={startCapture}
             disabled={isCapturing}
@@ -248,7 +248,7 @@ const ModalTestScreen: React.FC = () => {
             accessibilityLabel="capture-button"
           >
             <Text style={styles.buttonText}>
-              {isCapturing ? '📱 Capturing...' : '📸 Capture Modal'}
+              {isCapturing ? "📱 Capturing..." : "📸 Capture Modal"}
             </Text>
           </TouchableOpacity>
 
@@ -256,7 +256,7 @@ const ModalTestScreen: React.FC = () => {
             <View style={styles.previewContainer}>
               <Text style={styles.previewTitle}>✅ Modal Captured:</Text>
               <Image
-                source={{ uri: capturedUri }}
+                source={{uri: capturedUri}}
                 style={styles.previewImage}
                 resizeMode="contain"
                 fadeDuration={0}
@@ -265,8 +265,8 @@ const ModalTestScreen: React.FC = () => {
                 {capturedUri}
               </Text>
               <Text style={styles.noteText}>
-                Modal type: {modalType} ({modalVisible ? 'visible' : 'hidden'})
-                {'\n'}This tests modal overlay capture
+                Modal type: {modalType} ({modalVisible ? "visible" : "hidden"})
+                {"\n"}This tests modal overlay capture
               </Text>
             </View>
           )}
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   emoji: {
     fontSize: 64,
@@ -293,195 +293,195 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: '700',
-    textAlign: 'center',
+    fontWeight: "700",
+    textAlign: "center",
     marginBottom: 15,
-    color: '#333',
+    color: "#333",
   },
   description: {
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 30,
-    color: '#666',
+    color: "#666",
     lineHeight: 24,
     paddingHorizontal: 20,
   },
   infoCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     padding: 15,
     borderRadius: 8,
     marginBottom: 15,
-    width: '100%',
+    width: "100%",
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
   },
   controlsCard: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: "#F8F9FA",
     padding: 15,
     borderRadius: 8,
     marginBottom: 20,
-    width: '100%',
+    width: "100%",
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
   },
   cardTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 8,
-    color: '#333',
+    color: "#333",
   },
   cardText: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     lineHeight: 20,
   },
   toggleButton: {
     padding: 12,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 10,
   },
   toggleText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   modalContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 30,
-    width: '100%',
+    width: "100%",
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     marginBottom: 15,
-    textAlign: 'center',
+    textAlign: "center",
   },
   modalCapture: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     width: 600,
     height: 400,
-    position: 'relative',
+    position: "relative",
   },
   backgroundContent: {
     padding: 20,
-    height: '100%',
+    height: "100%",
   },
   backgroundText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
     marginBottom: 15,
-    textAlign: 'center',
+    textAlign: "center",
   },
   backgroundElements: {
     flex: 1,
-    justifyContent: 'space-around',
+    justifyContent: "space-around",
   },
   backgroundElement: {
     padding: 10,
     borderRadius: 6,
-    alignItems: 'center',
+    alignItems: "center",
   },
   elementText: {
     fontSize: 12,
-    color: '#666',
+    color: "#666",
   },
   modalOverlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   alertModal: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
     padding: 20,
     margin: 20,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
   },
   alertTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 10,
-    color: '#333',
+    color: "#333",
   },
   alertMessage: {
     fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
     marginBottom: 20,
   },
   alertButtons: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 10,
   },
   alertButton: {
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 6,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: "#F5F5F5",
   },
   primaryButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: "#007AFF",
   },
   alertButtonText: {
     fontSize: 14,
-    color: '#333',
+    color: "#333",
   },
   primaryButtonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
   },
   overlayModal: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 8,
     margin: 30,
     maxHeight: 140,
   },
   overlayHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
+    borderBottomColor: "#E5E5E5",
   },
   overlayTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
   },
   closeButton: {
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: '#F5F5F5',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#F5F5F5",
+    justifyContent: "center",
+    alignItems: "center",
   },
   closeButtonText: {
     fontSize: 16,
-    color: '#666',
+    color: "#666",
   },
   overlayContent: {
     padding: 15,
   },
   overlayText: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     marginBottom: 10,
   },
   overlayItems: {
@@ -489,42 +489,42 @@ const styles = StyleSheet.create({
   },
   overlayItem: {
     padding: 8,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: "#F8F9FA",
     borderRadius: 4,
   },
   overlayItemText: {
     fontSize: 12,
-    color: '#333',
+    color: "#333",
   },
   fullscreenModal: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     margin: 10,
     borderRadius: 8,
     flex: 1,
   },
   fullscreenHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
+    borderBottomColor: "#E5E5E5",
   },
   fullscreenTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
   },
   fullscreenClose: {
     paddingHorizontal: 15,
     paddingVertical: 8,
-    backgroundColor: '#007AFF',
+    backgroundColor: "#007AFF",
     borderRadius: 6,
   },
   fullscreenCloseText: {
     fontSize: 14,
-    color: '#FFFFFF',
-    fontWeight: '600',
+    color: "#FFFFFF",
+    fontWeight: "600",
   },
   fullscreenContent: {
     flex: 1,
@@ -532,24 +532,24 @@ const styles = StyleSheet.create({
   },
   fullscreenText: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     marginBottom: 15,
   },
   fullscreenSection: {
     marginBottom: 15,
     padding: 10,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: "#F8F9FA",
     borderRadius: 6,
   },
   smallSectionTitle: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
     marginBottom: 5,
   },
   sectionContent: {
     fontSize: 12,
-    color: '#666',
+    color: "#666",
     lineHeight: 16,
   },
   button: {
@@ -559,18 +559,18 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: "600",
+    textAlign: "center",
   },
   previewContainer: {
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
     padding: 16,
     borderRadius: 12,
-    width: '100%',
-    shadowColor: '#000',
+    width: "100%",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 1,
@@ -581,30 +581,30 @@ const styles = StyleSheet.create({
   },
   previewTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 10,
-    color: '#28a745',
+    color: "#28a745",
   },
   previewImage: {
     width: 200,
     height: 130,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     marginBottom: 10,
   },
   uriText: {
     fontSize: 12,
-    color: '#999',
-    textAlign: 'center',
-    fontFamily: 'monospace',
+    color: "#999",
+    textAlign: "center",
+    fontFamily: "monospace",
     marginBottom: 10,
   },
   noteText: {
     fontSize: 12,
-    color: '#007AFF',
-    textAlign: 'center',
-    fontStyle: 'italic',
+    color: "#007AFF",
+    textAlign: "center",
+    fontStyle: "italic",
   },
 });
 

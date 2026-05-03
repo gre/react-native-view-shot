@@ -1,5 +1,5 @@
-import React from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import React from "react";
+import {TouchableOpacity, Text, StyleSheet} from "react-native";
 
 interface CaptureButtonProps {
   onPress: () => void;
@@ -15,10 +15,10 @@ export const CaptureButton: React.FC<CaptureButtonProps> = ({
   onPress,
   isCapturing,
   disabled = false,
-  captureText = '📸 Capture',
-  capturingText = '📸 Capturing...',
-  disabledText = '⏳ Loading...',
-  icon = '📸',
+  captureText = "📸 Capture",
+  capturingText = "📸 Capturing...",
+  disabledText = "⏳ Loading...",
+  icon = "📸",
 }) => {
   const getButtonText = () => {
     if (isCapturing) return capturingText;
@@ -27,13 +27,13 @@ export const CaptureButton: React.FC<CaptureButtonProps> = ({
   };
 
   const getButtonColor = () => {
-    if (isCapturing || disabled) return '#999';
-    return '#007AFF';
+    if (isCapturing || disabled) return "#999";
+    return "#007AFF";
   };
 
   return (
     <TouchableOpacity
-      style={[styles.button, { backgroundColor: getButtonColor() }]}
+      style={[styles.button, {backgroundColor: getButtonColor()}]}
       onPress={onPress}
       disabled={isCapturing || disabled}
       testID="capture-button"
@@ -53,10 +53,10 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: "600",
+    textAlign: "center",
   },
 });
 

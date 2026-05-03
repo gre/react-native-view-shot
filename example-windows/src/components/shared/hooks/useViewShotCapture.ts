@@ -1,10 +1,10 @@
-import { useState, useCallback, useRef } from 'react';
-import { captureRef } from 'react-native-view-shot';
+import {useState, useCallback, useRef} from "react";
+import {captureRef} from "react-native-view-shot";
 
 export interface CaptureOptions {
-  format?: 'png' | 'jpg' | 'webm';
+  format?: "png" | "jpg" | "webm";
   quality?: number;
-  result?: 'tmpfile' | 'base64' | 'zip-base64' | 'data-uri';
+  result?: "tmpfile" | "base64" | "zip-base64" | "data-uri";
   handleGLSurfaceViewOnAndroid?: boolean;
 }
 
@@ -17,20 +17,20 @@ export const useViewShotCapture = (successMessage?: string) => {
     (uri: string) => {
       setCapturedUri(uri);
       setIsCapturing(false);
-      console.log(successMessage || 'Captured!', `Content captured: ${uri}`);
+      console.log(successMessage || "Captured!", `Content captured: ${uri}`);
     },
     [successMessage],
   );
 
   const onCaptureFailure = useCallback((error: Error) => {
     setIsCapturing(false);
-    console.error('Capture Failed', `Error: ${error.message}`);
+    console.error("Capture Failed", `Error: ${error.message}`);
   }, []);
 
   const startCapture = useCallback(
     async (options: CaptureOptions = {}) => {
       if (!viewShotRef.current) {
-        console.error('Error', 'ViewShot reference not available');
+        console.error("Error", "ViewShot reference not available");
         return;
       }
 
@@ -39,7 +39,7 @@ export const useViewShotCapture = (successMessage?: string) => {
 
       try {
         const captureOptions = {
-          format: 'png' as const,
+          format: "png" as const,
           quality: 0.8,
           ...options,
         };

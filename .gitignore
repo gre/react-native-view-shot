@@ -149,3 +149,4 @@ Thumbs.db
 
 # react-native run-windows build logs
 example-windows/buildlogs/
+example-windows/msbuild.binlog

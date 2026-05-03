@@ -1,4 +1,4 @@
-const { getDefaultConfig, mergeConfig } = require("@react-native/metro-config");
+const {getDefaultConfig, mergeConfig} = require("@react-native/metro-config");
 const fs = require("fs");
 const path = require("path");
 const exclusionList = require("metro-config/src/defaults/exclusionList");
@@ -13,7 +13,7 @@ const rnwPath = fs.realpathSync(
 // Block the lib's own node_modules/{react,react-native} so Metro doesn't bundle
 // duplicate copies (the lib's devDeps + this example's deps), which breaks hooks
 // in React 19 because only one copy gets its dispatcher set by the renderer.
-const blockedParentModule = (name) =>
+const blockedParentModule = name =>
   new RegExp(
     path
       .resolve(monorepoRoot, "node_modules", name, ".*")

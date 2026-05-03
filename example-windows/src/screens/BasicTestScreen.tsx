@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, {useRef, useState} from "react";
 import {
   View,
   Text,
@@ -8,8 +8,8 @@ import {
   Alert,
   Image,
   ScrollView,
-} from 'react-native';
-import ViewShot, { captureRef } from 'react-native-view-shot';
+} from "react-native";
+import ViewShot, {captureRef} from "react-native-view-shot";
 
 const BasicTestScreen: React.FC = () => {
   const viewShotRef = useRef(null);
@@ -19,14 +19,14 @@ const BasicTestScreen: React.FC = () => {
     try {
       if (viewShotRef.current) {
         const uri = await captureRef(viewShotRef.current, {
-          format: 'png',
+          format: "png",
           quality: 0.8,
         });
         setImageUri(uri);
-        console.log('Screenshot saved:', uri);
+        console.log("Screenshot saved:", uri);
       }
     } catch (error) {
-      console.error('Failed to capture screenshot:', error);
+      console.error("Failed to capture screenshot:", error);
     }
   };
 
@@ -48,14 +48,14 @@ const BasicTestScreen: React.FC = () => {
               </Text>
             </View>
 
-            <View style={[styles.testCard, { backgroundColor: '#E3F2FD' }]}>
+            <View style={[styles.testCard, {backgroundColor: "#E3F2FD"}]}>
               <Text style={styles.cardTitle}>📸 ViewShot Ready</Text>
               <Text style={styles.cardText}>
                 react-native-view-shot working with New Architecture
               </Text>
             </View>
 
-            <View style={[styles.testCard, { backgroundColor: '#F3E5F5' }]}>
+            <View style={[styles.testCard, {backgroundColor: "#F3E5F5"}]}>
               <Text style={styles.cardTitle}>🔧 Step by Step Testing</Text>
               <Text style={styles.cardText}>
                 Organized navigation to test each use case separately
@@ -79,7 +79,7 @@ const BasicTestScreen: React.FC = () => {
             <View style={styles.previewContainer}>
               <Text style={styles.previewTitle}>✅ Capture Success:</Text>
               <Image
-                source={{ uri: imageUri }}
+                source={{uri: imageUri}}
                 style={styles.previewImage}
                 resizeMode="contain"
               />
@@ -97,22 +97,22 @@ const BasicTestScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2F2F7',
+    backgroundColor: "#F2F2F7",
   },
   scrollView: {
     flex: 1,
   },
   captureArea: {
     margin: 20,
-    alignSelf: 'center',
-    width: '100%',
+    alignSelf: "center",
+    width: "100%",
     maxWidth: 720,
   },
   content: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     padding: 20,
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -123,58 +123,58 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: '700',
-    textAlign: 'center',
+    fontWeight: "700",
+    textAlign: "center",
     marginBottom: 10,
-    color: '#333',
+    color: "#333",
   },
   subtitle: {
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 20,
-    color: '#666',
+    color: "#666",
     lineHeight: 22,
   },
   testCard: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: "#f0f0f0",
     padding: 15,
     borderRadius: 8,
     marginBottom: 15,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
   },
   cardTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 5,
-    color: '#333',
+    color: "#333",
   },
   cardText: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     lineHeight: 20,
   },
   controls: {
     padding: 20,
   },
   button: {
-    backgroundColor: '#007AFF',
+    backgroundColor: "#007AFF",
     padding: 16,
     borderRadius: 12,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 20,
   },
   buttonText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   previewContainer: {
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
     padding: 16,
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 1,
@@ -185,23 +185,23 @@ const styles = StyleSheet.create({
   },
   previewTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 10,
-    color: '#28a745',
+    color: "#28a745",
   },
   previewImage: {
     width: 200,
     height: 300,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     marginBottom: 10,
   },
   uriText: {
     fontSize: 12,
-    color: '#999',
-    textAlign: 'center',
-    fontFamily: 'monospace',
+    color: "#999",
+    textAlign: "center",
+    fontFamily: "monospace",
   },
 });
 

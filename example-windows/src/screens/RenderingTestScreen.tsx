@@ -1,9 +1,9 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
-import ViewShot from 'react-native-view-shot';
-import { CaptureButton } from '../components/shared/CaptureButton';
-import { PreviewContainer } from '../components/shared/PreviewContainer';
-import { useViewShotCapture } from '../components/shared/hooks/useViewShotCapture';
+import React, {useEffect, useRef} from "react";
+import {View, Text, StyleSheet, SafeAreaView, ScrollView} from "react-native";
+import ViewShot from "react-native-view-shot";
+import {CaptureButton} from "../components/shared/CaptureButton";
+import {PreviewContainer} from "../components/shared/PreviewContainer";
+import {useViewShotCapture} from "../components/shared/hooks/useViewShotCapture";
 
 const CARD_WIDTH = 640;
 const CELL_GAP = 8;
@@ -18,7 +18,7 @@ interface CellProps {
   children: React.ReactNode;
 }
 
-const Cell: React.FC<CellProps> = ({ label, wide, children }) => (
+const Cell: React.FC<CellProps> = ({label, wide, children}) => (
   <View style={[styles.cell, wide && styles.cellWide]}>
     <Text style={styles.cellLabel}>{label}</Text>
     {children}
@@ -47,30 +47,30 @@ const TransformsRow: React.FC = () => (
       <View
         style={[
           styles.transformBox,
-          { backgroundColor: '#FF6B6B', transform: [{ rotate: '30deg' }] },
+          {backgroundColor: "#FF6B6B", transform: [{rotate: "30deg"}]},
         ]}
       />
       <View
         style={[
           styles.transformBox,
           {
-            backgroundColor: '#4ECDC4',
-            transform: [{ scaleX: 1.4 }, { scaleY: 0.6 }],
+            backgroundColor: "#4ECDC4",
+            transform: [{scaleX: 1.4}, {scaleY: 0.6}],
           },
         ]}
       />
       <View
         style={[
           styles.transformBox,
-          { backgroundColor: '#45B7D1', transform: [{ skewX: '20deg' }] },
+          {backgroundColor: "#45B7D1", transform: [{skewX: "20deg"}]},
         ]}
       />
       <View
         style={[
           styles.transformBox,
           {
-            backgroundColor: '#F1C40F',
-            transform: [{ perspective: 300 }, { rotateX: '45deg' }],
+            backgroundColor: "#F1C40F",
+            transform: [{perspective: 300}, {rotateX: "45deg"}],
           },
         ]}
       />
@@ -78,12 +78,8 @@ const TransformsRow: React.FC = () => (
         style={[
           styles.transformBox,
           {
-            backgroundColor: '#9B59B6',
-            transform: [
-              { translateX: 4 },
-              { rotate: '15deg' },
-              { scale: 0.85 },
-            ],
+            backgroundColor: "#9B59B6",
+            transform: [{translateX: 4}, {rotate: "15deg"}, {scale: 0.85}],
           },
         ]}
       />
@@ -97,13 +93,13 @@ const NestedOpacityCell: React.FC = () => (
       <View
         style={[
           styles.opacityChild,
-          { backgroundColor: '#E74C3C', left: 8, top: 8 },
+          {backgroundColor: "#E74C3C", left: 8, top: 8},
         ]}
       />
       <View
         style={[
           styles.opacityChild,
-          { backgroundColor: '#3498DB', left: 32, top: 16 },
+          {backgroundColor: "#3498DB", left: 32, top: 16},
         ]}
       />
     </View>
@@ -116,19 +112,19 @@ const ZIndexCell: React.FC = () => (
       <View
         style={[
           styles.zIndexChild,
-          { backgroundColor: '#E74C3C', left: 0, zIndex: 3 },
+          {backgroundColor: "#E74C3C", left: 0, zIndex: 3},
         ]}
       />
       <View
         style={[
           styles.zIndexChild,
-          { backgroundColor: '#27AE60', left: 24, zIndex: 2 },
+          {backgroundColor: "#27AE60", left: 24, zIndex: 2},
         ]}
       />
       <View
         style={[
           styles.zIndexChild,
-          { backgroundColor: '#3498DB', left: 48, zIndex: 1 },
+          {backgroundColor: "#3498DB", left: 48, zIndex: 1},
         ]}
       />
     </View>
@@ -140,7 +136,7 @@ const ScrolledCell: React.FC = () => {
 
   useEffect(() => {
     const t = setTimeout(() => {
-      scrollRef.current?.scrollTo({ y: 60, animated: false });
+      scrollRef.current?.scrollTo({y: 60, animated: false});
     }, 50);
     return () => clearTimeout(t);
   }, []);
@@ -152,13 +148,13 @@ const ScrolledCell: React.FC = () => {
         style={styles.scrolledViewport}
         scrollEnabled={false}
       >
-        <View style={[styles.scrolledBand, { backgroundColor: '#E74C3C' }]}>
+        <View style={[styles.scrolledBand, {backgroundColor: "#E74C3C"}]}>
           <Text style={styles.scrolledBandText}>top (y=0)</Text>
         </View>
-        <View style={[styles.scrolledBand, { backgroundColor: '#F1C40F' }]}>
+        <View style={[styles.scrolledBand, {backgroundColor: "#F1C40F"}]}>
           <Text style={styles.scrolledBandText}>middle (y=60)</Text>
         </View>
-        <View style={[styles.scrolledBand, { backgroundColor: '#27AE60' }]}>
+        <View style={[styles.scrolledBand, {backgroundColor: "#27AE60"}]}>
           <Text style={styles.scrolledBandText}>bottom (y=120)</Text>
         </View>
       </ScrollView>
@@ -177,8 +173,8 @@ const SkiaCell: React.FC = () => (
 );
 
 const RenderingTestScreen: React.FC = () => {
-  const { capturedUri, isCapturing, viewShotRef, startCapture } =
-    useViewShotCapture('Rendering captured');
+  const {capturedUri, isCapturing, viewShotRef, startCapture} =
+    useViewShotCapture("Rendering captured");
 
   return (
     <SafeAreaView style={styles.container}>
@@ -210,7 +206,7 @@ const RenderingTestScreen: React.FC = () => {
 
         <View style={styles.controls}>
           <CaptureButton
-            onPress={() => startCapture({ format: 'png', quality: 1 })}
+            onPress={() => startCapture({format: "png", quality: 1})}
             isCapturing={isCapturing}
             captureText="📸 Capture test card"
           />
@@ -229,89 +225,89 @@ const RenderingTestScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F2F2F7' },
-  scroll: { flex: 1 },
+  container: {flex: 1, backgroundColor: "#F2F2F7"},
+  scroll: {flex: 1},
   intro: {
     margin: 16,
     padding: 12,
-    backgroundColor: '#E3F2FD',
+    backgroundColor: "#E3F2FD",
     borderRadius: 8,
     borderLeftWidth: 4,
-    borderLeftColor: '#1976D2',
+    borderLeftColor: "#1976D2",
   },
   introTitle: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#0D47A1',
+    fontWeight: "700",
+    color: "#0D47A1",
     marginBottom: 4,
   },
-  introBody: { fontSize: 12, color: '#1565C0', lineHeight: 17 },
-  captureWrapper: { alignItems: 'center', paddingVertical: 16 },
+  introBody: {fontSize: 12, color: "#1565C0", lineHeight: 17},
+  captureWrapper: {alignItems: "center", paddingVertical: 16},
   card: {
     width: CARD_WIDTH,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     padding: CELL_GAP,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#DDD',
+    borderColor: "#DDD",
   },
-  row: { flexDirection: 'row', gap: CELL_GAP, marginBottom: CELL_GAP },
+  row: {flexDirection: "row", gap: CELL_GAP, marginBottom: CELL_GAP},
   cell: {
     flex: 1,
     height: CELL_HEIGHT,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: "#FAFAFA",
     borderRadius: 6,
     padding: 6,
   },
-  cellWide: { width: '100%', flex: 0, marginBottom: CELL_GAP },
+  cellWide: {width: "100%", flex: 0, marginBottom: CELL_GAP},
   cellLabel: {
     fontSize: 10,
-    fontWeight: '600',
-    color: '#555',
+    fontWeight: "600",
+    color: "#555",
     marginBottom: 4,
   },
 
   paddedBox: {
     flex: 1,
-    backgroundColor: '#FFE4E1',
+    backgroundColor: "#FFE4E1",
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#A52A2A',
+    borderColor: "#A52A2A",
     padding: 10,
   },
-  paddedBoxInner: { flex: 1, backgroundColor: '#A52A2A', borderRadius: 4 },
+  paddedBoxInner: {flex: 1, backgroundColor: "#A52A2A", borderRadius: 4},
 
   overflowBox: {
     width: 120,
     height: 70,
     borderRadius: 24,
-    overflow: 'hidden',
-    alignSelf: 'center',
+    overflow: "hidden",
+    alignSelf: "center",
   },
   overflowBoxOversized: {
     width: 200,
     height: 120,
-    backgroundColor: '#FF7F50',
+    backgroundColor: "#FF7F50",
     marginLeft: -40,
     marginTop: -25,
   },
 
   transformRow: {
     flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
   },
-  transformBox: { width: 32, height: 32, borderRadius: 4 },
+  transformBox: {width: 32, height: 32, borderRadius: 4},
 
   opacityParent: {
     flex: 1,
     opacity: 0.5,
-    backgroundColor: '#ECF0F1',
+    backgroundColor: "#ECF0F1",
     borderRadius: 4,
   },
   opacityChild: {
-    position: 'absolute',
+    position: "absolute",
     width: 48,
     height: 48,
     borderRadius: 4,
@@ -319,12 +315,12 @@ const styles = StyleSheet.create({
 
   zIndexParent: {
     flex: 1,
-    backgroundColor: '#ECF0F1',
+    backgroundColor: "#ECF0F1",
     borderRadius: 4,
     paddingTop: 16,
   },
   zIndexChild: {
-    position: 'absolute',
+    position: "absolute",
     top: 16,
     width: 56,
     height: 56,
@@ -334,35 +330,35 @@ const styles = StyleSheet.create({
   scrolledViewport: {
     flex: 1,
     borderRadius: 4,
-    backgroundColor: '#ECF0F1',
+    backgroundColor: "#ECF0F1",
     padding: 8,
   },
   scrolledBand: {
     height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
-  scrolledBandText: { color: '#FFF', fontWeight: '700', fontSize: 12 },
+  scrolledBandText: {color: "#FFF", fontWeight: "700", fontSize: 12},
 
   skiaPlaceholder: {
     flex: 1,
     borderRadius: 4,
-    backgroundColor: '#ECF0F1',
+    backgroundColor: "#ECF0F1",
     borderWidth: 1,
-    borderColor: '#BDC3C7',
-    borderStyle: 'dashed',
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderColor: "#BDC3C7",
+    borderStyle: "dashed",
+    justifyContent: "center",
+    alignItems: "center",
     padding: 8,
   },
   skiaPlaceholderText: {
     fontSize: 11,
-    color: '#7F8C8D',
-    textAlign: 'center',
-    fontStyle: 'italic',
+    color: "#7F8C8D",
+    textAlign: "center",
+    fontStyle: "italic",
   },
 
-  controls: { padding: 16 },
+  controls: {padding: 16},
 });
 
 export default RenderingTestScreen;

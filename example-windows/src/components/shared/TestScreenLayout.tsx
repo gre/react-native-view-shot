@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   SafeAreaView,
   ScrollView,
@@ -7,12 +7,12 @@ import {
   StatusBar,
   useColorScheme,
   StyleSheet,
-} from 'react-native';
-import ViewShot from 'react-native-view-shot';
-import { InfoCard } from './InfoCard';
-import { ControlsCard } from './ControlsCard';
-import { CaptureButton } from './CaptureButton';
-import { PreviewContainer } from './PreviewContainer';
+} from "react-native";
+import ViewShot from "react-native-view-shot";
+import {InfoCard} from "./InfoCard";
+import {ControlsCard} from "./ControlsCard";
+import {CaptureButton} from "./CaptureButton";
+import {PreviewContainer} from "./PreviewContainer";
 
 interface TestScreenLayoutProps {
   emoji: string;
@@ -65,16 +65,16 @@ export const TestScreenLayout: React.FC<TestScreenLayoutProps> = ({
   capturedUri,
   previewConfig,
 }) => {
-  const isDarkMode = useColorScheme() === 'dark';
+  const isDarkMode = useColorScheme() === "dark";
 
   const backgroundStyle = {
-    backgroundColor: isDarkMode ? '#1C1C1E' : '#F2F2F7',
+    backgroundColor: isDarkMode ? "#1C1C1E" : "#F2F2F7",
   };
 
   return (
     <SafeAreaView style={[styles.container, backgroundStyle]}>
       <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        barStyle={isDarkMode ? "light-content" : "dark-content"}
         backgroundColor={backgroundStyle.backgroundColor}
       />
       <ScrollView style={styles.scrollView} testID={scrollViewTestID}>
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   emoji: {
     fontSize: 64,
@@ -154,44 +154,44 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: '700',
-    textAlign: 'center',
+    fontWeight: "700",
+    textAlign: "center",
     marginBottom: 15,
-    color: '#333',
+    color: "#333",
   },
   description: {
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 30,
-    color: '#666',
+    color: "#666",
     lineHeight: 24,
     paddingHorizontal: 20,
   },
   cardText: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     lineHeight: 20,
   },
   testContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 30,
-    width: '100%',
+    width: "100%",
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     marginBottom: 15,
-    textAlign: 'center',
+    textAlign: "center",
   },
   testCapture: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     padding: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 

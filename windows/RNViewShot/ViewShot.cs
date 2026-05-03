@@ -34,12 +34,17 @@ namespace RNViewShot
                         }
                     }
 
-                    var imageBytes = new byte[ras.Size];
+                    if (ras.Size > int.MaxValue)
+                    {
+                        throw new InvalidOperationException("Capture is too large to base64-encode (" + ras.Size + " bytes)");
+                    }
+                    var imageBytes = new byte[(int)ras.Size];
                     await ras.AsStream().ReadAsync(imageBytes, 0, imageBytes.Length);
                     var data = Convert.ToBase64String(imageBytes);
                     if (result == "data-uri")
                     {
-                        return "data:image/" + extension + ";base64," + data;
+                        var mime = extension == "jpg" ? "jpeg" : extension;
+                        return "data:image/" + mime + ";base64," + data;
                     }
                     return data;
                 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
@@ -8,11 +8,11 @@ import {
   SafeAreaView,
   StatusBar,
   useColorScheme,
-} from 'react-native';
-import type { StackNavigationProp } from '@react-navigation/stack';
-import type { RootStackParamList } from '../../App';
+} from "react-native";
+import type {StackNavigationProp} from "@react-navigation/stack";
+import type {RootStackParamList} from "../../App";
 
-type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
+type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, "Home">;
 
 interface Props {
   navigation: HomeScreenNavigationProp;
@@ -23,100 +23,100 @@ interface TestCase {
   title: string;
   description: string;
   emoji: string;
-  priority: 'high' | 'medium' | 'low';
-  status?: 'bug' | 'new' | 'tested';
+  priority: "high" | "medium" | "low";
+  status?: "bug" | "new" | "tested";
 }
 
-const testCases: { [category: string]: TestCase[] } = {
-  '🟢 BASIC TESTS': [
+const testCases: {[category: string]: TestCase[]} = {
+  "🟢 BASIC TESTS": [
     {
-      key: 'BasicTest',
-      title: 'Basic ViewShot',
-      description: 'Simple view capture test',
-      emoji: '📸',
-      priority: 'high',
-      status: 'tested',
+      key: "BasicTest",
+      title: "Basic ViewShot",
+      description: "Simple view capture test",
+      emoji: "📸",
+      priority: "high",
+      status: "tested",
     },
     {
-      key: 'FullScreen',
-      title: 'Full Screen',
-      description: 'Capture entire screen with captureScreen()',
-      emoji: '🖥️',
-      priority: 'high',
-      status: 'tested',
+      key: "FullScreen",
+      title: "Full Screen",
+      description: "Capture entire screen with captureScreen()",
+      emoji: "🖥️",
+      priority: "high",
+      status: "tested",
     },
     {
-      key: 'Transparency',
-      title: 'Transparency',
-      description: 'PNG with transparent background test',
-      emoji: '⚪',
-      priority: 'high',
-      status: 'tested',
+      key: "Transparency",
+      title: "Transparency",
+      description: "PNG with transparent background test",
+      emoji: "⚪",
+      priority: "high",
+      status: "tested",
     },
     {
-      key: 'FS',
-      title: 'File System',
-      description: 'Save to file operations (tmpfile)',
-      emoji: '💾',
-      priority: 'high',
-      status: 'tested',
+      key: "FS",
+      title: "File System",
+      description: "Save to file operations (tmpfile)",
+      emoji: "💾",
+      priority: "high",
+      status: "tested",
     },
     {
-      key: 'ScrollView',
-      title: 'ScrollView & Lists',
-      description: 'ScrollView, FlatList, SectionList capture',
-      emoji: '📜',
-      priority: 'high',
-      status: 'new',
-    },
-  ],
-  '🟡 MEDIA TESTS': [
-    {
-      key: 'Image',
-      title: 'Image Capture',
-      description: 'Local/remote images with format options',
-      emoji: '🖼️',
-      priority: 'medium',
-      status: 'tested',
+      key: "ScrollView",
+      title: "ScrollView & Lists",
+      description: "ScrollView, FlatList, SectionList capture",
+      emoji: "📜",
+      priority: "high",
+      status: "new",
     },
   ],
-  '🔴 RENDERING CORRECTNESS': [
+  "🟡 MEDIA TESTS": [
     {
-      key: 'Rendering',
-      title: 'Rendering test card',
+      key: "Image",
+      title: "Image Capture",
+      description: "Local/remote images with format options",
+      emoji: "🖼️",
+      priority: "medium",
+      status: "tested",
+    },
+  ],
+  "🔴 RENDERING CORRECTNESS": [
+    {
+      key: "Rendering",
+      title: "Rendering test card",
       description:
-        'Transforms / nested opacity / z-index / scroll / overflow / Skia',
-      emoji: '🧪',
-      priority: 'high',
-      status: 'new',
+        "Transforms / nested opacity / z-index / scroll / overflow / Skia",
+      emoji: "🧪",
+      priority: "high",
+      status: "new",
     },
     {
-      key: 'StyleFilters',
-      title: 'Style filters',
+      key: "StyleFilters",
+      title: "Style filters",
       description:
-        'RN `filter` prop (brightness/contrast/blur/...) — known gap (#578)',
-      emoji: '🎨',
-      priority: 'high',
-      status: 'bug',
+        "RN `filter` prop (brightness/contrast/blur/...) — known gap (#578)",
+      emoji: "🎨",
+      priority: "high",
+      status: "bug",
     },
   ],
-  '🟠 ADVANCED TESTS': [
+  "🟠 ADVANCED TESTS": [
     {
-      key: 'Modal',
-      title: 'Modal',
-      description: 'Modal dialog capture',
-      emoji: '📱',
-      priority: 'medium',
-      status: 'tested',
+      key: "Modal",
+      title: "Modal",
+      description: "Modal dialog capture",
+      emoji: "📱",
+      priority: "medium",
+      status: "tested",
     },
   ],
 };
 
-const HomeScreen: React.FC<Props> = ({ navigation }) => {
-  const isDarkMode = useColorScheme() === 'dark';
+const HomeScreen: React.FC<Props> = ({navigation}) => {
+  const isDarkMode = useColorScheme() === "dark";
 
   const backgroundStyle = {
-    backgroundColor: isDarkMode ? '#1C1C1E' : '#F2F2F7',
+    backgroundColor: isDarkMode ? "#1C1C1E" : "#F2F2F7",
   };
 
   const renderTestCase = (testCase: TestCase) => {
@@ -125,7 +125,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         key={testCase.key}
         style={styles.testCase}
         onPress={() => navigation.navigate(testCase.key)}
-        testID={`nav-${testCase.title.toLowerCase().replace(/\s+/g, '-')}`}
+        testID={`nav-${testCase.title.toLowerCase().replace(/\s+/g, "-")}`}
         accessible={true}
         accessibilityLabel={testCase.title}
       >
@@ -152,7 +152,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <SafeAreaView style={[styles.container, backgroundStyle]}>
       <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        barStyle={isDarkMode ? "light-content" : "dark-content"}
         backgroundColor={backgroundStyle.backgroundColor}
       />
       <ScrollView style={styles.scrollView} testID="homeScrollView">
@@ -189,30 +189,30 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 20,
   },
   title: {
     fontSize: 28,
-    fontWeight: '700',
-    color: '#007AFF',
+    fontWeight: "700",
+    color: "#007AFF",
     marginBottom: 5,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: "#666",
     marginBottom: 15,
   },
   architectureBadge: {
-    backgroundColor: '#E3F2FD',
+    backgroundColor: "#E3F2FD",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
   },
   architectureText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#1976D2',
+    fontWeight: "600",
+    color: "#1976D2",
   },
   category: {
     marginBottom: 25,
@@ -220,15 +220,15 @@ const styles = StyleSheet.create({
   },
   categoryTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     marginBottom: 12,
   },
   testCase: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
     marginBottom: 10,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 1,
@@ -238,9 +238,9 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   testCaseContent: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 16,
-    alignItems: 'center',
+    alignItems: "center",
   },
   testEmoji: {
     fontSize: 24,
@@ -250,31 +250,31 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   testTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 4,
   },
   testTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
   },
   testDescription: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     lineHeight: 20,
   },
   footer: {
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 20,
   },
   footerText: {
     fontSize: 14,
-    color: '#999',
-    textAlign: 'center',
-    fontStyle: 'italic',
+    color: "#999",
+    textAlign: "center",
+    fontStyle: "italic",
   },
 });
 

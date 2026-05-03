@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from "react";
 import {
   View,
   Text,
@@ -10,11 +10,11 @@ import {
   ScrollView,
   StatusBar,
   useColorScheme,
-} from 'react-native';
-import { captureScreen } from 'react-native-view-shot';
+} from "react-native";
+import {captureScreen} from "react-native-view-shot";
 
 const FullScreenTestScreen: React.FC = () => {
-  const isDarkMode = useColorScheme() === 'dark';
+  const isDarkMode = useColorScheme() === "dark";
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
 
@@ -22,26 +22,26 @@ const FullScreenTestScreen: React.FC = () => {
     setIsCapturing(true);
     try {
       const uri = await captureScreen({
-        format: 'png',
+        format: "png",
         quality: 0.8,
       });
       setImageUri(uri);
       setIsCapturing(false);
-      console.log('Full Screen Captured:', uri);
+      console.log("Full Screen Captured:", uri);
     } catch (error) {
       setIsCapturing(false);
-      console.error('Capture error:', error);
+      console.error("Capture error:", error);
     }
   };
 
   const backgroundStyle = {
-    backgroundColor: isDarkMode ? '#1C1C1E' : '#F2F2F7',
+    backgroundColor: isDarkMode ? "#1C1C1E" : "#F2F2F7",
   };
 
   return (
     <SafeAreaView style={[styles.container, backgroundStyle]}>
       <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        barStyle={isDarkMode ? "light-content" : "dark-content"}
         backgroundColor={backgroundStyle.backgroundColor}
       />
       <ScrollView style={styles.scrollView} testID="fullScreenScrollView">
@@ -56,19 +56,19 @@ const FullScreenTestScreen: React.FC = () => {
           <View style={styles.infoCard}>
             <Text style={styles.cardTitle}>🎯 What this captures:</Text>
             <Text style={styles.cardText}>
-              • Status bar and navigation{'\n'}• All visible content{'\n'}•
-              System UI elements{'\n'}• Only what's currently on screen
+              • Status bar and navigation{"\n"}• All visible content{"\n"}•
+              System UI elements{"\n"}• Only what's currently on screen
             </Text>
           </View>
 
-          <View style={[styles.infoCard, { backgroundColor: '#FFF3CD' }]}>
+          <View style={[styles.infoCard, {backgroundColor: "#FFF3CD"}]}>
             <Text style={styles.cardTitle}>⚠️ Important:</Text>
             <Text style={styles.cardText}>
               ScrollViews will NOT be captured entirely - only visible portions
             </Text>
           </View>
 
-          <View style={[styles.infoCard, { backgroundColor: '#D4EDDA' }]}>
+          <View style={[styles.infoCard, {backgroundColor: "#D4EDDA"}]}>
             <Text style={styles.cardTitle}>✅ New Architecture:</Text>
             <Text style={styles.cardText}>
               captureScreen() working with Fabric + TurboModules
@@ -78,7 +78,7 @@ const FullScreenTestScreen: React.FC = () => {
           <TouchableOpacity
             style={[
               styles.button,
-              { backgroundColor: isCapturing ? '#999' : '#007AFF' },
+              {backgroundColor: isCapturing ? "#999" : "#007AFF"},
             ]}
             onPress={captureFullScreen}
             disabled={isCapturing}
@@ -87,7 +87,7 @@ const FullScreenTestScreen: React.FC = () => {
             accessibilityLabel="capture-button"
           >
             <Text style={styles.buttonText}>
-              {isCapturing ? '📸 Capturing...' : '📸 Capture Full Screen'}
+              {isCapturing ? "📸 Capturing..." : "📸 Capture Full Screen"}
             </Text>
           </TouchableOpacity>
 
@@ -95,7 +95,7 @@ const FullScreenTestScreen: React.FC = () => {
             <View style={styles.previewContainer}>
               <Text style={styles.previewTitle}>✅ Full Screen Captured:</Text>
               <Image
-                source={{ uri: imageUri }}
+                source={{uri: imageUri}}
                 style={styles.previewImage}
                 resizeMode="contain"
               />
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   emoji: {
     fontSize: 64,
@@ -130,37 +130,37 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: '700',
-    textAlign: 'center',
+    fontWeight: "700",
+    textAlign: "center",
     marginBottom: 15,
-    color: '#333',
+    color: "#333",
   },
   description: {
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 30,
-    color: '#666',
+    color: "#666",
     lineHeight: 24,
     paddingHorizontal: 20,
   },
   infoCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     padding: 15,
     borderRadius: 8,
     marginBottom: 15,
-    width: '100%',
+    width: "100%",
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
   },
   cardTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 8,
-    color: '#333',
+    color: "#333",
   },
   cardText: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     lineHeight: 20,
   },
   button: {
@@ -171,18 +171,18 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: "600",
+    textAlign: "center",
   },
   previewContainer: {
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
     padding: 16,
     borderRadius: 12,
-    width: '100%',
-    shadowColor: '#000',
+    width: "100%",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 1,
@@ -193,30 +193,30 @@ const styles = StyleSheet.create({
   },
   previewTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 10,
-    color: '#28a745',
+    color: "#28a745",
   },
   previewImage: {
     width: 200,
     height: 350,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     marginBottom: 10,
   },
   uriText: {
     fontSize: 12,
-    color: '#999',
-    textAlign: 'center',
-    fontFamily: 'monospace',
+    color: "#999",
+    textAlign: "center",
+    fontFamily: "monospace",
     marginBottom: 10,
   },
   noteText: {
     fontSize: 12,
-    color: '#007AFF',
-    textAlign: 'center',
-    fontStyle: 'italic',
+    color: "#007AFF",
+    textAlign: "center",
+    fontStyle: "italic",
   },
 });
 

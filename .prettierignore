@@ -85,6 +85,7 @@ build_model.json
 # Specific files that shouldn't be formatted
 example/android/gradle/wrapper/gradle-wrapper.properties
 
-# Lockfiles  
+# Lockfiles
 yarn.lock
 package-lock.json
+**/packages.lock.json

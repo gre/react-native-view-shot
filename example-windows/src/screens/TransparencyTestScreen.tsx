@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, {useState, useCallback} from "react";
 import {
   View,
   Text,
@@ -8,11 +8,11 @@ import {
   Image,
   StatusBar,
   useColorScheme,
-} from 'react-native';
-import ViewShot from 'react-native-view-shot';
+} from "react-native";
+import ViewShot from "react-native-view-shot";
 
 const TransparencyTestScreen: React.FC = () => {
-  const isDarkMode = useColorScheme() === 'dark';
+  const isDarkMode = useColorScheme() === "dark";
   const [capturedUri, setCapturedUri] = useState<string | null>(null);
 
   const onCapture = useCallback((uri: string) => {
@@ -20,13 +20,13 @@ const TransparencyTestScreen: React.FC = () => {
   }, []);
 
   const backgroundStyle = {
-    backgroundColor: isDarkMode ? '#1C1C1E' : '#F2F2F7',
+    backgroundColor: isDarkMode ? "#1C1C1E" : "#F2F2F7",
   };
 
   return (
     <SafeAreaView style={[styles.container, backgroundStyle]}>
       <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        barStyle={isDarkMode ? "light-content" : "dark-content"}
         backgroundColor={backgroundStyle.backgroundColor}
       />
       <ScrollView style={styles.scrollView} testID="transparencyScrollView">
@@ -41,9 +41,9 @@ const TransparencyTestScreen: React.FC = () => {
           <View style={styles.infoCard}>
             <Text style={styles.cardTitle}>🎯 How it works:</Text>
             <Text style={styles.cardText}>
-              • ViewShot without backgroundColor → transparent background{'\n'}•
-              PNG format preserves alpha channel{'\n'}• captureMode="mount"
-              captures automatically{'\n'}• Red background shows transparency
+              • ViewShot without backgroundColor → transparent background{"\n"}•
+              PNG format preserves alpha channel{"\n"}• captureMode="mount"
+              captures automatically{"\n"}• Red background shows transparency
               effect
             </Text>
           </View>
@@ -58,7 +58,7 @@ const TransparencyTestScreen: React.FC = () => {
               captureMode="mount"
               style={styles.captureView}
               options={{
-                format: 'png',
+                format: "png",
                 quality: 0.9,
               }}
             >
@@ -77,7 +77,7 @@ const TransparencyTestScreen: React.FC = () => {
             <View style={styles.redBackground}>
               {capturedUri ? (
                 <Image
-                  source={{ uri: capturedUri }}
+                  source={{uri: capturedUri}}
                   style={styles.capturedImage}
                   fadeDuration={0}
                 />
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   emoji: {
     fontSize: 64,
@@ -122,50 +122,50 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: '700',
-    textAlign: 'center',
+    fontWeight: "700",
+    textAlign: "center",
     marginBottom: 15,
-    color: '#333',
+    color: "#333",
   },
   description: {
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 30,
-    color: '#666',
+    color: "#666",
     lineHeight: 24,
     paddingHorizontal: 20,
   },
   infoCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     padding: 15,
     borderRadius: 8,
     marginBottom: 30,
-    width: '100%',
+    width: "100%",
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
   },
   cardTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 8,
-    color: '#333',
+    color: "#333",
   },
   cardText: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     lineHeight: 20,
   },
   testContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 30,
-    width: '100%',
+    width: "100%",
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     marginBottom: 15,
-    textAlign: 'center',
+    textAlign: "center",
   },
   captureView: {
     width: 220,
@@ -174,27 +174,27 @@ const styles = StyleSheet.create({
   circleContainer: {
     width: 220,
     height: 220,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   circle: {
     width: 180,
     height: 180,
     borderRadius: 90,
-    backgroundColor: 'cyan',
+    backgroundColor: "cyan",
     borderWidth: 2,
-    borderColor: 'blue',
+    borderColor: "blue",
   },
   resultContainer: {
-    alignItems: 'center',
-    width: '100%',
+    alignItems: "center",
+    width: "100%",
   },
   redBackground: {
-    backgroundColor: '#ff0000',
+    backgroundColor: "#ff0000",
     width: 320,
     height: 320,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     borderRadius: 8,
     marginBottom: 20,
   },
@@ -203,34 +203,34 @@ const styles = StyleSheet.create({
     height: 220,
   },
   waitingText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   statusCard: {
-    backgroundColor: '#d4edda',
+    backgroundColor: "#d4edda",
     padding: 15,
     borderRadius: 8,
-    width: '100%',
+    width: "100%",
     borderWidth: 1,
-    borderColor: '#c3e6cb',
+    borderColor: "#c3e6cb",
   },
   statusTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#155724',
+    fontWeight: "600",
+    color: "#155724",
     marginBottom: 8,
   },
   statusText: {
     fontSize: 14,
-    color: '#155724',
+    color: "#155724",
     lineHeight: 20,
     marginBottom: 10,
   },
   uriText: {
     fontSize: 12,
-    color: '#6c757d',
-    fontFamily: 'monospace',
+    color: "#6c757d",
+    fontFamily: "monospace",
   },
 });
 

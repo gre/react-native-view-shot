@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React from "react";
+import {View, Text, TouchableOpacity, StyleSheet} from "react-native";
 
 interface ControlButton {
   label: string;
@@ -13,7 +13,7 @@ interface ControlsCardProps {
 }
 
 export const ControlsCard: React.FC<ControlsCardProps> = ({
-  title = '⚙️ Controls:',
+  title = "⚙️ Controls:",
   buttons,
 }) => {
   return (
@@ -24,7 +24,7 @@ export const ControlsCard: React.FC<ControlsCardProps> = ({
           key={index}
           style={[
             styles.toggleButton,
-            { backgroundColor: button.backgroundColor || '#007AFF' },
+            {backgroundColor: button.backgroundColor || "#007AFF"},
           ]}
           onPress={button.onPress}
         >
@@ -37,30 +37,30 @@ export const ControlsCard: React.FC<ControlsCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: "#F8F9FA",
     padding: 15,
     borderRadius: 8,
     marginBottom: 20,
-    width: '100%',
+    width: "100%",
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
   },
   title: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 8,
-    color: '#333',
+    color: "#333",
   },
   toggleButton: {
     padding: 12,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 10,
   },
   toggleText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
 

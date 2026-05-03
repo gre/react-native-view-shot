@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from "react";
 import {
   View,
   Text,
@@ -6,17 +6,17 @@ import {
   StyleSheet,
   Alert,
   Platform,
-} from 'react-native';
-import ViewShot from 'react-native-view-shot';
+} from "react-native";
+import ViewShot from "react-native-view-shot";
 import {
   TestScreenLayout,
   InfoCard,
   ControlsCard,
   useViewShotCapture,
-} from '../components/shared';
+} from "../components/shared";
 
 const FSTestScreen: React.FC = () => {
-  const [saveFormat, setSaveFormat] = useState<'png' | 'jpg' | 'webm'>('png');
+  const [saveFormat, setSaveFormat] = useState<"png" | "jpg" | "webm">("png");
   const [quality, setQuality] = useState<number>(0.8);
 
   const {
@@ -31,12 +31,12 @@ const FSTestScreen: React.FC = () => {
     await baseStartCapture({
       format: saveFormat,
       quality: quality,
-      result: 'tmpfile', // Force file system save
+      result: "tmpfile", // Force file system save
     });
   };
 
   const cycleFormat = () => {
-    const formats: Array<'png' | 'jpg' | 'webm'> = ['png', 'jpg', 'webm'];
+    const formats: Array<"png" | "jpg" | "webm"> = ["png", "jpg", "webm"];
     const currentIndex = formats.indexOf(saveFormat);
     const nextIndex = (currentIndex + 1) % formats.length;
     setSaveFormat(formats[nextIndex]);
@@ -59,12 +59,12 @@ const FSTestScreen: React.FC = () => {
       scrollViewTestID="fsScrollView"
       infoCards={[
         {
-          title: '🎯 What this tests:',
+          title: "🎯 What this tests:",
           content:
-            '• File system save (tmpfile)\n• Different image formats\n• Quality compression\n• File path handling',
+            "• File system save (tmpfile)\n• Different image formats\n• Quality compression\n• File path handling",
         },
         {
-          title: '📱 Platform info:',
+          title: "📱 Platform info:",
           content: `Platform: ${Platform.OS}\nVersion: ${Platform.Version}\nTest shows actual file paths and sizes`,
         },
       ]}
@@ -72,12 +72,12 @@ const FSTestScreen: React.FC = () => {
         {
           label: `📄 Format: ${saveFormat.toUpperCase()}`,
           onPress: cycleFormat,
-          backgroundColor: '#007AFF',
+          backgroundColor: "#007AFF",
         },
         {
           label: `🎚️ Quality: ${Math.round(quality * 100)}%`,
           onPress: cycleQuality,
-          backgroundColor: '#28a745',
+          backgroundColor: "#28a745",
         },
       ]}
       testSectionTitle={`💾 File System Test (${saveFormat} @ ${Math.round(
@@ -108,19 +108,19 @@ const FSTestScreen: React.FC = () => {
               <Text style={styles.samplesTitle}>🎨 Color Samples:</Text>
               <View style={styles.colorRow}>
                 <View
-                  style={[styles.colorSample, { backgroundColor: '#FF6B6B' }]}
+                  style={[styles.colorSample, {backgroundColor: "#FF6B6B"}]}
                 />
                 <View
-                  style={[styles.colorSample, { backgroundColor: '#4ECDC4' }]}
+                  style={[styles.colorSample, {backgroundColor: "#4ECDC4"}]}
                 />
                 <View
-                  style={[styles.colorSample, { backgroundColor: '#45B7D1' }]}
+                  style={[styles.colorSample, {backgroundColor: "#45B7D1"}]}
                 />
                 <View
-                  style={[styles.colorSample, { backgroundColor: '#96CEB4' }]}
+                  style={[styles.colorSample, {backgroundColor: "#96CEB4"}]}
                 />
                 <View
-                  style={[styles.colorSample, { backgroundColor: '#FECA57' }]}
+                  style={[styles.colorSample, {backgroundColor: "#FECA57"}]}
                 />
               </View>
             </View>
@@ -138,12 +138,12 @@ const FSTestScreen: React.FC = () => {
       captureButton={{
         onPress: startCapture,
         isCapturing: isCapturing,
-        captureText: '💾 Save to File System',
-        capturingText: '💾 Saving...',
+        captureText: "💾 Save to File System",
+        capturingText: "💾 Saving...",
       }}
       capturedUri={capturedUri}
       previewConfig={{
-        title: '✅ File Saved:',
+        title: "✅ File Saved:",
         noteText: `Format: ${saveFormat} | Quality: ${Math.round(
           quality * 100,
         )}%\nFile saved to temporary directory`,
@@ -158,20 +158,20 @@ const styles = StyleSheet.create({
   },
   testTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
+    fontWeight: "bold",
+    color: "#333",
+    textAlign: "center",
     marginBottom: 15,
   },
   documentHeader: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: "#F8F9FA",
     padding: 10,
     borderRadius: 6,
     marginBottom: 15,
   },
   docInfo: {
     fontSize: 12,
-    color: '#666',
+    color: "#666",
     marginBottom: 2,
   },
   documentContent: {
@@ -182,26 +182,26 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     marginBottom: 5,
   },
   sectionText: {
     fontSize: 12,
-    color: '#666',
+    color: "#666",
     lineHeight: 16,
   },
   colorSamples: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   samplesTitle: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     marginBottom: 8,
   },
   colorRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
   },
   colorSample: {
@@ -210,19 +210,19 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   textSample: {
-    backgroundColor: '#F0F8FF',
+    backgroundColor: "#F0F8FF",
     padding: 10,
     borderRadius: 6,
   },
   sampleTitle: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     marginBottom: 5,
   },
   sampleText: {
     fontSize: 11,
-    color: '#666',
+    color: "#666",
     lineHeight: 15,
   },
 });

@@ -1,11 +1,11 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
   Image,
   StyleSheet,
   type ImageResizeMode,
-} from 'react-native';
+} from "react-native";
 
 interface PreviewContainerProps {
   capturedUri: string;
@@ -18,18 +18,18 @@ interface PreviewContainerProps {
 
 export const PreviewContainer: React.FC<PreviewContainerProps> = ({
   capturedUri,
-  title = '✅ Captured:',
+  title = "✅ Captured:",
   noteText,
   imageWidth = 200,
   imageHeight = 150,
-  resizeMode = 'contain',
+  resizeMode = "contain",
 }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{title}</Text>
       <Image
-        source={{ uri: capturedUri }}
-        style={[styles.image, { width: imageWidth, height: imageHeight }]}
+        source={{uri: capturedUri}}
+        style={[styles.image, {width: imageWidth, height: imageHeight}]}
         resizeMode={resizeMode}
         fadeDuration={0}
       />
@@ -43,12 +43,12 @@ export const PreviewContainer: React.FC<PreviewContainerProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
     padding: 16,
     borderRadius: 12,
-    width: '100%',
-    shadowColor: '#000',
+    width: "100%",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 1,
@@ -59,28 +59,28 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 10,
-    color: '#28a745',
+    color: "#28a745",
   },
   image: {
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     marginBottom: 10,
   },
   uriText: {
     fontSize: 12,
-    color: '#999',
-    textAlign: 'center',
-    fontFamily: 'monospace',
+    color: "#999",
+    textAlign: "center",
+    fontFamily: "monospace",
     marginBottom: 10,
   },
   noteText: {
     fontSize: 12,
-    color: '#007AFF',
-    textAlign: 'center',
-    fontStyle: 'italic',
+    color: "#007AFF",
+    textAlign: "center",
+    fontStyle: "italic",
   },
 });
 

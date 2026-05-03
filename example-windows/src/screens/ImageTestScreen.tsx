@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, {useState, useCallback, useRef} from "react";
 import {
   View,
   Text,
@@ -10,17 +10,17 @@ import {
   StatusBar,
   useColorScheme,
   Alert,
-} from 'react-native';
-import { captureRef } from 'react-native-view-shot';
+} from "react-native";
+import {captureRef} from "react-native-view-shot";
 
-const localImage = require('../cat.jpg');
-const remoteImage = { uri: 'https://i.imgur.com/5EOyTDQ.jpg' };
+const localImage = require("../cat.jpg");
+const remoteImage = {uri: "https://i.imgur.com/5EOyTDQ.jpg"};
 
 const ImageTestScreen: React.FC = () => {
-  const isDarkMode = useColorScheme() === 'dark';
+  const isDarkMode = useColorScheme() === "dark";
   const [capturedUri, setCapturedUri] = useState<string | null>(null);
   const [useRemoteImage, setUseRemoteImage] = useState(false);
-  const [captureFormat, setCaptureFormat] = useState<'png' | 'jpg'>('jpg');
+  const [captureFormat, setCaptureFormat] = useState<"png" | "jpg">("jpg");
   const [isCapturing, setIsCapturing] = useState(false);
 
   // Wrap the Image in a View we control: on Windows, captureRef on a bare
@@ -50,7 +50,7 @@ const ImageTestScreen: React.FC = () => {
     setCapturedUri(null);
 
     captureRef(imageWrapperRef, {
-      result: 'base64',
+      result: "base64",
       format: captureFormat,
       quality: 0.8,
     })
@@ -59,7 +59,7 @@ const ImageTestScreen: React.FC = () => {
   }, [onCapture, onCaptureFailure, captureFormat]);
 
   const backgroundStyle = {
-    backgroundColor: isDarkMode ? '#1C1C1E' : '#F2F2F7',
+    backgroundColor: isDarkMode ? "#1C1C1E" : "#F2F2F7",
   };
 
   const currentImageSource = useRemoteImage ? remoteImage : localImage;
@@ -67,7 +67,7 @@ const ImageTestScreen: React.FC = () => {
   return (
     <SafeAreaView style={[styles.container, backgroundStyle]}>
       <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        barStyle={isDarkMode ? "light-content" : "dark-content"}
         backgroundColor={backgroundStyle.backgroundColor}
       />
       <ScrollView style={styles.scrollView} testID="imageScrollView">
@@ -82,8 +82,8 @@ const ImageTestScreen: React.FC = () => {
           <View style={styles.infoCard}>
             <Text style={styles.cardTitle}>🎯 What this tests:</Text>
             <Text style={styles.cardText}>
-              • Local vs remote image capture{'\n'}• PNG vs JPG format output
-              {'\n'}• Base64 result handling{'\n'}• Image component capture with
+              • Local vs remote image capture{"\n"}• PNG vs JPG format output
+              {"\n"}• Base64 result handling{"\n"}• Image component capture with
               captureRef
             </Text>
           </View>
@@ -94,12 +94,12 @@ const ImageTestScreen: React.FC = () => {
             <TouchableOpacity
               style={[
                 styles.toggleButton,
-                { backgroundColor: useRemoteImage ? '#007AFF' : '#999' },
+                {backgroundColor: useRemoteImage ? "#007AFF" : "#999"},
               ]}
               onPress={() => setUseRemoteImage(!useRemoteImage)}
             >
               <Text style={styles.toggleText}>
-                {useRemoteImage ? '🌐 Remote Image' : '📱 Local Image'}
+                {useRemoteImage ? "🌐 Remote Image" : "📱 Local Image"}
               </Text>
             </TouchableOpacity>
 
@@ -109,10 +109,10 @@ const ImageTestScreen: React.FC = () => {
                   styles.formatButton,
                   {
                     backgroundColor:
-                      captureFormat === 'jpg' ? '#007AFF' : '#999',
+                      captureFormat === "jpg" ? "#007AFF" : "#999",
                   },
                 ]}
-                onPress={() => setCaptureFormat('jpg')}
+                onPress={() => setCaptureFormat("jpg")}
               >
                 <Text style={styles.toggleText}>JPG</Text>
               </TouchableOpacity>
@@ -122,10 +122,10 @@ const ImageTestScreen: React.FC = () => {
                   styles.formatButton,
                   {
                     backgroundColor:
-                      captureFormat === 'png' ? '#007AFF' : '#999',
+                      captureFormat === "png" ? "#007AFF" : "#999",
                   },
                 ]}
-                onPress={() => setCaptureFormat('png')}
+                onPress={() => setCaptureFormat("png")}
               >
                 <Text style={styles.toggleText}>PNG</Text>
               </TouchableOpacity>
@@ -134,7 +134,7 @@ const ImageTestScreen: React.FC = () => {
 
           <View style={styles.imageContainer}>
             <Text style={styles.sectionTitle}>
-              📸 Source Image ({useRemoteImage ? 'Remote' : 'Local'}):
+              📸 Source Image ({useRemoteImage ? "Remote" : "Local"}):
             </Text>
 
             <View ref={imageWrapperRef} style={styles.imageWrapper}>
@@ -149,7 +149,7 @@ const ImageTestScreen: React.FC = () => {
           <TouchableOpacity
             style={[
               styles.button,
-              { backgroundColor: isCapturing ? '#999' : '#007AFF' },
+              {backgroundColor: isCapturing ? "#999" : "#007AFF"},
             ]}
             onPress={handleCapture}
             disabled={isCapturing}
@@ -159,7 +159,7 @@ const ImageTestScreen: React.FC = () => {
           >
             <Text style={styles.buttonText}>
               {isCapturing
-                ? '📸 Capturing...'
+                ? "📸 Capturing..."
                 : `📸 Capture as ${captureFormat.toUpperCase()}`}
             </Text>
           </TouchableOpacity>
@@ -168,7 +168,7 @@ const ImageTestScreen: React.FC = () => {
             <View style={styles.previewContainer}>
               <Text style={styles.previewTitle}>✅ Captured Image:</Text>
               <Image
-                source={{ uri: capturedUri }}
+                source={{uri: capturedUri}}
                 style={styles.capturedImage}
                 resizeMode="contain"
               />
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   emoji: {
     fontSize: 64,
@@ -206,94 +206,94 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: '700',
-    textAlign: 'center',
+    fontWeight: "700",
+    textAlign: "center",
     marginBottom: 15,
-    color: '#333',
+    color: "#333",
   },
   description: {
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 30,
-    color: '#666',
+    color: "#666",
     lineHeight: 24,
     paddingHorizontal: 20,
   },
   infoCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     padding: 15,
     borderRadius: 8,
     marginBottom: 15,
-    width: '100%',
+    width: "100%",
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
   },
   controlsCard: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: "#F8F9FA",
     padding: 15,
     borderRadius: 8,
     marginBottom: 20,
-    width: '100%',
+    width: "100%",
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
   },
   cardTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 8,
-    color: '#333',
+    color: "#333",
   },
   cardText: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     lineHeight: 20,
   },
   toggleButton: {
     padding: 12,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 10,
   },
   toggleText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   formatButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   formatButton: {
     flex: 1,
     padding: 12,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
     marginHorizontal: 5,
   },
   imageContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 30,
-    width: '100%',
+    width: "100%",
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     marginBottom: 15,
-    textAlign: 'center',
+    textAlign: "center",
   },
   imageWrapper: {
     width: 300,
     height: 300,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
-    overflow: 'hidden',
-    backgroundColor: '#FFFFFF',
+    borderColor: "#ddd",
+    overflow: "hidden",
+    backgroundColor: "#FFFFFF",
   },
   sourceImage: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   button: {
     paddingHorizontal: 24,
@@ -302,18 +302,18 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: "600",
+    textAlign: "center",
   },
   previewContainer: {
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
     padding: 16,
     borderRadius: 12,
-    width: '100%',
-    shadowColor: '#000',
+    width: "100%",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 1,
@@ -324,36 +324,36 @@ const styles = StyleSheet.create({
   },
   previewTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 10,
-    color: '#28a745',
+    color: "#28a745",
   },
   capturedImage: {
     width: 300,
     height: 300,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     marginBottom: 10,
   },
   formatText: {
     fontSize: 14,
-    color: '#007AFF',
-    fontWeight: '600',
+    color: "#007AFF",
+    fontWeight: "600",
     marginBottom: 5,
   },
   uriText: {
     fontSize: 12,
-    color: '#999',
-    textAlign: 'center',
-    fontFamily: 'monospace',
+    color: "#999",
+    textAlign: "center",
+    fontFamily: "monospace",
     marginBottom: 10,
   },
   noteText: {
     fontSize: 12,
-    color: '#007AFF',
-    textAlign: 'center',
-    fontStyle: 'italic',
+    color: "#007AFF",
+    textAlign: "center",
+    fontStyle: "italic",
   },
 });
 

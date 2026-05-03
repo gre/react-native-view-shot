@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, {useRef, useState} from "react";
 import {
   View,
   Text,
@@ -9,35 +9,35 @@ import {
   ScrollView,
   FlatList,
   SectionList,
-} from 'react-native';
-import ViewShot, { captureRef } from 'react-native-view-shot';
-import { PreviewContainer } from '../components/shared';
+} from "react-native";
+import ViewShot, {captureRef} from "react-native-view-shot";
+import {PreviewContainer} from "../components/shared";
 
 const COLORS = [
-  '#FF6B6B',
-  '#4ECDC4',
-  '#45B7D1',
-  '#96CEB4',
-  '#FFEAA7',
-  '#DDA0DD',
-  '#98D8C8',
-  '#F7DC6F',
-  '#BB8FCE',
-  '#85C1E9',
-  '#F1948A',
-  '#82E0AA',
-  '#F8C471',
-  '#AED6F1',
-  '#D7BDE2',
+  "#FF6B6B",
+  "#4ECDC4",
+  "#45B7D1",
+  "#96CEB4",
+  "#FFEAA7",
+  "#DDA0DD",
+  "#98D8C8",
+  "#F7DC6F",
+  "#BB8FCE",
+  "#85C1E9",
+  "#F1948A",
+  "#82E0AA",
+  "#F8C471",
+  "#AED6F1",
+  "#D7BDE2",
 ];
 
-const scrollViewItems = Array.from({ length: 20 }, (_, i) => ({
+const scrollViewItems = Array.from({length: 20}, (_, i) => ({
   id: i,
   color: COLORS[i % COLORS.length],
   label: `Item ${i + 1}`,
 }));
 
-const flatListData = Array.from({ length: 30 }, (_, i) => ({
+const flatListData = Array.from({length: 30}, (_, i) => ({
   id: String(i),
   title: `FlatList Item ${i + 1}`,
   color: COLORS[i % COLORS.length],
@@ -47,13 +47,13 @@ const flatListData = Array.from({ length: 30 }, (_, i) => ({
 // of total content) inside a 200px viewport — items 3..6 are off-screen until
 // the user scrolls. With `snapshotContentContainer: true` the capture should
 // contain ALL six items, not just the visible viewport.
-const contentContainerItems = Array.from({ length: 6 }, (_, i) => ({
+const contentContainerItems = Array.from({length: 6}, (_, i) => ({
   id: i,
   color: COLORS[i % COLORS.length],
   label: `Item ${i + 1}`,
 }));
 
-const flatListContentContainerItems = Array.from({ length: 8 }, (_, i) => ({
+const flatListContentContainerItems = Array.from({length: 8}, (_, i) => ({
   id: String(i),
   color: COLORS[(i + 3) % COLORS.length],
   title: `Row ${i + 1}`,
@@ -61,14 +61,14 @@ const flatListContentContainerItems = Array.from({ length: 8 }, (_, i) => ({
 
 const sectionListData = [
   {
-    title: 'Fruits',
-    data: ['Apple', 'Banana', 'Cherry', 'Date', 'Elderberry'],
+    title: "Fruits",
+    data: ["Apple", "Banana", "Cherry", "Date", "Elderberry"],
   },
   {
-    title: 'Vegetables',
-    data: ['Artichoke', 'Broccoli', 'Carrot', 'Daikon', 'Eggplant'],
+    title: "Vegetables",
+    data: ["Artichoke", "Broccoli", "Carrot", "Daikon", "Eggplant"],
   },
-  { title: 'Grains', data: ['Amaranth', 'Barley', 'Corn', 'Durum', 'Emmer'] },
+  {title: "Grains", data: ["Amaranth", "Barley", "Corn", "Durum", "Emmer"]},
 ];
 
 interface SectionState {
@@ -115,14 +115,14 @@ const ScrollViewTestScreen: React.FC = () => {
     try {
       if (ref.current) {
         const uri = await captureRef(ref.current, {
-          format: 'png',
+          format: "png",
           quality: 0.8,
         });
-        setter({ uri, error: null });
+        setter({uri, error: null});
       }
     } catch (error: any) {
-      setter({ uri: null, error: error.message });
-      console.error('Capture failed:', error);
+      setter({uri: null, error: error.message});
+      console.error("Capture failed:", error);
     }
   };
 
@@ -136,15 +136,15 @@ const ScrollViewTestScreen: React.FC = () => {
     try {
       if (ref.current) {
         const uri = await captureRef(ref.current, {
-          format: 'png',
+          format: "png",
           quality: 1,
           snapshotContentContainer: true,
         });
-        setter({ uri, error: null });
+        setter({uri, error: null});
       }
     } catch (error: any) {
-      setter({ uri: null, error: error.message });
-      console.error('Capture failed:', error);
+      setter({uri: null, error: error.message});
+      console.error("Capture failed:", error);
     }
   };
 
@@ -161,7 +161,7 @@ const ScrollViewTestScreen: React.FC = () => {
         <View style={styles.previewContainer}>
           <Text style={styles.previewTitle}>Captured:</Text>
           <Image
-            source={{ uri: state.uri }}
+            source={{uri: state.uri}}
             style={styles.previewImage}
             resizeMode="contain"
           />
@@ -190,7 +190,7 @@ const ScrollViewTestScreen: React.FC = () => {
               {scrollViewItems.map(item => (
                 <View
                   key={item.id}
-                  style={[styles.colorItem, { backgroundColor: item.color }]}
+                  style={[styles.colorItem, {backgroundColor: item.color}]}
                 >
                   <Text style={styles.itemText}>{item.label}</Text>
                 </View>
@@ -216,10 +216,8 @@ const ScrollViewTestScreen: React.FC = () => {
               nestedScrollEnabled
               data={flatListData}
               keyExtractor={item => item.id}
-              renderItem={({ item }) => (
-                <View
-                  style={[styles.colorItem, { backgroundColor: item.color }]}
-                >
+              renderItem={({item}) => (
+                <View style={[styles.colorItem, {backgroundColor: item.color}]}>
                   <Text style={styles.itemText}>{item.title}</Text>
                 </View>
               )}
@@ -244,12 +242,12 @@ const ScrollViewTestScreen: React.FC = () => {
               nestedScrollEnabled
               sections={sectionListData}
               keyExtractor={(item, index) => item + index}
-              renderItem={({ item }) => (
+              renderItem={({item}) => (
                 <View style={styles.sectionItem}>
                   <Text style={styles.sectionItemText}>{item}</Text>
                 </View>
               )}
-              renderSectionHeader={({ section: { title } }) => (
+              renderSectionHeader={({section: {title}}) => (
                 <View style={styles.sectionHeader}>
                   <Text style={styles.sectionHeaderText}>{title}</Text>
                 </View>
@@ -273,10 +271,10 @@ const ScrollViewTestScreen: React.FC = () => {
           </Text>
           <View style={styles.hintBox}>
             <Text style={styles.hintText}>
-              Pass{' '}
+              Pass{" "}
               <Text style={styles.hintCode}>
                 snapshotContentContainer: true
-              </Text>{' '}
+              </Text>{" "}
               to capture the entire scrollable content of a ScrollView, not just
               the visible viewport. The viewport below is 200px tall but holds
               six 80px items — after capture you should see ALL six items
@@ -293,7 +291,7 @@ const ScrollViewTestScreen: React.FC = () => {
               {contentContainerItems.map(item => (
                 <View
                   key={item.id}
-                  style={[styles.tallItem, { backgroundColor: item.color }]}
+                  style={[styles.tallItem, {backgroundColor: item.color}]}
                 >
                   <Text style={styles.itemText}>{item.label}</Text>
                 </View>
@@ -359,10 +357,8 @@ const ScrollViewTestScreen: React.FC = () => {
               keyExtractor={item => item.id}
               nestedScrollEnabled
               testID="snapshotContentContainer-flatlist"
-              renderItem={({ item }) => (
-                <View
-                  style={[styles.tallItem, { backgroundColor: item.color }]}
-                >
+              renderItem={({item}) => (
+                <View style={[styles.tallItem, {backgroundColor: item.color}]}>
                   <Text style={styles.itemText}>{item.title}</Text>
                 </View>
               )}
@@ -409,7 +405,7 @@ const ScrollViewTestScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2F2F7',
+    backgroundColor: "#F2F2F7",
   },
   outerScroll: {
     flex: 1,
@@ -417,14 +413,14 @@ const styles = StyleSheet.create({
   infoBox: {
     margin: 16,
     padding: 12,
-    backgroundColor: '#E3F2FD',
+    backgroundColor: "#E3F2FD",
     borderRadius: 8,
     borderLeftWidth: 4,
-    borderLeftColor: '#1976D2',
+    borderLeftColor: "#1976D2",
   },
   infoText: {
     fontSize: 13,
-    color: '#1565C0',
+    color: "#1565C0",
     lineHeight: 18,
   },
   section: {
@@ -433,127 +429,127 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#333',
+    fontWeight: "700",
+    color: "#333",
     marginBottom: 8,
   },
   captureArea: {
     borderRadius: 12,
-    overflow: 'hidden',
+    overflow: "hidden",
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
   },
   scrollList: {
     height: 200,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   colorItem: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.1)',
+    borderBottomColor: "rgba(0,0,0,0.1)",
   },
   itemText: {
     fontSize: 15,
-    fontWeight: '600',
-    color: '#fff',
-    textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowOffset: { width: 0, height: 1 },
+    fontWeight: "600",
+    color: "#fff",
+    textShadowColor: "rgba(0,0,0,0.3)",
+    textShadowOffset: {width: 0, height: 1},
     textShadowRadius: 2,
   },
   sectionItem: {
     padding: 14,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: "#eee",
   },
   sectionItemText: {
     fontSize: 15,
-    color: '#333',
+    color: "#333",
   },
   sectionHeader: {
     padding: 8,
     paddingHorizontal: 14,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: "#f0f0f0",
   },
   sectionHeaderText: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#555',
+    fontWeight: "700",
+    color: "#555",
   },
   button: {
-    backgroundColor: '#007AFF',
+    backgroundColor: "#007AFF",
     padding: 14,
     borderRadius: 10,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 10,
   },
   buttonText: {
-    color: 'white',
+    color: "white",
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   previewContainer: {
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    alignItems: "center",
+    backgroundColor: "#fff",
     padding: 12,
     borderRadius: 10,
     marginTop: 10,
   },
   previewTitle: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 8,
-    color: '#28a745',
+    color: "#28a745",
   },
   previewImage: {
-    width: '100%',
+    width: "100%",
     aspectRatio: 1.5,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
   },
   errorContainer: {
     padding: 12,
-    backgroundColor: '#FFEBEE',
+    backgroundColor: "#FFEBEE",
     borderRadius: 8,
     marginTop: 10,
   },
   errorText: {
-    color: '#C62828',
+    color: "#C62828",
     fontSize: 13,
   },
   hintBox: {
     padding: 10,
     marginBottom: 8,
-    backgroundColor: '#FFF8E1',
+    backgroundColor: "#FFF8E1",
     borderRadius: 8,
     borderLeftWidth: 4,
-    borderLeftColor: '#F9A825',
+    borderLeftColor: "#F9A825",
   },
   hintText: {
     fontSize: 12,
-    color: '#5D4037',
+    color: "#5D4037",
     lineHeight: 17,
   },
   hintCode: {
-    fontFamily: 'monospace',
+    fontFamily: "monospace",
     fontSize: 12,
-    color: '#3E2723',
+    color: "#3E2723",
   },
   contentContainerScroll: {
     height: 200,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   tallItem: {
     height: 80,
     paddingHorizontal: 16,
-    justifyContent: 'center',
+    justifyContent: "center",
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.1)',
+    borderBottomColor: "rgba(0,0,0,0.1)",
   },
   contentPreviewWrapper: {
     marginTop: 10,
-    alignItems: 'center',
+    alignItems: "center",
   },
 });
 
