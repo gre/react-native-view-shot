@@ -153,6 +153,39 @@ jobs:
             -destination 'generic/platform=iOS Simulator' \
             build CODE_SIGNING_ALLOWED=NO
 
+      - name: Run iOS unit tests
+        working-directory: example
+        run: |
+          # Pick the first available iPhone simulator and pass its UDID
+          # (not its name) to xcodebuild. We use UDID because simulator
+          # display names can contain parentheses (e.g. "iPhone SE
+          # (3rd generation)"), and parsing them with a name-based regex
+          # is brittle: stripping the trailing "(...)" loses version
+          # disambiguation, and quoting parentheses on the
+          # `-destination name=...` form is fragile across shells.
+          # UDIDs are opaque and stable, so `id=$UDID` always resolves
+          # exactly one device regardless of name shape. We also avoid
+          # hard-coding e.g. "iPhone 16" which may disappear when Xcode
+          # updates on macos-15.
+          UDID=$(xcrun simctl list devices available -j | \
+            jq -r '.devices | to_entries[]
+              | select(.key | startswith("com.apple.CoreSimulator.SimRuntime.iOS"))
+              | .value[]
+              | select(.name | startswith("iPhone "))
+              | .udid' | head -1)
+          if [ -z "$UDID" ]; then
+            echo "::error::No iPhone simulator available on the runner"
+            xcrun simctl list devices available
+            exit 1
+          fi
+          echo "Using simulator UDID: $UDID"
+          xcrun simctl list devices available | grep "$UDID" || true
+          xcodebuild test \
+            -workspace ios/ViewShotExample.xcworkspace \
+            -scheme ViewShotExampleTests \
+            -destination "platform=iOS Simulator,id=$UDID" \
+            CODE_SIGNING_ALLOWED=NO
+
       - name: Upload iOS Build Logs
         if: failure()
         uses: actions/upload-artifact@v4
