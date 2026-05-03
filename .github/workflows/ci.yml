@@ -336,6 +336,13 @@ jobs:
           }
           Write-Host "OK: $exe and RNViewShot.winmd present"
 
+      - name: Upload Windows app package
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-app
+          path: example-windows/windows/ViewShotWindowsExample/AppPackages/**
+          if-no-files-found: error
+
       - name: Upload Windows build logs
         if: failure()
         uses: actions/upload-artifact@v4
