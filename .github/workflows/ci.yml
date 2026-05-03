@@ -195,7 +195,7 @@ jobs:
 
   test-windows-unit:
     name: Run Windows unit tests
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     needs: lint-and-type-check
 
     steps:
@@ -207,8 +207,26 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('windows/RNViewShot.Tests/RNViewShot.Tests.csproj') }}
+          restore-keys: ${{ runner.os }}-nuget-
+
       - name: Run dotnet tests
-        run: dotnet test windows/RNViewShot.Tests/RNViewShot.Tests.csproj --nologo --verbosity normal
+        run: |
+          dotnet test windows/RNViewShot.Tests/RNViewShot.Tests.csproj \
+            --nologo --verbosity normal \
+            --logger "trx;LogFileName=test-results.trx" \
+            --results-directory TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-unit-test-results
+          path: TestResults/
 
   build-windows:
     name: Build Windows
@@ -224,6 +242,9 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            example-windows/package-lock.json
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
@@ -232,6 +253,13 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-build-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: ${{ runner.os }}-nuget-build-
 
       - name: Install root dependencies
         run: npm install --legacy-peer-deps
@@ -256,6 +284,7 @@ jobs:
             --no-launch `
             --no-deploy `
             --no-packager `
+            --no-autolink `
             --logging `
             --buildLogDirectory buildlogs `
             --no-telemetry

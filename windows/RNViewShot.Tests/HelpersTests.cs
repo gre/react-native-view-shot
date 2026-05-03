@@ -1,7 +1,8 @@
 using System;
 using System.IO;
-using RNViewShot;
 using Xunit;
+
+namespace RNViewShot.Tests;
 
 public class HelpersTests
 {
