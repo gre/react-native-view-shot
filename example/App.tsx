@@ -29,6 +29,7 @@ export type RootStackParamList = {
   FS: undefined;
   // Rendering correctness
   Rendering: undefined;
+  StyleFilters: undefined;
 };
 
 // Import all test screens
@@ -45,6 +46,7 @@ import ModalTestScreen from './src/screens/ModalTestScreen';
 import FSTestScreen from './src/screens/FSTestScreen';
 import ScrollViewTestScreen from './src/screens/ScrollViewTestScreen';
 import RenderingTestScreen from './src/screens/RenderingTestScreen';
+import StyleFiltersTestScreen from './src/screens/StyleFiltersTestScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -144,6 +146,11 @@ function App(): React.JSX.Element {
           name="Rendering"
           component={RenderingTestScreen}
           options={{ title: '🧪 Rendering correctness' }}
+        />
+        <Stack.Screen
+          name="StyleFilters"
+          component={StyleFiltersTestScreen}
+          options={{ title: '🎨 Style filters (Bug #578)' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

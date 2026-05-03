@@ -106,6 +106,15 @@ const testCases: { [category: string]: TestCase[] } = {
       priority: 'high',
       status: 'new',
     },
+    {
+      key: 'StyleFilters',
+      title: 'Style filters',
+      description:
+        'RN `filter` prop (brightness/contrast/blur/...) — known gap (#578)',
+      emoji: '🎨',
+      priority: 'high',
+      status: 'bug',
+    },
   ],
   '🟠 ADVANCED TESTS': [
     // {
