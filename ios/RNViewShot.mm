@@ -150,6 +150,12 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
         // this doesn't work for large views and reports incorrect success even though the image is blank
         success = [rendered drawViewHierarchyInRect:(CGRect){CGPointZero, size} afterScreenUpdates:YES];
       }
+      // Known limitation (#578): React Native renders `style.filter` effects
+      // (notably `blur` and `dropShadow`) through a SwiftUI `UIHostingController`
+      // that lives above the layer hierarchy. Neither `drawViewHierarchyInRect`
+      // nor `CALayer.renderInContext` reproduce the SwiftUI compositor's
+      // post-composition output, so those filters are missing from the capture.
+      // See README "Troubleshooting / FAQ" and `example/src/screens/StyleFiltersTestScreen.tsx`.
     }];
 
     if (snapshotContentContainer) {

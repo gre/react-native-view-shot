@@ -66,14 +66,17 @@ const StyleFiltersTestScreen: React.FC = () => {
             capture-time gap differs by platform:
           </Text>
           <Text style={styles.introBullet}>
-            • <Text style={styles.introBold}>iOS</Text>: every filter renders
-            live via `CALayer.filters`. Matrix-based filters (brightness /
-            contrast / grayscale / hueRotate / invert / saturate / sepia) modify
-            the layer&apos;s content directly and DO appear in the capture.
-            CIFilter-based effects (blur, dropShadow) are applied
-            post-composition and `drawViewHierarchyInRect` /
-            `UIGraphicsImageRenderer` don&apos;t see them — those are the true
-            #578 gap on iOS.
+            • <Text style={styles.introBold}>iOS</Text>: filters are rendered by
+            React Native through a SwiftUI `UIHostingController` (gated by
+            upstream `enableSwiftUIBasedFilters`). `brightness` is applied via a
+            sibling `compositingFilter` layer and DOES survive the capture.
+            `blur` / `dropShadow` are SwiftUI post-composition effects and are
+            NOT reproduced by `drawViewHierarchyInRect` or
+            `CALayer.renderInContext` — that is the #578 gap. Other filters
+            (grayscale / saturate / contrast / hueRotate / invert / sepia) go
+            through the same SwiftUI path and may render inconsistently
+            depending on the iOS / RN version. See README → Troubleshooting →
+            "`style.filter` is missing from the capture?" for workarounds.
           </Text>
           <Text style={styles.introBullet}>
             • <Text style={styles.introBold}>Android</Text>: RN&apos;s runtime
@@ -126,7 +129,7 @@ const StyleFiltersTestScreen: React.FC = () => {
               <PreviewContainer
                 capturedUri={capturedUri}
                 title="✅ Style Filters Captured:"
-                noteText="iOS: blur/dropShadow are missing (true gap). Android: most filters never rendered live, so capture matches live."
+                noteText="iOS: blur/dropShadow are missing (SwiftUI compositor — see README #578). Android: most filters never rendered live, so capture matches live."
                 imageWidth={CARD_WIDTH}
                 imageHeight={CARD_HEIGHT}
               />

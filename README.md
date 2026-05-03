@@ -335,6 +335,23 @@ A prop may be necessary to properly capture GL Surface View in the view tree:
 handleGLSurfaceViewOnAndroid?: boolean;
 ```
 
+### `style.filter` (`blur`, `dropShadow`, …) is missing from the capture? (iOS)
+
+> Tracked in [#578](https://github.com/gre/react-native-view-shot/issues/578).
+
+React Native renders `style.filter` effects on iOS through a SwiftUI host view (`UIHostingController`) gated by the upstream `enableSwiftUIBasedFilters` feature flag. The native capture path used by this library — `drawViewHierarchyInRect:afterScreenUpdates:` (default) and `CALayer.renderInContext:` (when `useRenderInContext: true`) — captures the underlying view hierarchy, not the SwiftUI compositor's post-composition output, so:
+
+- `brightness` (and `opacity`) are part of the layer's contents and **do** appear in the capture.
+- `blur` and `dropShadow` are SwiftUI-only effects applied above the layer hierarchy and are **not** captured. There is currently no public iOS API that re-renders a `UIHostingController`'s effect chain into a context.
+- `grayscale`, `saturate`, `contrast`, `hueRotate`, `invert`, `sepia` go through SwiftUI as well when the feature flag is on; whether they survive `drawViewHierarchyInRect` depends on the iOS version and the SwiftUI runtime.
+
+A repro screen exercising every supported filter ships with the example app at `example/src/screens/StyleFiltersTestScreen.tsx`.
+
+**Workarounds:**
+
+- Apply the visual effect via a layer that participates in the regular view hierarchy (e.g. a translucent overlay for shadows, a pre-blurred image asset, or a third-party native blur view that draws into its `CALayer.contents`). Those compose into the capture normally.
+- If you only need a single full-frame blur on the captured image, post-process the resulting `UIImage` yourself with `CIGaussianBlur`. Per-element blur is not addressable from outside the SwiftUI compositor.
+
 ### Trying to share the capture result with `expo-sharing`?
 
 `tmpfile` or the default capture result works best for this. Just be sure to prepend `file://` to result before you call `shareAsync`.
