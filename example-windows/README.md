@@ -1,45 +1,27 @@
-# Windows Example - Minimal ViewShot Test
+# Windows Example
 
-This is a minimal React Native Windows app to test the ViewShot module.
+React Native Windows demo app for `react-native-view-shot`.
 
-## ⚠️ Current Status
+## Prerequisites
 
-**Windows support is currently under construction and not working in CI.**
-
-The Windows build fails in GitHub Actions CI due to missing React Native Windows assemblies and dependencies. This is a known issue that needs to be resolved separately from the main CI pipeline.
-
-**Current CI Status:**
-
-- ✅ All other platforms (Android, iOS, Web) work correctly
-- ❌ Windows build is temporarily disabled in CI
-- 🔧 Windows support is being worked on separately
-
-## Setup
-
-```bash
-npm install
-npx react-native-windows-init --overwrite
-```
+- Node 20+
+- Visual Studio 2022 with the **Universal Windows Platform development** and **Native desktop with C++** workloads
+- Windows 11 SDK 10.0.22621
+- .NET 8 SDK on `PATH`
 
 ## Run
 
 ```bash
-npm run windows
+cd example-windows
+npm install --legacy-peer-deps
+npx react-native autolink-windows
+npx react-native run-windows --arch x64
 ```
 
-## Test
+`run-windows` builds, deploys, and launches the app in one shot. Pass `--no-launch --no-deploy --no-packager` to only build.
 
-The app displays a simple view with a colored box that can be captured using ViewShot.
-This validates that the Windows module correctly:
+## What's covered
 
-- Integrates with React Native Windows
-- Captures view snapshots
-- Returns image URIs
+The home screen lists every test screen mirrored from `example/` (BasicTest, FullScreen, Transparency, ScrollView, Image, FS, Modal, Rendering, StyleFilters). Video / WebView / SVG screens are skipped because the underlying RN modules don't have Windows native support.
 
-## Known Issues
-
-- **CI Build Failure**: Windows build fails in GitHub Actions due to missing React Native Windows assemblies
-- **Dependencies**: React Native Windows 0.75.19 compatibility issues in CI environment
-- **Autolinking**: Windows autolinking may not work correctly in CI
-
-These issues are being tracked and will be resolved in future updates.
+`snapshotContentContainer` is documented as not supported on Windows — see the lib's `README.md`. The flag is silently ignored and a `console.warn` fires in `__DEV__`.

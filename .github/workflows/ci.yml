@@ -193,6 +193,23 @@ jobs:
           name: ios-build-logs
           path: ~/Library/Logs/DiagnosticReports/
 
+  test-windows-unit:
+    name: Run Windows unit tests
+    runs-on: windows-latest
+    needs: lint-and-type-check
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Run dotnet tests
+        run: dotnet test windows/RNViewShot.Tests/RNViewShot.Tests.csproj --nologo --verbosity normal
+
   build-windows:
     name: Build Windows
     runs-on: windows-latest
@@ -211,6 +228,11 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
       - name: Install root dependencies
         run: npm install --legacy-peer-deps
 
@@ -221,189 +243,36 @@ jobs:
         working-directory: example-windows
         run: npm ci --legacy-peer-deps
 
-      - name: Verify parent library is available
-        working-directory: example-windows
-        shell: pwsh
-        run: |
-          Write-Host "🔍 Verifying parent library setup..."
-          
-          # Check if parent library was built
-          if (Test-Path "../lib") {
-            Write-Host "✅ Parent library built (lib/ exists)"
-            Get-ChildItem "../lib" | Select-Object Name
-          } else {
-            Write-Host "❌ Parent library not built (lib/ missing)"
-          }
-          
-          # Check if parent Windows module exists
-          if (Test-Path "../windows") {
-            Write-Host "✅ Parent Windows module exists"
-            Get-ChildItem "../windows" | Select-Object Name
-          } else {
-            Write-Host "❌ Parent Windows module missing"
-          }
-          
-          # Check if react-native.config.js exists in parent
-          if (Test-Path "../react-native.config.js") {
-            Write-Host "✅ Parent react-native.config.js exists"
-            Get-Content "../react-native.config.js"
-          } else {
-            Write-Host "❌ Parent react-native.config.js missing"
-          }
-          
-          # Check node_modules for react-native-view-shot
-          if (Test-Path "node_modules/react-native-view-shot") {
-            Write-Host "✅ react-native-view-shot in node_modules"
-            Get-ChildItem "node_modules/react-native-view-shot" | Select-Object Name
-          } else {
-            Write-Host "❌ react-native-view-shot not in node_modules"
-          }
-
       - name: Run Windows autolinking
         working-directory: example-windows
-        shell: pwsh
-        continue-on-error: true
-        run: |
-          Write-Host "🔗 Running React Native Windows autolinking..."
-          npx react-native autolink-windows --logging --verbose
-          
-          Write-Host ""
-          Write-Host "📋 Checking autolinking results..."
-          if (Test-Path "windows/ViewShotWindowsExample/AutolinkedNativeModules.g.cpp") {
-            $content = Get-Content "windows/ViewShotWindowsExample/AutolinkedNativeModules.g.cpp" -Raw
-            Write-Host "Autolinking file generated (length: $($content.Length) chars)"
-            Write-Host "First 500 chars:"
-            Write-Host $content.Substring(0, [Math]::Min(500, $content.Length))
-            if ($content -match "ViewShot" -or $content -match "RNViewShot") {
-              Write-Host "✅ ViewShot module found in autolinking!"
-            } else {
-              Write-Host "⚠️  ViewShot not in autolinking, but build will continue"
-            }
-          } else {
-            Write-Host "❌ Autolinking file not found!"
-          }
-          
-          Write-Host ""
-          Write-Host "📁 Checking parent library location..."
-          if (Test-Path "../react-native.config.js") {
-            Write-Host "✅ Found react-native.config.js in parent"
-            Get-Content "../react-native.config.js" | Select-Object -First 15
-          }
-          if (Test-Path "../package.json") {
-            Write-Host "✅ Found ../package.json"
-            $packageJson = Get-Content "../package.json" | ConvertFrom-Json
-            if ($packageJson.'react-native'.windows) {
-              Write-Host "✅ Windows config found in parent package.json"
-              $packageJson.'react-native'.windows | ConvertTo-Json
-            } else {
-              Write-Host "⚠️  No Windows config in parent package.json"
-            }
-          }
-          if (Test-Path "../windows") {
-            Write-Host "✅ Found ../windows directory"
-            Get-ChildItem "../windows" | Select-Object Name
-          }
+        run: npx --no-install react-native autolink-windows --no-telemetry
 
-      - name: Check autolinking results
-        working-directory: example-windows/windows/ViewShotWindowsExample
+      - name: Build example-windows
+        working-directory: example-windows
         shell: pwsh
         run: |
-          Write-Host "🔍 Checking autolinking results..."
-          
-          if (Test-Path "AutolinkedNativeModules.g.cs") {
-            $content = Get-Content "AutolinkedNativeModules.g.cs" -Raw
-            Write-Host "AutolinkedNativeModules.g.cs content:"
-            Write-Host $content
-            
-            if ($content -match "ViewShot" -or $content -match "RNViewShot") {
-              Write-Host "✅ ViewShot module found in autolinking!"
-            } else {
-              Write-Host "⚠️  ViewShot module NOT found in autolinking"
-              Write-Host "This might be why the build fails - the module isn't being linked"
-            }
-          } else {
-            Write-Host "❌ AutolinkedNativeModules.g.cs not found"
-          }
-          
-          Write-Host ""
-          Write-Host "Checking solution file for module references..."
-          $slnContent = Get-Content "../ViewShotWindowsExample.sln" -Raw
-          if ($slnContent -match "RNViewShot") {
-            Write-Host "✅ RNViewShot referenced in solution file"
-          } else {
-            Write-Host "⚠️  RNViewShot NOT referenced in solution file"
-          }
+          npx --no-install react-native run-windows `
+            --arch x64 `
+            --no-launch `
+            --no-deploy `
+            --no-packager `
+            --logging `
+            --buildLogDirectory buildlogs `
+            --no-telemetry
 
-      - name: Restore NuGet packages
-        working-directory: example-windows/windows
-        continue-on-error: true
-        run: nuget restore ViewShotWindowsExample.sln
-
-      - name: Build Windows example app
-        working-directory: example-windows/windows
+      - name: Verify build artifacts
+        working-directory: example-windows
         shell: pwsh
         run: |
-          Write-Host "🔨 Building Windows UWP app..."
-          Write-Host "Current directory: $PWD"
-          Write-Host "Solution file exists: $(Test-Path ViewShotWindowsExample.sln)"
-          
-          # Check if RNViewShot project exists
-          if (Test-Path "..\..\windows\RNViewShot\RNViewShot.csproj") {
-            Write-Host "✅ RNViewShot project found"
-          } else {
-            Write-Host "⚠️  RNViewShot project not found, building without it"
+          $exe = "windows/ViewShotWindowsExample/bin/x64/Debug/ViewShotWindowsExample.exe"
+          $rnviewshot = "windows/ViewShotWindowsExample/bin/x64/Debug/RNViewShot.winmd"
+          if (-not (Test-Path $exe)) {
+            Write-Error "Missing $exe"; exit 1
           }
-          
-          Write-Host ""
-          Write-Host "⚠️  Windows build is temporarily disabled due to CI issues"
-          Write-Host "Windows support is under construction - see example-windows/README.md for details"
-          Write-Host "The Windows build fails due to missing React Native Windows assemblies in CI"
-          Write-Host "This is a known issue that will be resolved separately"
-          
-          # Skip the actual build for now
-          Write-Host "✅ Windows build step completed (disabled - under construction)"
-
-      - name: Verify Windows build artifacts
-        working-directory: example-windows/windows
-        shell: pwsh
-        run: |
-          Write-Host "✅ Checking build artifacts..."
-          $buildPath = "x64/Debug/ViewShotWindowsExample"
-          
-          if (Test-Path $buildPath) {
-            Write-Host "✅ Build directory exists"
-            Get-ChildItem $buildPath -Recurse | Select-Object -First 10 | ForEach-Object {
-              Write-Host "   - $($_.Name)"
-            }
-          } else {
-            Write-Warning "Build directory not found at expected location"
+          if (-not (Test-Path $rnviewshot)) {
+            Write-Error "Missing $rnviewshot — RNViewShot module did not link"; exit 1
           }
-          
-          Write-Host "✅ Windows build verification complete"
-
-      - name: Verify ViewShot native module inclusion
-        working-directory: example-windows/windows/ViewShotWindowsExample
-        shell: pwsh
-        run: |
-          Write-Host "🔍 Verifying ViewShot module is included in build..."
-          
-          # Check autogenerated files
-          if (Test-Path "AutolinkedNativeModules.g.cpp") {
-            $content = Get-Content "AutolinkedNativeModules.g.cpp" -Raw
-            if ($content -match "RNViewShot" -or $content -match "ViewShot") {
-              Write-Host "✅ ViewShot module found in AutolinkedNativeModules.g.cpp"
-            } else {
-              Write-Warning "⚠️  ViewShot module not found in autolinking (might be manual)"
-            }
-          }
-          
-          # Check solution file for module reference
-          $slnContent = Get-Content "../ViewShotWindowsExample.sln" -Raw
-          if ($slnContent -match "RNViewShot") {
-            Write-Host "✅ RNViewShot referenced in solution file"
-          }
-          
-          Write-Host "✅ ViewShot module verification complete"
+          Write-Host "OK: $exe and RNViewShot.winmd present"
 
       - name: Upload Windows build logs
         if: failure()
@@ -411,7 +280,7 @@ jobs:
         with:
           name: windows-build-logs
           path: |
-            example-windows/windows/*.log
+            example-windows/buildlogs/**
             example-windows/windows/**/*.log
             example-windows/windows/**/*.err
 

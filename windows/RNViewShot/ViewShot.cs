@@ -43,8 +43,7 @@ namespace RNViewShot
                     var data = Convert.ToBase64String(imageBytes);
                     if (result == "data-uri")
                     {
-                        var mime = extension == "jpg" ? "jpeg" : extension;
-                        return "data:image/" + mime + ";base64," + data;
+                        return Helpers.BuildDataUri(extension, data);
                     }
                     return data;
                 }
@@ -112,7 +111,7 @@ namespace RNViewShot
         private static async Task<StorageFile> GetStorageFile(string path, string extension)
         {
             var storageFolder = ApplicationData.Current.LocalFolder;
-            var fileName = !string.IsNullOrEmpty(path) ? path : Path.ChangeExtension(Guid.NewGuid().ToString(), extension);
+            var fileName = Helpers.ResolveFileName(path, extension);
             return await storageFolder.CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
         }
     }

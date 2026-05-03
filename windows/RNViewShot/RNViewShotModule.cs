@@ -68,7 +68,7 @@ namespace RNViewShot
             var result = options["result"].IsNull ? "tmpfile" : options["result"].AsString();
             var path = options["path"].IsNull ? null : options["path"].AsString();
 
-            if (format != "png" && format != "jpg" && format != "jpeg")
+            if (!Helpers.IsSupportedFormat(format))
             {
                 return "Unsupported image format: " + format + ". Try one of: png | jpg | jpeg";
             }
