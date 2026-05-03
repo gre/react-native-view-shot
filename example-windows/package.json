@@ -7,16 +7,24 @@
     "start": "react-native start"
   },
   "dependencies": {
+    "@react-navigation/native": "^7.1.33",
+    "@react-navigation/stack": "^7.8.4",
     "react": "18.3.1",
-    "react-native": "0.75.4",
+    "react-native": "0.76.9",
+    "react-native-gesture-handler": "~2.21.2",
+    "react-native-safe-area-context": "~4.14.1",
+    "react-native-screens": "~3.37.0",
     "react-native-view-shot": "file:..",
-    "react-native-windows": "^0.75.19"
+    "react-native-windows": "0.76.17"
   },
   "devDependencies": {
-    "@react-native/babel-preset": "0.75.4",
-    "@react-native/metro-config": "0.75.4",
-    "@react-native/typescript-config": "0.75.4",
-    "metro-config": "^0.80.12",
+    "@babel/core": "^7.25.0",
+    "@babel/preset-env": "^7.25.0",
+    "@babel/runtime": "^7.25.0",
+    "@react-native/babel-preset": "0.76.9",
+    "@react-native/metro-config": "0.76.9",
+    "@react-native/typescript-config": "0.76.9",
+    "@types/react": "^18.3.0",
     "typescript": "^5.8.3"
   },
   "engines": {

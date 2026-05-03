@@ -139,9 +139,13 @@ Podfile.lock
 
 # Editor directories and files
 .vscode/
+.claude/
 *.swp
 *.swo
 *~
 
 # OS generated files
 Thumbs.db
+
+# react-native run-windows build logs
+example-windows/buildlogs/

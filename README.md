@@ -146,7 +146,7 @@ Returns a Promise of the image URI.
     - `"tmpfile"` (default): save to a temporary file _(that will only exist for as long as the app is running)_.
     - `"base64"`: encode as base64 and returns the raw string. Use only with small images as this may result of lags (the string is sent over the bridge). _N.B. This is not a data uri, use `data-uri` instead_.
     - `"data-uri"`: same as `base64` but also includes the [Data URI scheme](https://en.wikipedia.org/wiki/Data_URI_scheme) header.
-  - **`snapshotContentContainer`** _(bool)_: if true and when the captured ref is a `ScrollView`, the entire scrollable content is captured rather than just the visible viewport. Works on both iOS and Android (the lib temporarily expands the ScrollView to its full content size during the draw, then restores). **Android caveat**: only vertical `<ScrollView>` is supported — horizontal scroll views (`<ScrollView horizontal>`, backed by `HorizontalScrollView`) are not expanded and will fall back to capturing the visible bounds. iOS handles both axes via `UIScrollView`. **FlatList note**: virtualization (`removeClippedSubviews`, `windowSize`) means off-screen items aren't mounted at the React layer and will be missing from the capture. Set `removeClippedSubviews={false}` and a large `windowSize`, or use a plain `<ScrollView>` for content up to a few hundred items. See `example/src/screens/ScrollViewTestScreen.tsx` for a working demo.
+  - **`snapshotContentContainer`** _(bool)_: if true and when the captured ref is a `ScrollView`, the entire scrollable content is captured rather than just the visible viewport. Works on both iOS and Android (the lib temporarily expands the ScrollView to its full content size during the draw, then restores). **Android caveat**: only vertical `<ScrollView>` is supported — horizontal scroll views (`<ScrollView horizontal>`, backed by `HorizontalScrollView`) are not expanded and will fall back to capturing the visible bounds. iOS handles both axes via `UIScrollView`. **Windows: not supported** — UWP's `RenderTargetBitmap` respects the live `ScrollViewer` clip and we have no reliable way to capture the full scrollable area; the option is ignored and only the visible viewport is captured (a `console.warn` fires in `__DEV__`). **FlatList note**: virtualization (`removeClippedSubviews`, `windowSize`) means off-screen items aren't mounted at the React layer and will be missing from the capture. Set `removeClippedSubviews={false}` and a large `windowSize`, or use a plain `<ScrollView>` for content up to a few hundred items. See `example/src/screens/ScrollViewTestScreen.tsx` for a working demo.
   - [iOS] **`useRenderInContext`** _(bool)_: change the iOS snapshot strategy to use method `renderInContext` instead of `drawViewHierarchyInRect` which may help for some use cases.
 
 ## `releaseCapture(uri)`
@@ -155,7 +155,7 @@ This method release a previously captured `uri`. For tmpfile it will clean them 
 
 NB: the tmpfile captures are automatically cleaned out after the app closes, so you might not have to worry about this unless advanced usecases. The `ViewShot` component will use it each time you capture more than once (useful for continuous capture to not leak files).
 
-## `captureScreen()` Android and iOS Only
+## `captureScreen()` Android, iOS, and Windows
 
 ```js
 import {captureScreen} from "react-native-view-shot";
