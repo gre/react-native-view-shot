@@ -23,7 +23,11 @@ namespace RNViewShot
         public void releaseCapture(string uri)
         {
             if (string.IsNullOrEmpty(uri)) return;
-            // Only delete files that live inside the app's local folder (where ViewShot.GetStorageFile writes).
+            // Only delete files that actually live inside the app's local
+            // folder (where ViewShot.GetStorageFile writes). Use
+            // Path.GetRelativePath rather than a string prefix check, which
+            // would otherwise let sibling paths like
+            // "...\LocalState2\file.png" pass a "...\LocalState" prefix.
             var localFolder = ApplicationData.Current.LocalFolder.Path;
             string fullPath;
             try
@@ -34,8 +38,19 @@ namespace RNViewShot
             {
                 return;
             }
-            if (!fullPath.StartsWith(localFolder, StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(fullPath, localFolder, StringComparison.OrdinalIgnoreCase))
+            string relative;
+            try
+            {
+                relative = Path.GetRelativePath(localFolder, fullPath);
+            }
+            catch
+            {
+                return;
+            }
+            if (string.IsNullOrEmpty(relative)
+                || relative == "."
+                || relative.StartsWith("..", StringComparison.Ordinal)
+                || Path.IsPathRooted(relative))
             {
                 return;
             }
