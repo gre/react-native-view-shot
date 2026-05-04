@@ -184,18 +184,24 @@ function validateOptions(input?: CaptureOptions): {
     errors.push(
       "option result '" +
         badResult +
-        "' is not in valid formats: " +
+        "' is not a valid result: " +
         acceptedResults.join(" | "),
     );
   }
   return {options, errors};
 }
 
+// `HostElement` is the minimal shape of an HTMLElement; web callers can pass
+// `document.body` or similar without the consuming TS project needing the DOM lib.
+interface HostElement {
+  readonly nodeType: number;
+}
+
 type CaptureTarget =
   | number
   | React.Component
-  | HTMLElement
-  | React.RefObject<React.Component | HTMLElement | null>
+  | HostElement
+  | React.RefObject<React.Component | HostElement | null>
   | null;
 
 export function captureRef(
@@ -210,7 +216,7 @@ export function captureRef(
       "react-native-view-shot: NativeModules.RNViewShot is undefined. Make sure the library is linked on the native side.",
     );
   }
-  let viewHandle: number | React.Component | HTMLElement | null =
+  let viewHandle: number | React.Component | HostElement | null =
     typeof view === "number"
       ? view
       : view && typeof view === "object" && "current" in view
