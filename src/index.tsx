@@ -191,12 +191,6 @@ function validateOptions(input?: CaptureOptions): {
   return {options, errors};
 }
 
-// Mirror what the native `findNodeHandle` and the web `html2canvas`
-// fallback actually accept: a reactTag number, a component instance, a
-// DOM HTMLElement (web), or a ref to one. We deliberately don't take a
-// generic — `findNodeHandle` doesn't propagate the ref's component type
-// into anything we return, so a generic would only widen the input type
-// and let arbitrary values type-check.
 type CaptureTarget =
   | number
   | React.Component
@@ -223,7 +217,6 @@ export function captureRef(
         ? view.current
         : view;
   if (Platform.OS !== "web" && typeof viewHandle !== "number") {
-    // On native we won't see HTMLElement here; the cast keeps strict mode happy.
     const node = findNodeHandle(viewHandle as React.Component | null);
     if (!node) {
       return Promise.reject(
@@ -244,8 +237,6 @@ export function captureRef(
       "react-native-view-shot: `snapshotContentContainer` is not supported on Windows. The option is ignored; only the visible viewport will be captured.",
     );
   }
-  // On native, viewHandle is now a number (reactTag); on web, it's the HTMLElement
-  // and RNViewShot resolves to `./RNViewShot.web` which handles the DOM node directly.
   return RNViewShot.captureRef(viewHandle as number, options);
 }
 
