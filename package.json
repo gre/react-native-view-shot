@@ -6,6 +6,16 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "react-native": "src/index.tsx",
+  "exports": {
+    ".": {
+      "react-native": "./src/index.tsx",
+      "types": "./lib/index.d.ts",
+      "import": "./lib/index.js",
+      "require": "./lib/index.js",
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "keywords": [
     "react-native",
     "screenshot",

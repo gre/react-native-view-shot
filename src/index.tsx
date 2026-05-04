@@ -39,9 +39,11 @@ export interface CaptureOptions {
    */
   height?: number;
   /**
-   * either png or jpg or webm (Android). Defaults to png. raw is a ARGB array of image pixels.
+   * either png, jpg, webp (Android), or raw (Android, ARGB pixel array). Defaults to png.
+   * `webm` is accepted as a deprecated alias for `webp` (it has always produced WEBP-encoded
+   * data — the extension was misnamed).
    */
-  format?: "jpg" | "png" | "webm" | "raw";
+  format?: "jpg" | "png" | "webp" | "webm" | "raw";
   /**
    * the quality. 0.0 - 1.0 (default). (only available on lossy formats like jpg)
    */
@@ -109,7 +111,7 @@ export interface ViewShotProperties {
 }
 
 const acceptedFormats = ["png", "jpg"].concat(
-  Platform.OS === "android" ? ["webm", "raw"] : [],
+  Platform.OS === "android" ? ["webp", "webm", "raw"] : [],
 );
 
 const acceptedResults = ["tmpfile", "base64", "data-uri"].concat(
@@ -170,6 +172,10 @@ function validateOptions(input?: CaptureOptions): {
         "' is not in valid formats: " +
         acceptedFormats.join(" | "),
     );
+  } else if (options.format === "webm") {
+    errors.push(
+      "option format 'webm' is deprecated and will be removed in a future version. Use 'webp' instead (the encoded data has always been WEBP, only the extension was misnamed).",
+    );
   }
   if (acceptedResults.indexOf(options.result || "") === -1) {
     options.result = defaultOptions.result;
@@ -183,8 +189,16 @@ function validateOptions(input?: CaptureOptions): {
   return {options, errors};
 }
 
-export function captureRef<T = any>(
-  view: number | React.ReactInstance | RefObject<T> | null,
+type CaptureTarget<T> =
+  | number
+  | React.Component
+  | React.ComponentClass
+  | RefObject<T>
+  | T
+  | null;
+
+export function captureRef<T = unknown>(
+  view: CaptureTarget<T>,
   optionsObject?: CaptureOptions,
 ): Promise<string> {
   if (!RNViewShot) {
@@ -195,15 +209,19 @@ export function captureRef<T = any>(
       "react-native-view-shot: NativeModules.RNViewShot is undefined. Make sure the library is linked on the native side.",
     );
   }
-  let viewHandle: any = view;
-  if (view && typeof view === "object" && "current" in view && view.current) {
-    viewHandle = view.current;
-    if (!viewHandle) {
-      return Promise.reject(new Error("ref.current is null"));
-    }
+  let viewHandle: number | object | null = view as number | object | null;
+  if (
+    view &&
+    typeof view === "object" &&
+    "current" in view &&
+    (view as RefObject<T>).current != null
+  ) {
+    viewHandle = (view as RefObject<T>).current as object;
   }
   if (Platform.OS !== "web" && typeof viewHandle !== "number") {
-    const node = findNodeHandle(viewHandle);
+    const node = findNodeHandle(
+      viewHandle as React.Component | React.ComponentClass | null,
+    );
     if (!node) {
       return Promise.reject(
         new Error("findNodeHandle failed to resolve view=" + String(view)),
@@ -212,22 +230,20 @@ export function captureRef<T = any>(
     viewHandle = node;
   }
   const {options, errors} = validateOptions(optionsObject);
-  if (__DEV__ && errors.length > 0) {
+  if (errors.length > 0) {
     console.warn(
       "react-native-view-shot: bad options:\n" +
         errors.map(e => `- ${e}`).join("\n"),
     );
   }
-  if (
-    __DEV__ &&
-    Platform.OS === "windows" &&
-    optionsObject?.snapshotContentContainer
-  ) {
+  if (Platform.OS === "windows" && optionsObject?.snapshotContentContainer) {
     console.warn(
       "react-native-view-shot: `snapshotContentContainer` is not supported on Windows. The option is ignored; only the visible viewport will be captured.",
     );
   }
-  return RNViewShot.captureRef(viewHandle, options);
+  // On native, viewHandle is now a number (reactTag); on web, it's the HTMLElement
+  // and RNViewShot resolves to `./RNViewShot.web` which handles the DOM node directly.
+  return RNViewShot.captureRef(viewHandle as number, options);
 }
 
 export function releaseCapture(uri: string): void {
@@ -250,7 +266,7 @@ export function captureScreen(optionsObject?: CaptureOptions): Promise<string> {
     );
   }
   const {options, errors} = validateOptions(optionsObject);
-  if (__DEV__ && errors.length > 0) {
+  if (errors.length > 0) {
     console.warn(
       "react-native-view-shot: bad options:\n" +
         errors.map(e => `- ${e}`).join("\n"),
@@ -305,14 +321,16 @@ const ViewShotComponent = forwardRef<ViewShotRef, ViewShotProperties>(
       style,
     } = props;
 
-    const rootRef = useRef<View>(null);
+    const rootRef = useRef<View | null>(null);
     const rafRef = useRef<number | null>(null);
     const lastCapturedURIRef = useRef<string | null>(null);
-    const resolveFirstLayoutRef = useRef<((layout: any) => void) | null>(null);
+    const resolveFirstLayoutRef = useRef<((layout: unknown) => void) | null>(
+      null,
+    );
 
     const firstLayoutPromise = useMemo(
       () =>
-        new Promise<any>(resolve => {
+        new Promise<unknown>(resolve => {
           resolveFirstLayoutRef.current = resolve;
         }),
       [],
