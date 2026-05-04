@@ -1,7 +1,9 @@
 using Microsoft.ReactNative;
 using Microsoft.ReactNative.Managed;
 using System;
+using System.IO;
 using System.Threading.Tasks;
+using Windows.Storage;
 using Windows.UI.Xaml;
 
 namespace RNViewShot
@@ -20,7 +22,31 @@ namespace RNViewShot
         [ReactMethod]
         public void releaseCapture(string uri)
         {
-            // TODO implement me
+            if (string.IsNullOrEmpty(uri)) return;
+            // Only delete files that live inside the app's local folder (where ViewShot.GetStorageFile writes).
+            var localFolder = ApplicationData.Current.LocalFolder.Path;
+            string fullPath;
+            try
+            {
+                fullPath = Path.GetFullPath(uri);
+            }
+            catch
+            {
+                return;
+            }
+            if (!fullPath.StartsWith(localFolder, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(fullPath, localFolder, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+            try
+            {
+                if (File.Exists(fullPath)) File.Delete(fullPath);
+            }
+            catch
+            {
+                // Best-effort cleanup; mirrors iOS/Android which silently ignore deletion errors.
+            }
         }
 
         [ReactMethod]
@@ -70,7 +96,7 @@ namespace RNViewShot
 
             if (!Helpers.IsSupportedFormat(format))
             {
-                return "Unsupported image format: " + format + ". Try one of: png | jpg | jpeg";
+                throw new ArgumentException("Unsupported image format: " + format + ". Try one of: png | jpg | jpeg");
             }
 
             var tcs = new TaskCompletionSource<string>();
@@ -84,7 +110,7 @@ namespace RNViewShot
                 }
                 catch (Exception ex)
                 {
-                    tcs.SetResult(ex.Message);
+                    tcs.SetException(ex);
                 }
             });
             return await tcs.Task;

@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
 
   s.authors      = package['author']
   s.homepage     = package['homepage']
-  s.platform     = :ios, "9.0"
+  s.platform     = :ios, "15.1"
 
   s.source       = { :git => "https://github.com/gre/react-native-view-shot.git", :tag => "v#{s.version}" }
   s.source_files  = "ios/**/*.{h,m,mm}"

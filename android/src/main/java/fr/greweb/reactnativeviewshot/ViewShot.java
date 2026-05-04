@@ -930,7 +930,7 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
         final int w = view.getWidth();
         final int h = view.getHeight();
 
-        return Math.min(w * h * ARGB_SIZE, 32);
+        return Math.max(w * h * ARGB_SIZE, 32);
     }
 
     /**
