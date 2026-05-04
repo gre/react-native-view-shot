@@ -23,21 +23,19 @@ namespace RNViewShot
         public void releaseCapture(string uri)
         {
             if (string.IsNullOrEmpty(uri)) return;
-            // Only delete files that actually live inside the app's local
-            // folder (where ViewShot.GetStorageFile writes). Use
-            // Path.GetRelativePath rather than a string prefix check, which
-            // would otherwise let sibling paths like
-            // "...\LocalState2\file.png" pass a "...\LocalState" prefix.
-            var localFolder = ApplicationData.Current.LocalFolder.Path;
             string fullPath;
             try
             {
-                fullPath = Path.GetFullPath(uri);
+                // JS often passes file:// URIs (mirrors Android Uri.parse behaviour).
+                fullPath = Uri.TryCreate(uri, UriKind.Absolute, out var parsed) && parsed.IsFile
+                    ? parsed.LocalPath
+                    : Path.GetFullPath(uri);
             }
             catch
             {
                 return;
             }
+            var localFolder = ApplicationData.Current.LocalFolder.Path;
             string relative;
             try
             {
@@ -54,14 +52,8 @@ namespace RNViewShot
             {
                 return;
             }
-            try
-            {
-                if (File.Exists(fullPath)) File.Delete(fullPath);
-            }
-            catch
-            {
-                // Best-effort cleanup; mirrors iOS/Android which silently ignore deletion errors.
-            }
+            try { if (File.Exists(fullPath)) File.Delete(fullPath); }
+            catch { }
         }
 
         [ReactMethod]
@@ -114,18 +106,18 @@ namespace RNViewShot
                 throw new ArgumentException("Unsupported image format: " + format + ". Try one of: png | jpg | jpeg");
             }
 
-            var tcs = new TaskCompletionSource<string>();
+            var tcs = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
             _context.Handle.UIDispatcher.Post(async () =>
             {
                 try
                 {
                     var target = resolveTarget();
                     var output = await ViewShot.Execute(target, format, quality, width, height, path, result);
-                    tcs.SetResult(output);
+                    tcs.TrySetResult(output);
                 }
                 catch (Exception ex)
                 {
-                    tcs.SetException(ex);
+                    tcs.TrySetException(ex);
                 }
             });
             return await tcs.Task;
