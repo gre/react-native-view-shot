@@ -246,6 +246,13 @@ jobs:
             -destination 'generic/platform=iOS Simulator' \
             build CODE_SIGNING_ALLOWED=NO
 
+      - name: Upload iOS Build Logs (new arch)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-logs-new-arch
+          path: ~/Library/Logs/DiagnosticReports/
+
   test-windows-unit:
     name: Run Windows unit tests
     runs-on: ubuntu-latest

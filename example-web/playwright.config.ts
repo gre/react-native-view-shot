@@ -3,9 +3,13 @@ import {defineConfig, devices} from "@playwright/test";
 export default defineConfig({
   testDir: "./e2e",
   snapshotDir: "./e2e/snapshots/reference",
-  // No `{platform}` segment — Linux (CI) is the single source of truth.
+  // CI (Linux) writes/reads a single shared baseline; local non-Linux runs
+  // get their own per-platform files so font/anti-aliasing diffs don't fail
+  // local e2e and don't overwrite the committed Linux baseline.
   snapshotPathTemplate:
-    "{snapshotDir}/{testFilePath}-snapshots/{arg}-{projectName}{ext}",
+    process.env.CI || process.platform === "linux"
+      ? "{snapshotDir}/{testFilePath}-snapshots/{arg}-{projectName}{ext}"
+      : "{snapshotDir}/{testFilePath}-snapshots/{arg}-{projectName}-{platform}{ext}",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
