@@ -10,7 +10,7 @@
     "test:e2e": "playwright test --reporter=list",
     "test:e2e:headed": "playwright test --headed --reporter=list",
     "test:e2e:debug": "playwright test --headed --debug",
-    "test:e2e:update-snapshots": "node -e \"if (process.platform !== 'linux') { console.error('\\n  Snapshot baselines must be regenerated on Linux (the CI platform). On macOS / Windows the renders differ\\n  enough to overwrite the committed Linux baselines and fail CI.\\n\\n  To update snapshots, push your branch and grab the web-snapshots-actual artifact from the failing CI run\\n  (see example-web/e2e/snapshots/README.md for instructions).\\n'); process.exit(1) }\" && playwright test --update-snapshots"
+    "test:e2e:update-snapshots": "node scripts/require-linux.js && playwright test --update-snapshots"
   },
   "dependencies": {
     "html2canvas": "^1.4.1",

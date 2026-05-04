@@ -194,9 +194,6 @@ jobs:
           path: ~/Library/Logs/DiagnosticReports/
 
   build-ios-new-arch:
-    # Smoke test: confirm the iOS example still compiles with the new
-    # architecture (Fabric + TurboModules) enabled. Detox E2E currently runs in
-    # old arch only; this job catches new-arch-only build regressions.
     name: Build iOS App (New Architecture)
     runs-on: macos-15
     needs: lint-and-type-check
@@ -624,13 +621,8 @@ jobs:
 
       - name: Report iOS test results
         if: always()
-        # Detox iOS is intentionally non-blocking: jest-junit doesn't flush
-        # its XML when the Jest SummaryReporter crashes
-        # (TypeError: Cannot read properties of undefined reading 'isSet'),
-        # and there are pre-existing failing suites
-        # (snapshot-content-container, style-filters) that need their own
-        # fixes before this job can be made strict. Until then, treat the
-        # uploaded artifacts and screenshots as the source of truth.
+        # Non-blocking: Jest SummaryReporter crashes (isSet TypeError) and the
+        # snapshot-content-container / style-filters suites are known-failing.
         run: |
           if [ "${{ steps.detox_ios_tests.outcome }}" == "failure" ]; then
             echo "⚠️ Detox exited with error (may be Jest reporter crash, check artifacts for actual results)"
@@ -638,11 +630,8 @@ jobs:
             echo "✅ Detox iOS tests completed"
           fi
 
-  # Android Detox E2E tests are disabled on CI due to native library conflicts
-  # between the example app and the Detox test runner that we have not yet
-  # reproduced reliably outside of CI. iOS Detox covers the cross-platform JS/TS
-  # paths; Android-specific regressions must be caught manually until this is
-  # resolved. Tracking issue: TODO link once filed (see PR description).
+  # Android Detox is disabled on CI: native library conflicts not yet
+  # reproduced outside the runner. Track via the PR description.
   # test-detox-android:
   #   name: Detox E2E Tests (Android)
   #   runs-on: ubuntu-latest
