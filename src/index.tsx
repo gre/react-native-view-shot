@@ -165,10 +165,11 @@ function validateOptions(input?: CaptureOptions): {
     errors.push("option handleGLSurfaceViewOnAndroid should be a boolean");
   }
   if (acceptedFormats.indexOf(options.format || "") === -1) {
+    const badFormat = options.format;
     options.format = defaultOptions.format;
     errors.push(
       "option format '" +
-        options.format +
+        badFormat +
         "' is not in valid formats: " +
         acceptedFormats.join(" | "),
     );
@@ -178,10 +179,11 @@ function validateOptions(input?: CaptureOptions): {
     );
   }
   if (acceptedResults.indexOf(options.result || "") === -1) {
+    const badResult = options.result;
     options.result = defaultOptions.result;
     errors.push(
       "option result '" +
-        options.result +
+        badResult +
         "' is not in valid formats: " +
         acceptedResults.join(" | "),
     );
@@ -189,16 +191,21 @@ function validateOptions(input?: CaptureOptions): {
   return {options, errors};
 }
 
-type CaptureTarget<T> =
+// Mirror what the native `findNodeHandle` and the web `html2canvas`
+// fallback actually accept: a reactTag number, a component instance, a
+// DOM HTMLElement (web), or a ref to one. We deliberately don't take a
+// generic — `findNodeHandle` doesn't propagate the ref's component type
+// into anything we return, so a generic would only widen the input type
+// and let arbitrary values type-check.
+type CaptureTarget =
   | number
   | React.Component
-  | React.ComponentClass
-  | RefObject<T>
-  | T
+  | HTMLElement
+  | React.RefObject<React.Component | HTMLElement | null>
   | null;
 
-export function captureRef<T = unknown>(
-  view: CaptureTarget<T>,
+export function captureRef(
+  view: CaptureTarget,
   optionsObject?: CaptureOptions,
 ): Promise<string> {
   if (!RNViewShot) {
@@ -209,19 +216,15 @@ export function captureRef<T = unknown>(
       "react-native-view-shot: NativeModules.RNViewShot is undefined. Make sure the library is linked on the native side.",
     );
   }
-  let viewHandle: number | object | null = view as number | object | null;
-  if (
-    view &&
-    typeof view === "object" &&
-    "current" in view &&
-    (view as RefObject<T>).current != null
-  ) {
-    viewHandle = (view as RefObject<T>).current as object;
-  }
+  let viewHandle: number | React.Component | HTMLElement | null =
+    typeof view === "number"
+      ? view
+      : view && typeof view === "object" && "current" in view
+        ? view.current
+        : view;
   if (Platform.OS !== "web" && typeof viewHandle !== "number") {
-    const node = findNodeHandle(
-      viewHandle as React.Component | React.ComponentClass | null,
-    );
+    // On native we won't see HTMLElement here; the cast keeps strict mode happy.
+    const node = findNodeHandle(viewHandle as React.Component | null);
     if (!node) {
       return Promise.reject(
         new Error("findNodeHandle failed to resolve view=" + String(view)),
