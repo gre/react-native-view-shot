@@ -193,6 +193,62 @@ jobs:
           name: ios-build-logs
           path: ~/Library/Logs/DiagnosticReports/
 
+  build-ios-new-arch:
+    # Smoke test: confirm the iOS example still compiles with the new
+    # architecture (Fabric + TurboModules) enabled. Detox E2E currently runs in
+    # old arch only; this job catches new-arch-only build regressions.
+    name: Build iOS App (New Architecture)
+    runs-on: macos-15
+    needs: lint-and-type-check
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Cache CocoaPods (new arch)
+        uses: actions/cache@v4
+        with:
+          path: example/ios/Pods
+          key: ${{ runner.os }}-pods-newarch-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-newarch-
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Build library
+        run: npm run build
+
+      - name: Install example dependencies
+        working-directory: example
+        run: npm ci --legacy-peer-deps
+
+      - name: Setup CocoaPods
+        uses: maxim-lobanov/setup-cocoapods@v1
+        with:
+          version: latest
+
+      - name: Pod install (new arch)
+        working-directory: example/ios
+        env:
+          RCT_NEW_ARCH_ENABLED: '1'
+        run: pod install --verbose
+
+      - name: Build iOS (new arch)
+        working-directory: example
+        run: |
+          xcodebuild -workspace ios/ViewShotExample.xcworkspace \
+            -scheme ViewShotExample \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            build CODE_SIGNING_ALLOWED=NO
+
   test-windows-unit:
     name: Run Windows unit tests
     runs-on: ubuntu-latest
@@ -538,7 +594,6 @@ jobs:
       - name: Run Detox Tests
         working-directory: example
         run: npm run test:e2e:ios
-        continue-on-error: true
         id: detox_ios_tests
 
       - name: Stop Metro Bundler
@@ -578,8 +633,11 @@ jobs:
             echo "✅ Detox iOS tests completed"
           fi
 
-  # TODO: Android Detox E2E tests disabled temporarily - not stable on CI.
-  # Re-enable when Android emulator reliability is improved.
+  # Android Detox E2E tests are disabled on CI due to native library conflicts
+  # between the example app and the Detox test runner that we have not yet
+  # reproduced reliably outside of CI. iOS Detox covers the cross-platform JS/TS
+  # paths; Android-specific regressions must be caught manually until this is
+  # resolved. Tracking issue: TODO link once filed (see PR description).
   # test-detox-android:
   #   name: Detox E2E Tests (Android)
   #   runs-on: ubuntu-latest
@@ -694,7 +752,6 @@ jobs:
       - name: Run Playwright tests
         working-directory: example-web
         run: npm run test:e2e
-        continue-on-error: true
         id: playwright_tests
         
       - name: Stop web development server
