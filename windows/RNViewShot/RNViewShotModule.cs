@@ -1,7 +1,9 @@
 using Microsoft.ReactNative;
 using Microsoft.ReactNative.Managed;
 using System;
+using System.IO;
 using System.Threading.Tasks;
+using Windows.Storage;
 using Windows.UI.Xaml;
 
 namespace RNViewShot
@@ -20,7 +22,38 @@ namespace RNViewShot
         [ReactMethod]
         public void releaseCapture(string uri)
         {
-            // TODO implement me
+            if (string.IsNullOrEmpty(uri)) return;
+            string fullPath;
+            try
+            {
+                // JS often passes file:// URIs (mirrors Android Uri.parse behaviour).
+                fullPath = Uri.TryCreate(uri, UriKind.Absolute, out var parsed) && parsed.IsFile
+                    ? parsed.LocalPath
+                    : Path.GetFullPath(uri);
+            }
+            catch
+            {
+                return;
+            }
+            var localFolder = ApplicationData.Current.LocalFolder.Path;
+            string relative;
+            try
+            {
+                relative = Path.GetRelativePath(localFolder, fullPath);
+            }
+            catch
+            {
+                return;
+            }
+            if (string.IsNullOrEmpty(relative)
+                || relative == "."
+                || relative.StartsWith("..", StringComparison.Ordinal)
+                || Path.IsPathRooted(relative))
+            {
+                return;
+            }
+            try { if (File.Exists(fullPath)) File.Delete(fullPath); }
+            catch { }
         }
 
         [ReactMethod]
@@ -70,21 +103,21 @@ namespace RNViewShot
 
             if (!Helpers.IsSupportedFormat(format))
             {
-                return "Unsupported image format: " + format + ". Try one of: png | jpg | jpeg";
+                throw new ArgumentException("Unsupported image format: " + format + ". Try one of: png | jpg | jpeg");
             }
 
-            var tcs = new TaskCompletionSource<string>();
+            var tcs = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
             _context.Handle.UIDispatcher.Post(async () =>
             {
                 try
                 {
                     var target = resolveTarget();
                     var output = await ViewShot.Execute(target, format, quality, width, height, path, result);
-                    tcs.SetResult(output);
+                    tcs.TrySetResult(output);
                 }
                 catch (Exception ex)
                 {
-                    tcs.SetResult(ex.Message);
+                    tcs.TrySetException(ex);
                 }
             });
             return await tcs.Task;
