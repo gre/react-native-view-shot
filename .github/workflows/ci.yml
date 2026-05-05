@@ -193,6 +193,66 @@ jobs:
           name: ios-build-logs
           path: ~/Library/Logs/DiagnosticReports/
 
+  build-ios-new-arch:
+    name: Build iOS App (New Architecture)
+    runs-on: macos-15
+    needs: lint-and-type-check
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Cache CocoaPods (new arch)
+        uses: actions/cache@v4
+        with:
+          path: example/ios/Pods
+          key: ${{ runner.os }}-pods-newarch-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-newarch-
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Build library
+        run: npm run build
+
+      - name: Install example dependencies
+        working-directory: example
+        run: npm ci --legacy-peer-deps
+
+      - name: Setup CocoaPods
+        uses: maxim-lobanov/setup-cocoapods@v1
+        with:
+          version: latest
+
+      - name: Pod install (new arch)
+        working-directory: example/ios
+        env:
+          RCT_NEW_ARCH_ENABLED: '1'
+        run: pod install --verbose
+
+      - name: Build iOS (new arch)
+        working-directory: example
+        run: |
+          xcodebuild -workspace ios/ViewShotExample.xcworkspace \
+            -scheme ViewShotExample \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            build CODE_SIGNING_ALLOWED=NO
+
+      - name: Upload iOS Build Logs (new arch)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-logs-new-arch
+          path: ~/Library/Logs/DiagnosticReports/
+
   test-windows-unit:
     name: Run Windows unit tests
     runs-on: ubuntu-latest
@@ -568,18 +628,17 @@ jobs:
 
       - name: Report iOS test results
         if: always()
+        # Non-blocking: Jest SummaryReporter crashes (isSet TypeError) and the
+        # snapshot-content-container / style-filters suites are known-failing.
         run: |
-          # Note: Detox exit code is unreliable due to Jest SummaryReporter crash
-          # (TypeError: Cannot read properties of undefined reading 'isSet')
-          # Tests results are best checked via the uploaded artifacts and screenshots
           if [ "${{ steps.detox_ios_tests.outcome }}" == "failure" ]; then
             echo "⚠️ Detox exited with error (may be Jest reporter crash, check artifacts for actual results)"
           else
             echo "✅ Detox iOS tests completed"
           fi
 
-  # TODO: Android Detox E2E tests disabled temporarily - not stable on CI.
-  # Re-enable when Android emulator reliability is improved.
+  # Android Detox is disabled on CI: native library conflicts not yet
+  # reproduced outside the runner. Track via the PR description.
   # test-detox-android:
   #   name: Detox E2E Tests (Android)
   #   runs-on: ubuntu-latest
@@ -694,7 +753,6 @@ jobs:
       - name: Run Playwright tests
         working-directory: example-web
         run: npm run test:e2e
-        continue-on-error: true
         id: playwright_tests
         
       - name: Stop web development server
@@ -719,8 +777,8 @@ jobs:
             echo "- Font or styling differences" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "**To update snapshots:**" >> $GITHUB_STEP_SUMMARY
-            echo "1. Download the \`web-snapshots-reference\` artifact" >> $GITHUB_STEP_SUMMARY
-            echo "2. Replace \`example-web/e2e/snapshots/reference/\` with the downloaded files" >> $GITHUB_STEP_SUMMARY
+            echo "1. Download the \`web-snapshots-actual\` artifact (uploaded below)" >> $GITHUB_STEP_SUMMARY
+            echo "2. Take the \`*-actual.png\` files and copy them over the matching baselines in \`example-web/e2e/snapshots/reference/viewshot.spec.ts-snapshots/\` (drop the \`-actual\` suffix)" >> $GITHUB_STEP_SUMMARY
             echo "3. Commit the updated snapshots" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "**Diff files available in artifacts:**" >> $GITHUB_STEP_SUMMARY

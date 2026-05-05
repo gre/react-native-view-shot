@@ -1,40 +1,40 @@
 # Web Example Snapshots
 
-This directory contains reference screenshots for visual regression testing with Playwright.
-
-## Directory Structure
+Reference screenshots for visual regression testing with Playwright.
 
 ```
 snapshots/
-├── reference/          # Golden snapshots (committed to git)
-│   ├── basic-test-png-capture-chromium-darwin.png
-│   └── transparency-solid-capture-chromium-darwin.png
-└── output/            # Test results (git ignored)
+├── reference/
+│   └── <spec-file>.ts-snapshots/   # Golden snapshots (committed)
+│       └── <test-name>-chromium.png
+└── output/                         # Test results (git-ignored)
 ```
 
-## Updating Snapshots
+The CI (Linux + Chromium) writes a single shared golden file per test,
+which is what gets committed. Local non-Linux runs use a per-platform
+file (`<name>-chromium-darwin.png` etc.) so font/anti-aliasing diffs
+don't fail your local e2e and don't overwrite the committed Linux
+baseline. Those local files are not committed.
 
-### Local Development
+## Updating snapshots
 
-Run tests in update mode to regenerate all snapshots:
+Baselines must be regenerated **on Linux only**.
+`npm run test:e2e:update-snapshots` refuses to run on macOS / Windows
+to prevent overwriting the committed Linux references.
 
-```bash
-npm run test:e2e:update-snapshots
-```
+The recommended flow is to update via CI artifacts:
 
-### From CI
+1. Push your branch. CI runs Playwright; if your visual change made
+   tests fail, the failing job uploads the rendered screenshots as the
+   `web-snapshots-actual` artifact.
+2. Download `web-snapshots-actual` from the failed GitHub Actions run.
+3. For each `*-actual.png` file, copy it over the matching baseline
+   under the corresponding `<spec-file>.ts-snapshots/` directory in
+   `example-web/e2e/snapshots/reference/`, dropping the `-actual`
+   suffix.
+4. Review the diff with `git diff` (image diffs render in GitHub PRs).
+5. Commit if the visual change is intended.
 
-When tests fail in CI due to visual changes:
-
-1. Go to the failed GitHub Actions workflow
-2. Download the `web-snapshots-reference` artifact
-3. Extract the PNG files
-4. Replace files in `example-web/e2e/snapshots/reference/`
-5. Review the changes with `git diff`
-6. Commit if the changes are expected
-
-## Platform Notes
-
-Snapshots are platform-specific (e.g., `-chromium-darwin.png`). The CI runs on Linux, so you may see different snapshot names in CI vs local macOS development.
-
-For consistent CI testing, we use the snapshots generated on the CI platform (Linux + Chromium).
+If you really need to regenerate locally (e.g. to bootstrap a brand new
+test), do it inside a Linux container or VM; do not commit baselines
+generated on macOS or Windows.

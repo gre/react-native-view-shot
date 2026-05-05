@@ -10,7 +10,7 @@
     "test:e2e": "playwright test --reporter=list",
     "test:e2e:headed": "playwright test --headed --reporter=list",
     "test:e2e:debug": "playwright test --headed --debug",
-    "test:e2e:update-snapshots": "playwright test --update-snapshots"
+    "test:e2e:update-snapshots": "node scripts/require-linux.js && playwright test --update-snapshots"
   },
   "dependencies": {
     "html2canvas": "^1.4.1",
