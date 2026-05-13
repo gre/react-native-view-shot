@@ -102,6 +102,23 @@ jobs:
           name: android-apk
           path: example/android/app/build/outputs/apk/debug/app-debug.apk
 
+  lint-podspec:
+    name: Lint CocoaPods Podspec
+    runs-on: macos-15
+    needs: lint-and-type-check
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup CocoaPods
+        uses: maxim-lobanov/setup-cocoapods@v1
+        with:
+          version: latest
+
+      - name: Lint podspec
+        run: pod lib lint --allow-warnings --quick
+
   build-ios:
     name: Build iOS App
     runs-on: macos-15  # Use latest macOS with Xcode 16.1+

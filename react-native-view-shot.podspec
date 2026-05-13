@@ -16,6 +16,6 @@ Pod::Spec.new do |s|
   s.source_files  = "ios/**/*.{h,m,mm}"
   s.resource_bundles = { 'RNViewShotPrivacyInfo' => ['ios/PrivacyInfo.xcprivacy'] }
 
-  install_modules_dependencies(s)
+  install_modules_dependencies(s) if defined?(install_modules_dependencies)
 end
 
