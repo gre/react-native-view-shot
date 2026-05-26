@@ -22,6 +22,8 @@ import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
+import android.widget.HorizontalScrollView;
 import android.widget.ScrollView;
 
 import com.facebook.react.bridge.Promise;
@@ -759,6 +761,13 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
                     final Bitmap childBitmapBuffer = tvChild.getBitmap(getExactBitmapForScreenshot(child.getWidth(), child.getHeight()));
 
                     final int countCanvasSave = c.save();
+                    // A TextureView's bitmap is its full surface, which can be
+                    // larger than the viewport when it lives inside a ScrollView
+                    // (e.g. a wide Skia/GL canvas). applyTransformations positions
+                    // it but applies no ancestor clip, so it bleeds past the
+                    // scroll viewport to the bitmap edge. Clip to the scrolling
+                    // ancestors' viewports first.
+                    clipToScrollAncestors(c, view, child);
                     applyTransformations(c, view, child);
 
                     // due to re-use of bitmaps for screenshot, we can get bitmap that is bigger in size than requested
@@ -777,6 +786,7 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
                                 @Override
                                 public void onPixelCopyFinished(int copyResult) {
                                     final int countCanvasSave = c.save();
+                                    clipToScrollAncestors(c, view, child);
                                     applyTransformations(c, view, child);
                                     c.drawBitmap(childBitmapBuffer, 0, 0, paint);
                                     c.restoreToCount(countCanvasSave);
@@ -888,12 +898,18 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
         // apply transformations from parent --> child order
         Collections.reverse(ms);
 
+        // A child is drawn by Android at (getLeft - parent.scrollX), but this
+        // walk previously used getLeft only, so content inside a scrolled
+        // container was positioned at scroll offset 0. Track the parent of each
+        // view and subtract its scroll so the captured window matches what is
+        // actually visible on screen.
+        View parent = root;
         for (final View v : ms) {
             c.save();
 
             // apply each view transformations, so each child will be affected by them
-            final float dx = v.getLeft() + ((v != child) ? v.getPaddingLeft() : 0) + v.getTranslationX();
-            final float dy = v.getTop() + ((v != child) ? v.getPaddingTop() : 0) + v.getTranslationY();
+            final float dx = v.getLeft() - parent.getScrollX() + ((v != child) ? v.getPaddingLeft() : 0) + v.getTranslationX();
+            final float dy = v.getTop() - parent.getScrollY() + ((v != child) ? v.getPaddingTop() : 0) + v.getTranslationY();
             c.translate(dx, dy);
             c.rotate(v.getRotation(), v.getPivotX(), v.getPivotY());
             c.scale(v.getScaleX(), v.getScaleY());
@@ -902,9 +918,62 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
             transform.postTranslate(dx, dy);
             transform.postRotate(v.getRotation(), v.getPivotX(), v.getPivotY());
             transform.postScale(v.getScaleX(), v.getScaleY());
+
+            parent = v;
         }
 
         return transform;
+    }
+
+    /**
+     * Clip {@code c} (assumed at {@code root}'s coordinate origin) to the
+     * on-screen frame of every scrolling ancestor between {@code child} and
+     * {@code root}. Called before blitting a TextureView/SurfaceView surface so
+     * an oversized child (e.g. a Skia/GL canvas wider than its horizontal
+     * ScrollView) is bounded to the visible viewport instead of bleeding to the
+     * output bitmap edge.
+     *
+     * <p>The frame is computed as an axis-aligned rect from layout offsets,
+     * translations and scroll positions. Rotation/scale on ancestors above the
+     * scroll container is not accounted for (uncommon for a capture root); the
+     * scroll container's own transform must be excluded here because the blit's
+     * content lands in the container's untransformed frame.
+     */
+    private void clipToScrollAncestors(@NonNull final Canvas c, @NonNull final View root, @NonNull final View child) {
+        View v = child;
+        while (true) {
+            final ViewParent pp = v.getParent();
+            if (!(pp instanceof View)) break;
+            final View parent = (View) pp;
+            if (parent == root) break;
+            if (parent instanceof HorizontalScrollView || parent instanceof ScrollView) {
+                final float[] off = offsetInRoot(root, parent);
+                c.clipRect(off[0], off[1], off[0] + parent.getWidth(), off[1] + parent.getHeight());
+            }
+            v = parent;
+        }
+    }
+
+    /**
+     * Top-left of {@code target} relative to {@code root} in the coordinate
+     * space the capture canvas uses — summing layout offsets and translations
+     * while subtracting each parent's scroll.
+     */
+    private static float[] offsetInRoot(@NonNull final View root, @NonNull final View target) {
+        float left = 0f;
+        float top = 0f;
+        View v = target;
+        while (v != null && v != root) {
+            left += v.getLeft() + v.getTranslationX();
+            top += v.getTop() + v.getTranslationY();
+            final ViewParent pp = v.getParent();
+            if (!(pp instanceof View)) break;
+            final View parent = (View) pp;
+            left -= parent.getScrollX();
+            top -= parent.getScrollY();
+            v = parent;
+        }
+        return new float[]{left, top};
     }
 
     @SuppressWarnings("unchecked")
