@@ -52,7 +52,7 @@
     "@babel/preset-react": "^7.27.1",
     "@eslint/js": "^10",
     "@types/jest": "^30.0.0",
-    "@types/react": "^18.3.0",
+    "@types/react": "^19.1.1",
     "@types/react-test-renderer": "^19.1.0",
     "babel-jest": "^30.2.0",
     "eslint": "^9.17.0",
@@ -63,13 +63,13 @@
     "prettier": "^3.4.2",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "react-native": "^0.76.5",
+    "react-native": "^0.84.1",
     "react-test-renderer": "^19.2.4",
     "ts-jest": "^29.4.6",
     "typescript": "^5.8.3"
   },
   "engines": {
-    "node": ">=20",
+    "node": ">=20.19.4",
     "npm": ">=10"
   },
   "codegenConfig": {
