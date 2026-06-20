@@ -26,7 +26,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm install --legacy-peer-deps  # Need --legacy-peer-deps for react-native-windows@0.74.47
+        run: npm install --legacy-peer-deps  # Need --legacy-peer-deps for react-native-windows@0.76.17
 
       - name: Check formatting (no prettier diff allowed)
         run: npm run format:check
@@ -75,7 +75,7 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Install dependencies
-        run: npm install --legacy-peer-deps  # Need --legacy-peer-deps for react-native-windows@0.74.47
+        run: npm install --legacy-peer-deps  # Need --legacy-peer-deps for react-native-windows@0.76.17
 
       - name: Build library
         run: npm run build
@@ -143,7 +143,7 @@ jobs:
             ${{ runner.os }}-pods-
 
       - name: Install dependencies
-        run: npm install --legacy-peer-deps  # Need --legacy-peer-deps for react-native-windows@0.74.47
+        run: npm install --legacy-peer-deps  # Need --legacy-peer-deps for react-native-windows@0.76.17
 
       - name: Build library
         run: npm run build
@@ -307,7 +307,10 @@ jobs:
 
   build-windows:
     name: Build Windows
-    runs-on: windows-latest
+    # Pinned to windows-2022 (VS 2022). GitHub migrated windows-latest to
+    # Visual Studio 2026 (18.x) in June 2026, which react-native-windows 0.76
+    # does not support — its CLI only accepts VS in range [17.11.0, 18.0).
+    runs-on: windows-2022
     needs: lint-and-type-check
 
     steps:
