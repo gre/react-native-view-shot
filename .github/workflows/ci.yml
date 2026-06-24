@@ -52,6 +52,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # The Android assembleDebug build (RN new arch) exhausts the runner's
+      # ~14 GB of free disk. Reclaim space by removing large preinstalled
+      # toolchains we don't use, while keeping the Android SDK/NDK. Runs
+      # before Node/Java setup so their tool caches are untouched.
+      - name: Free up disk space
+        run: |
+          echo "Disk before cleanup:"; df -h /
+          sudo rm -rf /usr/share/dotnet \
+                      /opt/ghc /usr/local/.ghcup \
+                      /opt/hostedtoolcache/CodeQL \
+                      /usr/local/share/boost \
+                      /usr/local/share/powershell \
+                      /usr/local/lib/node_modules || true
+          sudo docker image prune --all --force || true
+          sudo swapoff -a || true
+          sudo rm -f /mnt/swapfile || true
+          sudo apt-get clean || true
+          echo "Disk after cleanup:"; df -h /
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
