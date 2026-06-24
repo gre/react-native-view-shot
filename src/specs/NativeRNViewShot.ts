@@ -1,6 +1,6 @@
 import type {TurboModule} from "react-native";
 import {TurboModuleRegistry, NativeModules} from "react-native";
-import {Int32, WithDefault} from "react-native/Libraries/Types/CodegenTypes";
+import {WithDefault} from "react-native/Libraries/Types/CodegenTypes";
 
 // Options stay `Object` (codegen → ReadableMap / NSDictionary).
 // Narrowing here would force a coordinated change to both native module
