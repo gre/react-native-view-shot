@@ -10,6 +10,13 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # Harden npm installs against transient registry network blips (e.g.
+  # ECONNRESET) seen intermittently on hosted runners.
+  NPM_CONFIG_FETCH_RETRIES: 5
+  NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: 20000
+  NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: 120000
+
 jobs:
   lint-and-type-check:
     name: Code Quality (Strict)
