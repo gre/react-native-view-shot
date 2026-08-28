@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.net.Uri;
@@ -41,7 +40,6 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -511,24 +509,20 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
 
     @NonNull
     static List<View> getAllChildren(@NonNull final View v) {
-        if (!(v instanceof ViewGroup)) {
-            final ArrayList<View> viewArrayList = new ArrayList<>();
-            viewArrayList.add(v);
-
-            return viewArrayList;
-        }
-
         final ArrayList<View> result = new ArrayList<>();
-
-        ViewGroup viewGroup = (ViewGroup) v;
-        for (int i = 0; i < viewGroup.getChildCount(); i++) {
-            View child = viewGroup.getChildAt(i);
-
-            //Do not add any parents, just add child elements
-            result.addAll(getAllChildren(child));
-        }
-
+        collectChildren(v, result);
         return result;
+    }
+
+    private static void collectChildren(@NonNull final View v, @NonNull final List<View> result) {
+        if (!(v instanceof ViewGroup)) {
+            result.add(v);
+        } else {
+            final ViewGroup group = (ViewGroup) v;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                collectChildren(group.getChildAt(i), result);
+            }
+        }
     }
 
     /**
@@ -860,7 +854,7 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
      */
     @NonNull
     static List<View> walkAncestors(@NonNull final View child, @NonNull final View root) {
-        final LinkedList<View> ms = new LinkedList<>();
+        final List<View> ms = new ArrayList<>();
         if (child == root) {
             return ms;
         }
@@ -876,21 +870,11 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
     /**
      * Concat all the transformation matrix's from parent to child.
      */
-    @NonNull
-    @SuppressWarnings("UnusedReturnValue")
-    private Matrix applyTransformations(final Canvas c, @NonNull final View root, @NonNull final View child) {
-        final Matrix transform = new Matrix();
-        final LinkedList<View> ms = new LinkedList<>(walkAncestors(child, root));
-        if (ms.isEmpty()) {
-            return transform;
-        }
-
+    private void applyTransformations(final Canvas c, @NonNull final View root, @NonNull final View child) {
+        final List<View> ms = walkAncestors(child, root);
         // apply transformations from parent --> child order
-        Collections.reverse(ms);
-
-        for (final View v : ms) {
-            c.save();
-
+        for (int i = ms.size() - 1; i >= 0; i--) {
+            final View v = ms.get(i);
             // apply each view transformations, so each child will be affected by them
             final float dx = v.getLeft() + ((v != child) ? v.getPaddingLeft() : 0) + v.getTranslationX();
             final float dy = v.getTop() + ((v != child) ? v.getPaddingTop() : 0) + v.getTranslationY();
@@ -898,13 +882,7 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
             c.rotate(v.getRotation(), v.getPivotX(), v.getPivotY());
             c.scale(v.getScaleX(), v.getScaleY());
 
-            // compute the matrix just for any future use
-            transform.postTranslate(dx, dy);
-            transform.postRotate(v.getRotation(), v.getPivotX(), v.getPivotY());
-            transform.postScale(v.getScaleX(), v.getScaleY());
         }
-
-        return transform;
     }
 
     @SuppressWarnings("unchecked")
