@@ -10,7 +10,7 @@ import {
   FlatList,
   SectionList,
 } from "react-native";
-import ViewShot, {captureRef} from "react-native-view-shot";
+import ViewShot, {captureRef, type ViewShotRef} from "react-native-view-shot";
 import {PreviewContainer} from "../components/shared";
 
 const COLORS = [
@@ -77,9 +77,9 @@ interface SectionState {
 }
 
 const ScrollViewTestScreen: React.FC = () => {
-  const scrollViewRef = useRef<ViewShot>(null);
-  const flatListRef = useRef<ViewShot>(null);
-  const sectionListRef = useRef<ViewShot>(null);
+  const scrollViewRef = useRef<ViewShotRef>(null);
+  const flatListRef = useRef<ViewShotRef>(null);
+  const sectionListRef = useRef<ViewShotRef>(null);
   // Refs for the `snapshotContentContainer` demo — these point at the raw
   // ScrollView / FlatList so the native module can read their content size.
   const contentContainerScrollRef = useRef<ScrollView>(null);
@@ -109,7 +109,7 @@ const ScrollViewTestScreen: React.FC = () => {
     });
 
   const capture = async (
-    ref: React.RefObject<ViewShot | null>,
+    ref: React.RefObject<ViewShotRef | null>,
     setter: (s: SectionState) => void,
   ) => {
     try {

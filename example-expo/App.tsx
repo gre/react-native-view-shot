@@ -9,11 +9,11 @@ import {
   Alert,
   Platform,
 } from "react-native";
-import ViewShot, {captureRef} from "react-native-view-shot";
+import ViewShot, {captureRef, type ViewShotRef} from "react-native-view-shot";
 
 export default function App() {
   const viewRef = useRef<View>(null);
-  const viewShotRef = useRef<ViewShot>(null);
+  const viewShotRef = useRef<ViewShotRef>(null);
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<"view-ref" | "viewshot">("view-ref");

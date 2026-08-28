@@ -7,14 +7,14 @@ import {
   ScrollView,
   Image,
 } from "react-native";
-import ViewShot from "react-native-view-shot";
+import ViewShot, {type ViewShotRef} from "react-native-view-shot";
 
 interface Props {
   goBack: () => void;
 }
 
 const ViewShotComponentScreen: React.FC<Props> = ({goBack}) => {
-  const viewShotRef = useRef<ViewShot>(null);
+  const viewShotRef = useRef<ViewShotRef>(null);
   const [capturedUri, setCapturedUri] = useState<string | null>(null);
   const [autoUri, setAutoUri] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
