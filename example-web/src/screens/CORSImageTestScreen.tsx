@@ -30,11 +30,16 @@ const CORSImageTestScreen: React.FC<Props> = ({goBack}) => {
   const [capturedUri, setCapturedUri] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [imagesLoaded, setImagesLoaded] = useState<Record<number, boolean>>({});
+  const [imageStatus, setImageStatus] = useState<
+    Record<number, "loaded" | "error">
+  >({});
 
-  const allImagesLoaded =
-    Object.keys(imagesLoaded).length === CROSS_ORIGIN_IMAGES.length &&
-    Object.values(imagesLoaded).every(Boolean);
+  const allImagesLoaded = CROSS_ORIGIN_IMAGES.every(
+    (_, index) => imageStatus[index] === "loaded",
+  );
+  const hasImageError = CROSS_ORIGIN_IMAGES.some(
+    (_, index) => imageStatus[index] === "error",
+  );
 
   const captureView = async () => {
     setIsCapturing(true);
@@ -86,13 +91,23 @@ const CORSImageTestScreen: React.FC<Props> = ({goBack}) => {
                 style={styles.testImage}
                 resizeMode="cover"
                 onLoad={() =>
-                  setImagesLoaded(prev => ({...prev, [index]: true}))
+                  setImageStatus(prev => ({...prev, [index]: "loaded"}))
+                }
+                onError={() =>
+                  setImageStatus(prev => ({...prev, [index]: "error"}))
                 }
               />
               <View style={styles.imageInfo}>
                 <Text style={styles.cardText}>{img.label}</Text>
-                <Text style={styles.statusText}>
-                  {imagesLoaded[index] ? "Loaded" : "Loading..."}
+                <Text
+                  style={styles.statusText}
+                  accessibilityLiveRegion="polite"
+                >
+                  {imageStatus[index] === "loaded"
+                    ? "Loaded"
+                    : imageStatus[index] === "error"
+                      ? "Failed to load"
+                      : "Loading..."}
                 </Text>
               </View>
             </View>
@@ -122,9 +137,11 @@ const CORSImageTestScreen: React.FC<Props> = ({goBack}) => {
           <Text style={styles.captureButtonText}>
             {isCapturing
               ? "Capturing..."
-              : !allImagesLoaded
-                ? "Waiting for images to load..."
-                : "Capture with CORS images"}
+              : hasImageError
+                ? "Some images failed to load"
+                : !allImagesLoaded
+                  ? "Waiting for images to load..."
+                  : "Capture with CORS images"}
           </Text>
         </TouchableOpacity>
 
