@@ -1,14 +1,21 @@
 /**
  * #677 — `useRenderInContext` drops the content of bordered views (iOS/Fabric).
  *
- * ⚠️ THIS TEST IS EXPECTED TO FAIL until the fix lands. It is the TDD
- * reproduction: it asserts the behaviour we want, against a library that
- * currently does not provide it. See PLAN-677.md, step 3.
+ * Captures the same cards twice — once through `drawViewHierarchyInRect` (the
+ * default, known good) and once through `renderInContext:` — then reads the
+ * resulting PNGs off the simulator's tmp directory and compares actual pixels.
  *
- * What it does: captures the same three cards twice — once through
- * `drawViewHierarchyInRect` (the default, known good) and once through
- * `renderInContext:` — then reads the resulting PNGs off the simulator's tmp
- * directory and compares actual pixels.
+ * Measured on iPhone 17 Pro / RN 0.84.1, before the fix:
+ *
+ *   plain           ✓   border-less, stays on RN's CoreAnimation path
+ *   border          ✕   uniqueColors = 1 — captured as a flat white block
+ *   border-clipped  ✓   `overflow: hidden` flips RN back to CoreAnimation
+ *   nested-border   ✕   the bordered view need not be the capture root
+ *   scroll-border   ✓   the reporter's own configuration does NOT reproduce
+ *
+ * That last line matters: this file reproduces a real bug with #677's exact
+ * signature, but not #677's exact setup. See PLAN-677.md for what that leaves
+ * open.
  *
  * The assertions deliberately do NOT use reference snapshots. What is being
  * checked is an invariant ("both strategies must render the same static
@@ -27,7 +34,13 @@ const {
 } = require('../helpers/pixels');
 
 const MODES = ['draw', 'ric'];
-const CARDS = ['plain', 'border', 'border-clipped'];
+const CARDS = [
+  'plain',
+  'border',
+  'border-clipped',
+  'nested-border',
+  'scroll-border',
+];
 
 // Filled by beforeAll, keyed `${mode}-${card}`.
 const uris = {};
@@ -52,7 +65,7 @@ describe('ViewShot - useRenderInContext (#677)', () => {
       await scrollIntoView(`ric-capture-${mode}`);
       await element(by.id(`ric-capture-${mode}`)).tap();
       // The last card to be written tells us the whole batch is done.
-      await waitFor(element(by.id(`ric-uri-${mode}-border-clipped`)))
+      await waitFor(element(by.id(`ric-uri-${mode}-scroll-border`)))
         .toExist()
         .withTimeout(30000);
     }
@@ -196,6 +209,38 @@ describe('ViewShot - useRenderInContext (#677)', () => {
   it('renders the clipped bordered card identically through both strategies', () => {
     const draw = readPng(uris['draw-border-clipped']);
     const ric = readPng(uris['ric-border-clipped']);
+
+    const stats = regionStats(ric, centerRegion(ric));
+    jestExpect(stats.uniqueColors).toBeGreaterThan(1);
+    jestExpect(diffRatio(draw, ric)).toBeLessThan(0.02);
+  });
+
+  /**
+   * Does the bordered view have to BE the capture root? The reporter's items
+   * are descendants, so if this passes while `border` fails, the reduction is
+   * not faithful to the report.
+   */
+  it('renders a bordered CHILD of the capture root identically', () => {
+    const draw = readPng(uris['draw-nested-border']);
+    const ric = readPng(uris['ric-nested-border']);
+
+    const stats = regionStats(ric, centerRegion(ric));
+    jestExpect(stats.uniqueColors).toBeGreaterThan(1);
+    jestExpect(diffRatio(draw, ric)).toBeLessThan(0.02);
+  });
+
+  /**
+   * #677 AS FILED — a vertical ScrollView captured with
+   * `snapshotContentContainer`, whose items carry the border.
+   *
+   * The `border` test above shows neither the ScrollView nor
+   * `snapshotContentContainer` is needed to trigger this. This one exists so
+   * the reported configuration itself is covered, rather than only our
+   * reduction of it.
+   */
+  it("renders the reporter's ScrollView case identically through both strategies", () => {
+    const draw = readPng(uris['draw-scroll-border']);
+    const ric = readPng(uris['ric-scroll-border']);
 
     const stats = regionStats(ric, centerRegion(ric));
     jestExpect(stats.uniqueColors).toBeGreaterThan(1);
