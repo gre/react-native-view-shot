@@ -26,17 +26,21 @@ import { captureRef } from 'react-native-view-shot';
  * `renderInContext:` does not. Appended last, it is therefore painted last —
  * over the text — and the card comes back as a flat white block.
  *
- * The three cards below carry identical content and differ only in the style
- * that decides which rendering path RN takes:
+ * The cards below carry identical content and differ only in what decides
+ * which rendering path RN takes. Measured before the fix:
  *
- *  - `plain`          no border          → CoreAnimation path, expected fine
- *  - `border`         borderWidth: 1     → appended sublayers, expected broken
- *  - `borderClipped`  border + overflow  → mask path (`createMaskLayer`), which
- *                                          `renderInContext:` also ignores
+ *  - `plain`           no border                  → fine
+ *  - `border`          borderWidth: 1             → captured as a flat block
+ *  - `border-clipped`  border + overflow: hidden  → fine (clipsToBounds flips
+ *                                                   `useCoreAnimationBorderRendering`
+ *                                                   back to true)
+ *  - `nested-border`   border on a child of the capture root → flat block too
+ *  - `scroll-border`   the reporter's own setup   → does NOT reproduce
  *
- * The third card exists to tell those two failure modes apart: the reporter
- * never showed whether their container clipped, and the two branches need
- * different fixes.
+ * The last two are controls. `nested-border` rules out "the bordered view must
+ * be the capture root". `scroll-border` replicates #677 as filed, and passes —
+ * so what is reproduced here shares #677's signature without being provably
+ * the same instance of it.
  */
 
 const CARD_WIDTH = 300;
@@ -53,9 +57,24 @@ const MODES: { key: ModeKey; label: string; useRenderInContext: boolean }[] = [
   { key: 'ric', label: 'renderInContext', useRenderInContext: true },
 ];
 
-type CardKey = 'plain' | 'border' | 'border-clipped';
+type CardKey =
+  | 'plain'
+  | 'border'
+  | 'border-clipped'
+  | 'nested-border'
+  | 'scroll-border';
 
-const CARDS: { key: CardKey; label: string; style: ViewStyle }[] = [
+interface CardSpec {
+  key: CardKey;
+  label: string;
+  style: ViewStyle;
+  /** Rendered as a ScrollView captured with `snapshotContentContainer`. */
+  scroll?: boolean;
+  /** The bordered view is a child of the capture root, not the root itself. */
+  nested?: boolean;
+}
+
+const CARDS: CardSpec[] = [
   {
     key: 'plain',
     label: 'no border (reference)',
@@ -63,7 +82,7 @@ const CARDS: { key: CardKey; label: string; style: ViewStyle }[] = [
   },
   {
     key: 'border',
-    label: "borderWidth: 1 — the reporter's case",
+    label: 'borderWidth: 1 — minimal repro',
     style: { borderWidth: 1, borderColor: '#F6F6F6' },
   },
   {
@@ -71,7 +90,28 @@ const CARDS: { key: CardKey; label: string; style: ViewStyle }[] = [
     label: "borderWidth: 1 + overflow: 'hidden'",
     style: { borderWidth: 1, borderColor: '#F6F6F6', overflow: 'hidden' },
   },
+  {
+    key: 'nested-border',
+    label: 'borderWidth: 1 on a CHILD of the capture root',
+    style: {},
+    nested: true,
+  },
+  {
+    key: 'scroll-border',
+    label: "the reporter's exact case — ScrollView + snapshotContentContainer",
+    style: {},
+    scroll: true,
+  },
 ];
+
+/**
+ * The reporter captures a vertical ScrollView with `snapshotContentContainer`,
+ * whose items carry the border. The minimal `border` card above shows the bug
+ * does not need any of that — but this card reproduces #677 as filed, so the
+ * fix is verified against the configuration actually reported and not only
+ * against our reduction of it.
+ */
+const SCROLL_ITEMS = [1, 2, 3, 4];
 
 /**
  * Identical in every card. High-contrast black on white, covering a large part
@@ -90,7 +130,7 @@ type Results = Partial<Record<`${ModeKey}-${CardKey}`, string>>;
 type Errors = Partial<Record<`${ModeKey}-${CardKey}`, string>>;
 
 const RenderInContextTestScreen: React.FC = () => {
-  const refs = useRef<Partial<Record<CardKey, View | null>>>({});
+  const refs = useRef<Partial<Record<CardKey, React.Component | null>>>({});
   const [results, setResults] = useState<Results>({});
   const [errors, setErrors] = useState<Errors>({});
   const [capturing, setCapturing] = useState<ModeKey | null>(null);
@@ -111,6 +151,8 @@ const RenderInContextTestScreen: React.FC = () => {
           quality: 1,
           result: 'tmpfile',
           useRenderInContext: modeConfig.useRenderInContext,
+          // The reporter's card is a ScrollView captured in full.
+          snapshotContentContainer: card.scroll === true,
         });
         setResults(prev => ({ ...prev, [slot]: uri }));
         setErrors(prev => ({ ...prev, [slot]: undefined }));
@@ -151,16 +193,49 @@ const RenderInContextTestScreen: React.FC = () => {
           {CARDS.map(card => (
             <View key={card.key} style={styles.cardSlot}>
               <Text style={styles.cardLabel}>{card.label}</Text>
-              <View
-                testID={`ric-card-${card.key}`}
-                ref={node => {
-                  refs.current[card.key] = node;
-                }}
-                collapsable={false}
-                style={[styles.card, card.style]}
-              >
-                <CardContent />
-              </View>
+              {card.nested ? (
+                <View
+                  testID={`ric-card-${card.key}`}
+                  ref={node => {
+                    refs.current[card.key] = node;
+                  }}
+                  collapsable={false}
+                  style={styles.card}
+                >
+                  <View collapsable={false} style={styles.nestedInner}>
+                    <CardContent />
+                  </View>
+                </View>
+              ) : card.scroll ? (
+                <ScrollView
+                  testID={`ric-card-${card.key}`}
+                  ref={node => {
+                    refs.current[card.key] = node;
+                  }}
+                  collapsable={false}
+                  removeClippedSubviews={false}
+                  style={styles.scrollCard}
+                >
+                  <View collapsable={false}>
+                    {SCROLL_ITEMS.map(n => (
+                      <View key={n} style={styles.scrollItem}>
+                        <Text style={styles.cardLine}>{`ITEM ${n}`}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </ScrollView>
+              ) : (
+                <View
+                  testID={`ric-card-${card.key}`}
+                  ref={node => {
+                    refs.current[card.key] = node;
+                  }}
+                  collapsable={false}
+                  style={[styles.card, card.style]}
+                >
+                  <CardContent />
+                </View>
+              )}
             </View>
           ))}
         </View>
@@ -255,6 +330,27 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     paddingHorizontal: 12,
+  },
+  scrollCard: {
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+    backgroundColor: '#FFFFFF',
+  },
+  nestedInner: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#F6F6F6',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+  },
+  // The reporter's item style, verbatim.
+  scrollItem: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#F6F6F6',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
   cardLine: {
     fontSize: 26,
