@@ -896,12 +896,13 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
             final float dy = v.getTop() + ((v != child) ? v.getPaddingTop() : 0) + v.getTranslationY();
             c.translate(dx, dy);
             c.rotate(v.getRotation(), v.getPivotX(), v.getPivotY());
-            c.scale(v.getScaleX(), v.getScaleY());
+            // scale about the view's pivot, matching how android renders the view
+            c.scale(v.getScaleX(), v.getScaleY(), v.getPivotX(), v.getPivotY());
 
             // compute the matrix just for any future use
             transform.postTranslate(dx, dy);
             transform.postRotate(v.getRotation(), v.getPivotX(), v.getPivotY());
-            transform.postScale(v.getScaleX(), v.getScaleY());
+            transform.postScale(v.getScaleX(), v.getScaleY(), v.getPivotX(), v.getPivotY());
         }
 
         return transform;
