@@ -1,31 +1,34 @@
-import { useState, useCallback, useRef } from 'react';
-import { captureRef } from 'react-native-view-shot';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import {
+  captureRef,
+  releaseCapture,
+  type CaptureOptions,
+  type ViewShotRef,
+} from 'react-native-view-shot';
 
-export interface CaptureOptions {
-  format?: 'png' | 'jpg' | 'webm';
-  quality?: number;
-  result?: 'tmpfile' | 'base64' | 'zip-base64' | 'data-uri';
-  handleGLSurfaceViewOnAndroid?: boolean;
-}
+export type { CaptureOptions } from 'react-native-view-shot';
 
 export const useViewShotCapture = (successMessage?: string) => {
-  const [capturedUri, setCapturedUri] = useState<string | null>(null);
+  const [capture, setCapture] = useState<{
+    uri: string;
+    temporary: boolean;
+  } | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
-  const viewShotRef = useRef<any>(null);
+  const viewShotRef = useRef<ViewShotRef | null>(null);
+  const requestId = useRef(0);
 
-  const onCapture = useCallback(
-    (uri: string) => {
-      setCapturedUri(uri);
-      setIsCapturing(false);
-      console.log(successMessage || 'Captured!', `Content captured: ${uri}`);
+  useEffect(
+    () => () => {
+      requestId.current++;
     },
-    [successMessage],
+    [],
   );
 
-  const onCaptureFailure = useCallback((error: Error) => {
-    setIsCapturing(false);
-    console.error('Capture Failed', `Error: ${error.message}`);
-  }, []);
+  useEffect(() => {
+    if (capture?.temporary) {
+      return () => releaseCapture(capture.uri);
+    }
+  }, [capture]);
 
   const startCapture = useCallback(
     async (options: CaptureOptions = {}) => {
@@ -34,31 +37,44 @@ export const useViewShotCapture = (successMessage?: string) => {
         return;
       }
 
+      const id = ++requestId.current;
+      const temporary = !options.result || options.result === 'tmpfile';
       setIsCapturing(true);
-      setCapturedUri(null);
+      setCapture(null);
 
       try {
-        const captureOptions = {
-          format: 'png' as const,
+        const uri = await captureRef(viewShotRef, {
+          format: 'png',
           quality: 0.8,
           ...options,
-        };
-        const uri = await captureRef(viewShotRef, captureOptions);
-        onCapture(uri);
+        });
+        if (id !== requestId.current) {
+          if (temporary) releaseCapture(uri);
+          return;
+        }
+        setCapture({ uri, temporary });
+        setIsCapturing(false);
+        console.log(successMessage || 'Captured!');
       } catch (error) {
-        onCaptureFailure(error as Error);
+        if (id !== requestId.current) return;
+        setIsCapturing(false);
+        console.error(
+          'Capture Failed',
+          error instanceof Error ? error.message : String(error),
+        );
       }
     },
-    [onCapture, onCaptureFailure],
+    [successMessage],
   );
 
   const resetCapture = useCallback(() => {
-    setCapturedUri(null);
+    requestId.current++;
+    setCapture(null);
     setIsCapturing(false);
   }, []);
 
   return {
-    capturedUri,
+    capturedUri: capture?.uri ?? null,
     isCapturing,
     viewShotRef,
     startCapture,
