@@ -48,7 +48,7 @@ import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -227,18 +227,17 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
             // UIManager queue.
             Log.e(TAG, "Failed to resolve view for snapshot", ex);
             final String detail = ex.getMessage() != null ? ex.getMessage() : ex.toString();
-            promise.reject(ERROR_UNABLE_TO_SNAPSHOT,
-                "Failed to resolve view for snapshot: " + detail, ex);
+            rejectCapture("Failed to resolve view for snapshot: " + detail, ex);
             return;
         }
 
         if (view == null) {
             Log.e(TAG, "No view found with reactTag: " + tag, new AssertionError());
-            promise.reject(ERROR_UNABLE_TO_SNAPSHOT, "No view found with reactTag: " + tag);
+            rejectCapture("No view found with reactTag: " + tag, null);
             return;
         }
 
-        executor.execute(new Runnable () {
+        final Runnable capture = new Runnable () {
             @Override
             public void run() {
                 try {
@@ -258,11 +257,20 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
                 } catch (final Throwable ex) {
                     Log.e(TAG, "Failed to capture view snapshot", ex);
                     final String detail = ex.getMessage() != null ? ex.getMessage() : ex.toString();
-                    promise.reject(ERROR_UNABLE_TO_SNAPSHOT,
-                        "Failed to capture view snapshot: " + detail, ex);
+                    rejectCapture("Failed to capture view snapshot: " + detail, ex);
                 }
             }
-        });
+        };
+        try {
+            executor.execute(capture);
+        } catch (RejectedExecutionException ex) {
+            rejectCapture("Capture executor rejected the snapshot", ex);
+        }
+    }
+
+    private void rejectCapture(final String message, @Nullable final Throwable cause) {
+        if (output != null) output.delete();
+        promise.reject(ERROR_UNABLE_TO_SNAPSHOT, message, cause);
     }
 
     private void saveToTempFileOnDevice(@NonNull final View view) throws IOException {
@@ -715,6 +723,10 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
                             }
                         }
                     } finally {
+                        // Publish completion before the final cancellation read.
+                        // Otherwise a timeout between this read and the wrapper's
+                        // completion signal leaves neither thread owning cleanup.
+                        uiTaskFinished.set(true);
                         // Only own the recycle when the caller has abandoned us
                         // (timed out): otherwise the caller is still alive and
                         // will keep using the bitmap for child overlays, scale
@@ -752,46 +764,40 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
                     if (child.getVisibility() != VISIBLE) continue;
 
                     final TextureView tvChild = (TextureView) child;
-                    tvChild.setOpaque(false); // <-- switch off background fill
-
+                    final boolean wasOpaque = tvChild.isOpaque();
                     // NOTE (olku): get re-usable bitmap. TextureView should use bitmaps with matching size,
                     // otherwise content of the TextureView will be scaled to provided bitmap dimensions
-                    final Bitmap childBitmapBuffer = tvChild.getBitmap(getExactBitmapForScreenshot(child.getWidth(), child.getHeight()));
-
+                    final Bitmap childBitmapBuffer = getExactBitmapForScreenshot(child.getWidth(), child.getHeight());
                     final int countCanvasSave = c.save();
-                    applyTransformations(c, view, child);
-
-                    // due to re-use of bitmaps for screenshot, we can get bitmap that is bigger in size than requested
-                    c.drawBitmap(childBitmapBuffer, 0, 0, paint);
-
-                    c.restoreToCount(countCanvasSave);
-                    recycleBitmap(childBitmapBuffer);
+                    try {
+                        tvChild.setOpaque(false); // switch off background fill only for this copy
+                        tvChild.getBitmap(childBitmapBuffer);
+                        applyTransformations(c, view, child);
+                        c.drawBitmap(childBitmapBuffer, 0, 0, paint);
+                    } finally {
+                        tvChild.setOpaque(wasOpaque);
+                        c.restoreToCount(countCanvasSave);
+                        recycleBitmap(childBitmapBuffer);
+                    }
                 } else if (child instanceof SurfaceView && handleGLSurfaceView) {
                     final SurfaceView svChild = (SurfaceView)child;
-                    final CountDownLatch latch = new CountDownLatch(1);
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        final Bitmap childBitmapBuffer = getExactBitmapForScreenshot(child.getWidth(), child.getHeight());
-                        try {
-                            PixelCopy.request(svChild, childBitmapBuffer, new PixelCopy.OnPixelCopyFinishedListener() {
-                                @Override
-                                public void onPixelCopyFinished(int copyResult) {
-                                    final int countCanvasSave = c.save();
-                                    applyTransformations(c, view, child);
-                                    c.drawBitmap(childBitmapBuffer, 0, 0, paint);
-                                    c.restoreToCount(countCanvasSave);
-                                    recycleBitmap(childBitmapBuffer);
-                                    latch.countDown();
-                                }
-                            }, new Handler(Looper.getMainLooper()));
-                            latch.await(SURFACE_VIEW_READ_PIXELS_TIMEOUT, TimeUnit.SECONDS);
-                        } catch (Exception e) {
-                            Log.e(TAG, "Cannot PixelCopy for " + svChild, e);
+                        final Bitmap childBitmapBuffer = captureSurfaceView(svChild);
+                        if (childBitmapBuffer != null) {
+                            final int countCanvasSave = c.save();
+                            try {
+                                applyTransformations(c, view, child);
+                                c.drawBitmap(childBitmapBuffer, 0, 0, paint);
+                            } finally {
+                                c.restoreToCount(countCanvasSave);
+                                recycleBitmap(childBitmapBuffer);
+                            }
                         }
                     } else {
                         Bitmap cache = svChild.getDrawingCache();
                         if (cache != null) {
-                            c.drawBitmap(svChild.getDrawingCache(), 0, 0, paint);
+                            c.drawBitmap(cache, 0, 0, paint);
                         }
                     }
                 }
@@ -838,6 +844,56 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
                 recycleBitmap(bitmap);
             }
         }
+    }
+
+    @Nullable
+    private Bitmap captureSurfaceView(@NonNull final SurfaceView view) {
+        if (view.getWidth() <= 0 || view.getHeight() <= 0) return null;
+
+        final Bitmap buffer = getExactBitmapForScreenshot(view.getWidth(), view.getHeight());
+        final AtomicReference<Bitmap> pending = new AtomicReference<>(buffer);
+        final AtomicBoolean abandoned = new AtomicBoolean(false);
+        final AtomicInteger result = new AtomicInteger(-1);
+        final CountDownLatch completed = new CountDownLatch(1);
+        try {
+            PixelCopy.request(view, buffer, new PixelCopy.OnPixelCopyFinishedListener() {
+                @Override
+                public void onPixelCopyFinished(int copyResult) {
+                    result.set(copyResult);
+                    completed.countDown();
+                    // A timed-out capture must leave this buffer alone until
+                    // PixelCopy finishes writing. Never touch its parent canvas
+                    // here: that capture may already have returned to the pool.
+                    if (abandoned.get()) {
+                        final Bitmap unused = pending.getAndSet(null);
+                        if (unused != null) recycleBitmap(unused);
+                    }
+                }
+            }, new Handler(Looper.getMainLooper()));
+        } catch (IllegalArgumentException e) {
+            recycleBitmap(buffer);
+            Log.e(TAG, "Cannot PixelCopy for " + view, e);
+            return null;
+        }
+
+        try {
+            if (completed.await(SURFACE_VIEW_READ_PIXELS_TIMEOUT, TimeUnit.SECONDS)
+                    && result.get() == PixelCopy.SUCCESS) {
+                return pending.getAndSet(null);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            Log.e(TAG, "Interrupted PixelCopy for " + view, e);
+        } finally {
+            abandoned.set(true);
+            // Covers completion immediately before abandonment. The callback
+            // covers completion after it; getAndSet gives exactly one owner.
+            if (completed.getCount() == 0) {
+                final Bitmap unused = pending.getAndSet(null);
+                if (unused != null) recycleBitmap(unused);
+            }
+        }
+        return null;
     }
 
     /**
