@@ -329,19 +329,14 @@ const ViewShotComponent = forwardRef<ViewShotRef, ViewShotProperties>(
     } = props;
 
     const rootRef = useRef<View | null>(null);
-    const rafRef = useRef<number | null>(null);
     const lastCapturedURIRef = useRef<string | null>(null);
-    const resolveFirstLayoutRef = useRef<((layout: unknown) => void) | null>(
-      null,
-    );
-
-    const firstLayoutPromise = useMemo(
-      () =>
-        new Promise<unknown>(resolve => {
-          resolveFirstLayoutRef.current = resolve;
-        }),
-      [],
-    );
+    const firstLayout = useMemo(() => {
+      let resolve!: (layout: unknown) => void;
+      const promise = new Promise<unknown>(r => {
+        resolve = r;
+      });
+      return {promise, resolve: resolve as ((layout: unknown) => void) | null};
+    }, []);
 
     // Keep latest props in refs so stable callbacks always see fresh values
     const onCaptureRef = useRef(onCapture);
@@ -353,7 +348,7 @@ const ViewShotComponent = forwardRef<ViewShotRef, ViewShotProperties>(
 
     const capture = useCallback(
       (): Promise<string> =>
-        firstLayoutPromise
+        firstLayout.promise
           .then(() => {
             if (!rootRef.current) return neverEndingPromise as Promise<never>;
             return captureRef(rootRef.current, optionsRef.current);
@@ -361,7 +356,10 @@ const ViewShotComponent = forwardRef<ViewShotRef, ViewShotProperties>(
           .then(
             uri => {
               if (!rootRef.current) return uri;
-              if (lastCapturedURIRef.current) {
+              if (
+                lastCapturedURIRef.current &&
+                lastCapturedURIRef.current !== uri
+              ) {
                 setTimeout(releaseCapture, 500, lastCapturedURIRef.current);
               }
               lastCapturedURIRef.current = uri;
@@ -374,15 +372,22 @@ const ViewShotComponent = forwardRef<ViewShotRef, ViewShotProperties>(
               throw e;
             },
           ) as Promise<string>,
-      [firstLayoutPromise],
+      [firstLayout],
     );
 
     const setRootRef = useCallback(
-      (node: View | null): void => {
+      (node: View | null): void | (() => void) => {
         rootRef.current = node;
         if (node) (node as ViewShotRef).capture = capture;
         if (typeof ref === "function") {
-          ref(node as ViewShotRef | null);
+          // ForwardedRef still types callback returns as void, even in React 19.
+          const cleanup: unknown = ref(node as ViewShotRef | null);
+          if (typeof cleanup === "function") {
+            return () => {
+              rootRef.current = null;
+              cleanup();
+            };
+          }
         } else if (ref) {
           ref.current = node as ViewShotRef | null;
         }
@@ -390,26 +395,13 @@ const ViewShotComponent = forwardRef<ViewShotRef, ViewShotProperties>(
       [capture, ref],
     );
 
-    const syncCaptureLoop = useCallback(
-      (mode: ViewShotProperties["captureMode"] | null): void => {
-        cancelAnimationFrame(rafRef.current as number);
-        if (mode === "continuous") {
-          let previousCaptureURI: string | null = "-";
-          const loop = (): void => {
-            rafRef.current = requestAnimationFrame(loop);
-            if (previousCaptureURI === lastCapturedURIRef.current) return;
-            previousCaptureURI = lastCapturedURIRef.current;
-            capture();
-          };
-          rafRef.current = requestAnimationFrame(loop);
-        }
-      },
-      [capture],
-    );
-
+    const didMountCapture = useRef(false);
     useEffect(() => {
       if (__DEV__) checkCompatibleProps(props);
-      if (captureMode === "mount") capture();
+      if (captureMode === "mount" && !didMountCapture.current) {
+        didMountCapture.current = true;
+        void capture().catch(() => {});
+      }
       // Run once: re-firing on prop changes would double-trigger `mount`
       // capture; the `[captureMode]` effect below handles loop sync, and the
       // no-deps effect below handles `update` mode.
@@ -417,28 +409,39 @@ const ViewShotComponent = forwardRef<ViewShotRef, ViewShotProperties>(
     }, []);
 
     useEffect(() => {
-      syncCaptureLoop(captureMode);
-      return () => syncCaptureLoop(null);
-    }, [captureMode, syncCaptureLoop]);
+      if (captureMode !== "continuous") return;
+      let active = true;
+      let frame: number;
+      const schedule = (): void => {
+        if (active) frame = requestAnimationFrame(loop);
+      };
+      const loop = (): void => {
+        void capture().then(schedule, schedule);
+      };
+      schedule();
+      return () => {
+        active = false;
+        cancelAnimationFrame(frame);
+      };
+    }, [captureMode, capture]);
 
-    const isFirstRender = useRef(true);
+    const previousProps = useRef(props);
     useEffect(() => {
-      if (isFirstRender.current) {
-        isFirstRender.current = false;
-        return;
+      if (previousProps.current !== props && captureMode === "update") {
+        void capture().catch(() => {});
       }
-      if (captureMode === "update") capture();
+      previousProps.current = props;
     });
 
     const onLayoutHandler = useCallback(
       (e: LayoutChangeEvent): void => {
-        if (resolveFirstLayoutRef.current) {
-          resolveFirstLayoutRef.current(e.nativeEvent.layout);
-          resolveFirstLayoutRef.current = null;
+        if (firstLayout.resolve) {
+          firstLayout.resolve(e.nativeEvent.layout);
+          firstLayout.resolve = null;
         }
         if (onLayout) onLayout(e);
       },
-      [onLayout],
+      [firstLayout, onLayout],
     );
 
     return (
