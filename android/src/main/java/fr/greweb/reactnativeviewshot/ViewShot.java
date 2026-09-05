@@ -139,7 +139,12 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
     /**
      * Image output buffer used as a source for base64 encoding
      */
-    private static byte[] outputBuffer = new byte[PREALLOCATE_SIZE];
+    private static final ThreadLocal<byte[]> outputBuffer = new ThreadLocal<byte[]>() {
+        @Override
+        protected byte[] initialValue() {
+            return new byte[PREALLOCATE_SIZE];
+        }
+    };
     //endregion
 
     //region Class members
@@ -242,10 +247,6 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
             @Override
             public void run() {
                 try {
-                    final ReusableByteArrayOutputStream stream = new ReusableByteArrayOutputStream(outputBuffer);
-                    stream.setSize(proposeSize(view));
-                    outputBuffer = stream.innerBuffer();
-
                     if (Results.TEMP_FILE.equals(result) && Formats.RAW == format) {
                         saveToRawFileOnDevice(view);
                     } else if (Results.TEMP_FILE.equals(result) && Formats.RAW != format) {
@@ -275,33 +276,34 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
     private void saveToRawFileOnDevice(@NonNull final View view) throws IOException {
         final String uri = Uri.fromFile(output).toString();
 
-        final FileOutputStream fos = new FileOutputStream(output);
-        final ReusableByteArrayOutputStream os = new ReusableByteArrayOutputStream(outputBuffer);
-        final Point size = captureView(view, os);
+        try (final FileOutputStream fos = new FileOutputStream(output)) {
+            final ReusableByteArrayOutputStream os = new ReusableByteArrayOutputStream(outputBuffer.get());
+            final Point size = captureView(view, os);
 
-        // in case of buffer grow that will be a new array with bigger size
-        outputBuffer = os.innerBuffer();
-        final int length = os.size();
-        final String resolution = String.format(Locale.US, "%d:%d|", size.x, size.y);
+            // Keep the grown buffer for the next capture on this worker.
+            outputBuffer.set(os.innerBuffer());
+            final int length = os.size();
+            final String resolution = String.format(Locale.US, "%d:%d|", size.x, size.y);
 
-        fos.write(resolution.getBytes(Charset.forName("US-ASCII")));
-        fos.write(outputBuffer, 0, length);
-        fos.close();
+            fos.write(resolution.getBytes(Charset.forName("US-ASCII")));
+            fos.write(os.innerBuffer(), 0, length);
+        }
 
         promise.resolve(uri);
     }
 
     private void saveToDataUriString(@NonNull final View view) throws IOException {
-        final ReusableByteArrayOutputStream os = new ReusableByteArrayOutputStream(outputBuffer);
+        final ReusableByteArrayOutputStream os = new ReusableByteArrayOutputStream(outputBuffer.get());
         captureView(view, os);
 
-        outputBuffer = os.innerBuffer();
+        outputBuffer.set(os.innerBuffer());
         final int length = os.size();
 
-        final String data = Base64.encodeToString(outputBuffer, 0, length, Base64.NO_WRAP);
+        final String data = Base64.encodeToString(os.innerBuffer(), 0, length, Base64.NO_WRAP);
 
         // correct the extension if JPG
-        final String imageFormat = "jpg".equals(extension) ? "jpeg" : extension;
+        final String imageFormat = "jpg".equals(extension) ? "jpeg"
+                : "webm".equals(extension) ? "webp" : extension;
 
         promise.resolve("data:image/" + imageFormat + ";base64," + data);
     }
@@ -310,11 +312,11 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
         final boolean isRaw = Formats.RAW == this.format;
         final boolean isZippedBase64 = Results.ZIP_BASE_64.equals(this.result);
 
-        final ReusableByteArrayOutputStream os = new ReusableByteArrayOutputStream(outputBuffer);
+        final ReusableByteArrayOutputStream os = new ReusableByteArrayOutputStream(outputBuffer.get());
         final Point size = captureView(view, os);
 
         // in case of buffer grow that will be a new array with bigger size
-        outputBuffer = os.innerBuffer();
+        outputBuffer.set(os.innerBuffer());
         final int length = os.size();
         final String resolution = String.format(Locale.US, "%d:%d|", size.x, size.y);
         final String header = (isRaw ? resolution : "");
@@ -322,19 +324,23 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
 
         if (isZippedBase64) {
             final Deflater deflater = new Deflater();
-            deflater.setInput(outputBuffer, 0, length);
-            deflater.finish();
+            try {
+                deflater.setInput(os.innerBuffer(), 0, length);
+                deflater.finish();
 
-            final ReusableByteArrayOutputStream zipped = new ReusableByteArrayOutputStream(new byte[32]);
-            byte[] buffer = new byte[1024];
-            while (!deflater.finished()) {
-                int count = deflater.deflate(buffer); // returns the generated code... index
-                zipped.write(buffer, 0, count);
+                final ReusableByteArrayOutputStream zipped = new ReusableByteArrayOutputStream(new byte[32]);
+                byte[] buffer = new byte[1024];
+                while (!deflater.finished()) {
+                    int count = deflater.deflate(buffer);
+                    zipped.write(buffer, 0, count);
+                }
+
+                data = header + Base64.encodeToString(zipped.innerBuffer(), 0, zipped.size(), Base64.NO_WRAP);
+            } finally {
+                deflater.end();
             }
-
-            data = header + Base64.encodeToString(zipped.innerBuffer(), 0, zipped.size(), Base64.NO_WRAP);
         } else {
-            data = header + Base64.encodeToString(outputBuffer, 0, length, Base64.NO_WRAP);
+            data = header + Base64.encodeToString(os.innerBuffer(), 0, length, Base64.NO_WRAP);
         }
 
         promise.resolve(data);
@@ -806,18 +812,22 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
                 final Bitmap toRecycle = originalToRecycle.getAndSet(null);
                 if (toRecycle != null) recycleBitmap(toRecycle);
                 bitmap = scaledBitmap;
+                resolution.x = bitmap.getWidth();
+                resolution.y = bitmap.getHeight();
             }
 
             // special case, just save RAW ARGB array without any compression
             if (Formats.RAW == this.format && os instanceof ReusableByteArrayOutputStream) {
-                final int total = w * h * ARGB_SIZE;
+                final int total = bitmap.getByteCount();
                 final ReusableByteArrayOutputStream rbaos = cast(os);
                 bitmap.copyPixelsToBuffer(rbaos.asBuffer(total));
                 rbaos.setSize(total);
             } else {
                 final Bitmap.CompressFormat cf = Formats.mapping[this.format];
 
-                bitmap.compress(cf, (int) (100.0 * quality), os);
+                if (!bitmap.compress(cf, (int) (100.0 * quality), os)) {
+                    throw new RuntimeException("Failed to encode snapshot bitmap");
+                }
             }
 
             return resolution; // return image width and height
