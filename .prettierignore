@@ -11,6 +11,10 @@ ios/build/
 example/android/build/
 example/ios/build/
 **/build/
+windows/**/bin/
+windows/**/obj/
+example-windows/windows/**/bin/
+example-windows/windows/**/obj/
 **/.gradle/
 **/.cxx/
 
