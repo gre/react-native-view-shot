@@ -208,6 +208,47 @@ Ne pas forcer l'assertion. Explorer dans cet ordre :
 
 ---
 
+## 3bis. Résultats mesurés (2026-09-05, iPhone 17 Pro, RN 0.84.1)
+
+Étape 3 exécutée. Mesures au pixel, avant fix :
+
+| carte            | uniqueColors (ric) | diff draw↔ric | verdict                                     |
+| ---------------- | ------------------ | -------------- | ------------------------------------------- |
+| `plain`          | 16                 | 0.0000         | ✓ garde-fou                                 |
+| `border`         | **1**              | **0.1092**     | ✕ **bug reproduit**                         |
+| `border-clipped` | 16                 | 0.0000         | ✓ non affectée                              |
+| `nested-border`  | —                  | —              | ✕ casse aussi                               |
+| `scroll-border`  | 16                 | < 0.02         | ✓ **le cas du rapporteur NE reproduit PAS** |
+
+Trois conclusions :
+
+1. **La branche masque est hors de cause.** `overflow: hidden` rebascule
+   `useCoreAnimationBorderRendering` à `true` (`RCTViewComponentView.mm:968`,
+   clause `|| clipsToBounds`) : aucune sous-couche n'est ajoutée. L'incertitude
+   de l'étape 0 est levée, et **l'Option B suffit**.
+2. **La vue bordée n'a pas besoin d'être la racine de la capture** —
+   `nested-border` casse aussi. L'hypothèse « c'est un effet de racine » est
+   fausse.
+3. **⚠️ Le cas exact de l'issue ne reproduit pas.** ScrollView +
+   `snapshotContentContainer` + items bordés rend identiquement dans les deux
+   modes, avec ou sans fix. Ce qui est reproduit ici a la signature de #677
+   (vue bordée + `renderInContext` → bloc uni) sans être prouvé être la même
+   instance.
+
+Ce qui distingue `nested-border` (casse) de `scroll-border` (passe) n'est pas
+établi. Piste non vérifiée : `snapshotContentContainer` redimensionne
+`scrollView.frame`, ce qui force une passe de layout — laquelle pourrait
+remonter les calques de contenu après le calque de fond, et rendre l'ordre
+correct par accident. Si c'est ça, le bug dépend de l'ordre de montage et est
+donc intermittent, ce qui expliquerait qu'il touche certains items du
+rapporteur et pas d'autres.
+
+**Conséquence pour l'étape 6 :** on ne peut pas annoncer au rapporteur que
+#677 est corrigé. On peut dire qu'un bug réel de la même famille est corrigé,
+et lui demander de vérifier sur son app.
+
+---
+
 ## 4. Corriger
 
 ⚠️ **Ne rien écrire ici avant que l'étape 3 soit rouge pour la bonne raison.**
@@ -250,7 +291,10 @@ transforment un rapport flou en gap **connu, reproductible et surveillé**.
 > Cf. le précédent `StyleFilters` (#578) : écran avec `status: 'bug'`, pas de fix.
 > Une note courte suffit — pas de doc de troubleshooting multi-paragraphes.
 
-**Recommandation :** viser **B**, avec A en repli si B ne suffit pas. Décider après l'étape 3.
+**Décidé après l'étape 3 : Option B.** Implémentée dans `ios/RNViewShot.mm`
+(`RNViewShotSortSublayersByZPosition` + restauration sous `CATransaction` avec
+actions désactivées). Les 5 cartes passent avec le fix, dont `border` et
+`nested-border` qui échouaient.
 
 ---
 
