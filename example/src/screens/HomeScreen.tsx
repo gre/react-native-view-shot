@@ -115,6 +115,15 @@ const testCases: { [category: string]: TestCase[] } = {
       priority: 'high',
       status: 'bug',
     },
+    {
+      key: 'RenderInContext',
+      title: 'RenderInContext',
+      description:
+        'useRenderInContext + borderWidth — content disappears (#677)',
+      emoji: '🩹',
+      priority: 'high',
+      status: 'bug',
+    },
   ],
   '🟠 ADVANCED TESTS': [
     // {
