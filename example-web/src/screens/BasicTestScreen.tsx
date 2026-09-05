@@ -56,7 +56,8 @@ const BasicTestScreen: React.FC<Props> = ({goBack}) => {
 
     const link = document.createElement("a");
     link.href = imageUri;
-    link.download = `viewshot-${Date.now()}.png`;
+    const extension = imageUri.startsWith("data:image/jpeg;") ? "jpg" : "png";
+    link.download = `viewshot-${Date.now()}.${extension}`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
