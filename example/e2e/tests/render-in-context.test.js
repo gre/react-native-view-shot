@@ -24,7 +24,8 @@
  */
 
 // `expect` in this scope is Detox's element matcher. Value assertions need
-// Jest's, which Detox's docs tell you to require explicitly.
+// Jest's, which Detox's docs tell you to require explicitly. `expect` is a
+// direct devDependency so this does not rely on hoisting out of jest's tree.
 const { expect: jestExpect } = require('expect');
 const {
   readPng,
@@ -46,7 +47,16 @@ const CARDS = [
 const uris = {};
 
 describe('ViewShot - useRenderInContext (#677)', () => {
+  // `useRenderInContext` is iOS-only, and `result: 'tmpfile'` returns a path
+  // inside the emulator on Android, which this host-side process cannot read.
+  // jest.config testMatch picks this file up for both configurations, so the
+  // skip has to be explicit.
+  const isIOS = device.getPlatform() === 'ios';
+  const itIOS = isIOS ? it : it.skip;
+
   beforeAll(async () => {
+    if (!isIOS) return;
+
     await device.launchApp({
       newInstance: true,
       permissions: { photos: 'YES', camera: 'YES' },
@@ -167,14 +177,17 @@ describe('ViewShot - useRenderInContext (#677)', () => {
    * If this fails, the tooling is broken (bad URI, unreadable PNG, wrong
    * region) and every other result in this file is meaningless.
    */
-  it('renders the border-less card identically through both strategies', () => {
-    const draw = readPng(uris['draw-plain']);
-    const ric = readPng(uris['ric-plain']);
+  itIOS(
+    'renders the border-less card identically through both strategies',
+    () => {
+      const draw = readPng(uris['draw-plain']);
+      const ric = readPng(uris['ric-plain']);
 
-    const stats = regionStats(ric, centerRegion(ric));
-    jestExpect(stats.uniqueColors).toBeGreaterThan(1);
-    jestExpect(diffRatio(draw, ric)).toBeLessThan(0.02);
-  });
+      const stats = regionStats(ric, centerRegion(ric));
+      jestExpect(stats.uniqueColors).toBeGreaterThan(1);
+      jestExpect(diffRatio(draw, ric)).toBeLessThan(0.02);
+    },
+  );
 
   /**
    * THE BUG (#677).
@@ -184,7 +197,7 @@ describe('ViewShot - useRenderInContext (#677)', () => {
    * `_backgroundColorLayer` held behind the content only by `zPosition`.
    * `renderInContext:` ignores `zPosition` and paints it last — over the text.
    */
-  it('renders the bordered card identically through both strategies', () => {
+  itIOS('renders the bordered card identically through both strategies', () => {
     const draw = readPng(uris['draw-border']);
     const ric = readPng(uris['ric-border']);
 
@@ -206,21 +219,24 @@ describe('ViewShot - useRenderInContext (#677)', () => {
    * fixing that needs a different change than the zPosition ordering, so which
    * of these two tests fails decides the shape of the fix.
    */
-  it('renders the clipped bordered card identically through both strategies', () => {
-    const draw = readPng(uris['draw-border-clipped']);
-    const ric = readPng(uris['ric-border-clipped']);
+  itIOS(
+    'renders the clipped bordered card identically through both strategies',
+    () => {
+      const draw = readPng(uris['draw-border-clipped']);
+      const ric = readPng(uris['ric-border-clipped']);
 
-    const stats = regionStats(ric, centerRegion(ric));
-    jestExpect(stats.uniqueColors).toBeGreaterThan(1);
-    jestExpect(diffRatio(draw, ric)).toBeLessThan(0.02);
-  });
+      const stats = regionStats(ric, centerRegion(ric));
+      jestExpect(stats.uniqueColors).toBeGreaterThan(1);
+      jestExpect(diffRatio(draw, ric)).toBeLessThan(0.02);
+    },
+  );
 
   /**
    * Does the bordered view have to BE the capture root? The reporter's items
    * are descendants, so if this passes while `border` fails, the reduction is
    * not faithful to the report.
    */
-  it('renders a bordered CHILD of the capture root identically', () => {
+  itIOS('renders a bordered CHILD of the capture root identically', () => {
     const draw = readPng(uris['draw-nested-border']);
     const ric = readPng(uris['ric-nested-border']);
 
@@ -238,12 +254,15 @@ describe('ViewShot - useRenderInContext (#677)', () => {
    * the reported configuration itself is covered, rather than only our
    * reduction of it.
    */
-  it("renders the reporter's ScrollView case identically through both strategies", () => {
-    const draw = readPng(uris['draw-scroll-border']);
-    const ric = readPng(uris['ric-scroll-border']);
+  itIOS(
+    "renders the reporter's ScrollView case identically through both strategies",
+    () => {
+      const draw = readPng(uris['draw-scroll-border']);
+      const ric = readPng(uris['ric-scroll-border']);
 
-    const stats = regionStats(ric, centerRegion(ric));
-    jestExpect(stats.uniqueColors).toBeGreaterThan(1);
-    jestExpect(diffRatio(draw, ric)).toBeLessThan(0.02);
-  });
+      const stats = regionStats(ric, centerRegion(ric));
+      jestExpect(stats.uniqueColors).toBeGreaterThan(1);
+      jestExpect(diffRatio(draw, ric)).toBeLessThan(0.02);
+    },
+  );
 });

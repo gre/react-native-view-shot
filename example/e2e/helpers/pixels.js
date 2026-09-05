@@ -40,8 +40,12 @@ function readPng(filePath) {
  * logical terms without worrying about the device scale factor.
  */
 function clampRegion(png, region) {
-  const x = Math.max(0, Math.floor(region.x));
-  const y = Math.max(0, Math.floor(region.y));
+  // Clamp the origin from both sides: an out-of-bounds x/y would otherwise
+  // read past the buffer and turn every statistic into NaN, with uniqueColors
+  // collapsing to 1 — which reads exactly like "flat block", i.e. a false bug
+  // signal rather than an error.
+  const x = Math.min(Math.max(0, Math.floor(region.x)), png.width - 1);
+  const y = Math.min(Math.max(0, Math.floor(region.y)), png.height - 1);
   const w = Math.max(1, Math.min(Math.floor(region.w), png.width - x));
   const h = Math.max(1, Math.min(Math.floor(region.h), png.height - y));
   return { x, y, w, h };
