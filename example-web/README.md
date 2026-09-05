@@ -96,19 +96,17 @@ See `.github/workflows/ci.yml` - the `test-web-example` job runs all Playwright 
 
 **CI Artifacts:**
 
-- `web-snapshots-reference`: Current reference snapshots (download to update local snapshots)
-- `web-snapshots-diff`: Visual diffs when tests fail (actual vs expected)
+- `web-snapshots-actual`: Actual, expected and diff images from failed comparisons
 - `playwright-report`: Full HTML test report
 - `playwright-test-results`: Detailed test results
 
 **When snapshots differ:**
 
 - The CI will show a clear message in the GitHub Actions summary
-- Download the `web-snapshots-reference` artifact
-- Replace `example-web/e2e/snapshots/reference/` with the downloaded files
-- Commit the updated snapshots
+- Run `./scripts/update-snapshots-from-ci.sh <RUN_ID>` from `example-web/` to import only the actual images from `web-snapshots-actual`
+- Review every changed reference image and commit only intended visual changes
 
-**Note:** Snapshots are platform-specific (Linux vs macOS). The CI runs on Linux, so you may need to update snapshots when running locally on macOS.
+**Note:** Committed reference images are generated on Linux. Local non-Linux runs use separate platform-suffixed images; do not replace the Linux references with macOS or Windows output. See [snapshot guidance](e2e/snapshots/README.md).
 
 ## Related
 

@@ -81,7 +81,7 @@ export interface ViewShotProperties {
    * - if not defined (default). the capture is not automatic and you need to use the ref and call capture()
    *   yourself.
    * - "mount". Capture the view once at mount. (It is important to understand image loading won't be waited, in
-   *   such case you want to use "none" with viewShotRef.capture() after Image#onLoad.)
+   *   such case omit captureMode and call viewShotRef.current.capture() after Image#onLoad.)
    * - "continuous" EXPERIMENTAL, this will capture A LOT of images continuously. For very specific use-cases.
    * - "update" EXPERIMENTAL, this will capture images each time React redraw (on did update). For very specific
    *   use-cases.
