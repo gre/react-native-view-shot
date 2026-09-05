@@ -119,10 +119,10 @@ const testCases: { [category: string]: TestCase[] } = {
       key: 'RenderInContext',
       title: 'RenderInContext',
       description:
-        'useRenderInContext + borderWidth — content disappears (#677)',
+        'useRenderInContext vs drawViewHierarchyInRect — zPosition (#677)',
       emoji: '🩹',
       priority: 'high',
-      status: 'bug',
+      status: 'tested',
     },
   ],
   '🟠 ADVANCED TESTS': [

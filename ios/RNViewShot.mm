@@ -60,11 +60,35 @@ static void RNViewShotSortSublayersByZPosition(CALayer *layer,
   }
 }
 
+/**
+ * Put each reordered array back the way it was.
+ *
+ * `renderInContext:` drives `display` / `drawInContext:` on layers that need
+ * it, so a delegate could add or remove a sublayer while we are rendering.
+ * Assigning the pre-render snapshot back wholesale would drop such an addition
+ * or resurrect a removal, corrupting the live view. So the current array is
+ * reordered to the recorded order instead: layers no longer present are simply
+ * never re-added, and layers added meanwhile keep their relative order at the
+ * end, where `addSublayer:` would have put them.
+ */
 static void RNViewShotRestoreSublayers(NSArray<CALayer *> *mutated,
                                        NSArray<NSArray<CALayer *> *> *originals)
 {
   for (NSUInteger i = 0; i < mutated.count; i++) {
-    mutated[i].sublayers = originals[i];
+    CALayer *layer = mutated[i];
+    NSArray<CALayer *> *original = originals[i];
+    NSArray<CALayer *> *current = layer.sublayers;
+
+    if ([current isEqualToArray:original]) continue;
+
+    NSMutableArray<CALayer *> *restored = [NSMutableArray arrayWithCapacity:current.count];
+    for (CALayer *sublayer in original) {
+      if ([current containsObject:sublayer]) [restored addObject:sublayer];
+    }
+    for (CALayer *sublayer in current) {
+      if (![original containsObject:sublayer]) [restored addObject:sublayer];
+    }
+    layer.sublayers = restored;
   }
 }
 
