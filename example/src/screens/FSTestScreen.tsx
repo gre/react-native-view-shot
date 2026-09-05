@@ -36,7 +36,8 @@ const FSTestScreen: React.FC = () => {
   };
 
   const cycleFormat = () => {
-    const formats: Array<'png' | 'jpg' | 'webm'> = ['png', 'jpg', 'webm'];
+    const formats: Array<'png' | 'jpg' | 'webm'> =
+      Platform.OS === 'android' ? ['png', 'jpg', 'webm'] : ['png', 'jpg'];
     const currentIndex = formats.indexOf(saveFormat);
     const nextIndex = (currentIndex + 1) % formats.length;
     setSaveFormat(formats[nextIndex]);

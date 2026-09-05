@@ -27,8 +27,6 @@ const ImageTestScreen: React.FC<Props> = ({goBack}) => {
           format,
           quality: 1.0, // Maximum quality
           result: "data-uri",
-          // For web, we can add pixelRatio for higher resolution
-          ...(typeof window !== "undefined" && {pixelRatio: 4}),
         });
         setCapturedUri(uri);
         console.log("Captured with format:", format);
@@ -119,7 +117,10 @@ const ImageTestScreen: React.FC<Props> = ({goBack}) => {
                 styles.formatButton,
                 format === "png" && styles.formatButtonActive,
               ]}
-              onPress={() => setFormat("png")}
+              onPress={() => {
+                setFormat("png");
+                setCapturedUri(null);
+              }}
             >
               <Text
                 style={[
@@ -136,7 +137,10 @@ const ImageTestScreen: React.FC<Props> = ({goBack}) => {
                 styles.formatButton,
                 format === "jpg" && styles.formatButtonActive,
               ]}
-              onPress={() => setFormat("jpg")}
+              onPress={() => {
+                setFormat("jpg");
+                setCapturedUri(null);
+              }}
             >
               <Text
                 style={[
@@ -170,7 +174,9 @@ const ImageTestScreen: React.FC<Props> = ({goBack}) => {
                 resizeMode="contain"
               />
               <Text style={styles.previewInfo}>
-                Format: {format.toUpperCase()} | Quality: 0.9
+                Format:{" "}
+                {capturedUri.startsWith("data:image/jpeg;") ? "JPG" : "PNG"}
+                {" | Quality: 1"}
               </Text>
             </View>
           )}
