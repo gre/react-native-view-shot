@@ -312,7 +312,7 @@ function checkCompatibleProps(props: ViewShotProperties): void {
  * method is attached to that node for the imperative `ref.current.capture()`
  * usage.
  */
-export type ViewShotRef = View & {
+export type ViewShotRef = React.ComponentRef<typeof View> & {
   capture: () => Promise<string>;
 };
 
@@ -328,7 +328,7 @@ const ViewShotComponent = forwardRef<ViewShotRef, ViewShotProperties>(
       style,
     } = props;
 
-    const rootRef = useRef<View | null>(null);
+    const rootRef = useRef<React.ComponentRef<typeof View> | null>(null);
     const rafRef = useRef<number | null>(null);
     const lastCapturedURIRef = useRef<string | null>(null);
     const resolveFirstLayoutRef = useRef<((layout: unknown) => void) | null>(
@@ -378,7 +378,7 @@ const ViewShotComponent = forwardRef<ViewShotRef, ViewShotProperties>(
     );
 
     const setRootRef = useCallback(
-      (node: View | null): void => {
+      (node: React.ComponentRef<typeof View> | null): void => {
         rootRef.current = node;
         if (node) (node as ViewShotRef).capture = capture;
         if (typeof ref === "function") {
