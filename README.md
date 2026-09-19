@@ -1,4 +1,4 @@
-# react-native-view-shot ![](https://img.shields.io/npm/v/react-native-view-shot.svg) ![](https://img.shields.io/badge/react--native-0.76%2B-05F561.svg)
+# react-native-view-shot ![](https://img.shields.io/npm/v/react-native-view-shot.svg) ![](https://img.shields.io/badge/react--native-0.80%2B-05F561.svg)
 
 Capture a React Native view to an image.
 
@@ -10,7 +10,7 @@ This library fully supports React Native's **new architecture** (Fabric + TurboM
 
 **Requirements:**
 
-- React Native >= 0.76.0
+- React Native >= 0.80.0
 - Node.js >= 20
 
 Both old and new architectures are supported for seamless migration.
