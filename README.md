@@ -43,6 +43,17 @@ npm install html2canvas-pro
 
 It is loaded lazily on the first capture. If it is missing, your bundler (webpack, Metro) fails at build time with `Can't resolve 'html2canvas-pro'`; in environments that resolve modules at runtime, `captureRef` rejects with an explicit install hint instead.
 
+`react-native` is also an optional peer dependency, so a web-only project can install `react-native-web` without pulling `react-native` (alias `react-native` to `react-native-web` in your bundler as usual).
+
+The library reads the `__DEV__` global, as React Native code does. Metro and Expo define it for you; with a custom webpack/esbuild setup you must define it yourself, otherwise the page throws `ReferenceError: __DEV__ is not defined`:
+
+```js
+// webpack.config.js
+new webpack.DefinePlugin({ __DEV__: JSON.stringify(process.env.NODE_ENV !== "production") })
+// esbuild
+--define:__DEV__=false
+```
+
 ## High Level API
 
 ```js
