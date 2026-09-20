@@ -1,4 +1,4 @@
-// Mock html2canvas before importing the module
+// Mock html2canvas-pro before importing the module
 const mockToDataURL = jest.fn();
 const mockCanvas = {
   toDataURL: mockToDataURL,
@@ -6,11 +6,12 @@ const mockCanvas = {
   height: 100,
 };
 
-jest.mock("html2canvas", () => {
-  return jest.fn().mockResolvedValue(mockCanvas);
-});
+jest.mock("html2canvas-pro", () => ({
+  __esModule: true,
+  default: jest.fn().mockResolvedValue(mockCanvas),
+}));
 
-import html2canvas from "html2canvas";
+import html2canvas from "html2canvas-pro";
 
 const RNViewShotWeb = require("../RNViewShot.web")
   .default as typeof import("../RNViewShot.web").default;

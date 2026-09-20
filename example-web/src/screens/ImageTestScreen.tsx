@@ -102,7 +102,7 @@ const ImageTestScreen: React.FC<Props> = ({goBack}) => {
               <Text style={styles.cardTitle}>📝 Text Content</Text>
               <Text style={styles.cardDescription}>
                 All styled elements including borders, shadows, and backgrounds
-                are captured by html2canvas.
+                are captured by html2canvas-pro.
               </Text>
             </View>
           </View>

@@ -125,7 +125,7 @@ const ComplexLayoutScreen: React.FC<Props> = ({goBack}) => {
 
             <View style={styles.footer}>
               <Text style={styles.footerText}>
-                Powered by react-native-view-shot + html2canvas
+                Powered by react-native-view-shot + html2canvas-pro
               </Text>
             </View>
           </View>
