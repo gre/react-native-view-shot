@@ -46,6 +46,9 @@
     "html2canvas-pro": "^2.0.0"
   },
   "peerDependenciesMeta": {
+    "react-native": {
+      "optional": true
+    },
     "html2canvas-pro": {
       "optional": true
     }
