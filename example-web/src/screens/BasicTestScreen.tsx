@@ -77,14 +77,14 @@ const BasicTestScreen: React.FC<Props> = ({goBack}) => {
           <View style={styles.captureContent}>
             <Text style={styles.title}>Hello from View Shot! 👋</Text>
             <Text style={styles.subtitle}>
-              This view is being captured using html2canvas on the web
+              This view is being captured using html2canvas-pro on the web
             </Text>
 
             <View style={styles.card}>
               <Text style={styles.cardTitle}>✅ Web Support</Text>
               <Text style={styles.cardText}>
                 The library automatically detects web platform and uses
-                html2canvas
+                html2canvas-pro
               </Text>
             </View>
 

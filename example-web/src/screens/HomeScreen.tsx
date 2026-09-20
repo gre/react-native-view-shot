@@ -23,7 +23,7 @@ const testCases: TestCase[] = [
   {
     key: "BasicTest",
     title: "Basic ViewShot",
-    description: "Simple view capture using html2canvas on web",
+    description: "Simple view capture using html2canvas-pro on web",
     emoji: "📸",
   },
   {
@@ -57,7 +57,7 @@ const HomeScreen: React.FC<Props> = ({navigate}) => {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>🌐 React Native View Shot</Text>
-        <Text style={styles.subtitle}>Web Example with html2canvas</Text>
+        <Text style={styles.subtitle}>Web Example with html2canvas-pro</Text>
         <View style={styles.architectureBadge}>
           <Text style={styles.architectureText}>
             ✅ React Native Web Support
@@ -69,8 +69,8 @@ const HomeScreen: React.FC<Props> = ({navigate}) => {
         <Text style={styles.infoTitle}>📚 About This Example</Text>
         <Text style={styles.infoText}>
           This web example demonstrates how react-native-view-shot works in web
-          browsers using html2canvas. The library automatically detects the web
-          platform and uses the appropriate implementation.
+          browsers using html2canvas-pro. The library automatically detects the
+          web platform and uses the appropriate implementation.
         </Text>
         <View style={styles.infoFeatures}>
           <Text style={styles.featureItem}>

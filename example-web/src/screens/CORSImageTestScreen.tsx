@@ -76,8 +76,8 @@ const CORSImageTestScreen: React.FC<Props> = ({goBack}) => {
           <Text style={styles.infoTitle}>About CORS Image Capture</Text>
           <Text style={styles.infoText}>
             This test verifies that cross-origin images are captured correctly
-            using html2canvas with the useCORS option. Without useCORS, images
-            from different domains would appear blank in the capture.
+            using html2canvas-pro with the useCORS option. Without useCORS,
+            images from different domains would appear blank in the capture.
           </Text>
         </View>
 

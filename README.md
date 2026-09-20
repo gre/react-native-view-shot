@@ -33,6 +33,16 @@ npx expo install react-native-view-shot
 npx pod-install
 ```
 
+### Web
+
+On web (`react-native-web`, Expo web), captures are rendered with [html2canvas-pro](https://github.com/yorickshan/html2canvas-pro). It is an optional peer dependency, so it is not installed on native-only projects — add it yourself when targeting the web:
+
+```bash
+npm install html2canvas-pro
+```
+
+It is loaded lazily on the first capture. If it is missing, your bundler (webpack, Metro) fails at build time with `Can't resolve 'html2canvas-pro'`; in environments that resolve modules at runtime, `captureRef` rejects with an explicit install hint instead.
+
 ## High Level API
 
 ```js
@@ -190,7 +200,7 @@ Returns a Promise of the image URI.
 
 ### Web Example
 
-[Checkout react-native-view-shot-web-example](example-web) - Web example demonstrating how the library works in browsers using html2canvas.
+[Checkout react-native-view-shot-web-example](example-web) - Web example demonstrating how the library works in browsers using html2canvas-pro.
 
 ## Interoperability Table
 
@@ -214,7 +224,7 @@ Model tested: iPhone 6 (iOS), Nexus 5 (Android).
 2. It returns an empty image (not a failure Promise).
 3. Component itself lacks platform support.
 4. But you can just use the react-native-maps snapshot function: https://github.com/airbnb/react-native-maps#take-snapshot-of-map
-5. Web support via html2canvas has limitations with SVG rendering. Basic SVG works, complex SVG may have issues.
+5. Web support via html2canvas-pro has limitations with SVG rendering. Basic SVG works, complex SVG may have issues.
 
 ## Performance Optimization
 
