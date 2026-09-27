@@ -7,7 +7,7 @@ test.describe("ViewShot Web Example", () => {
     // Verify home page loads
     await expect(page.locator("text=React Native View Shot")).toBeVisible();
     await expect(
-      page.locator("text=Web Example with html2canvas"),
+      page.locator("text=Web Example with html2canvas-pro"),
     ).toBeVisible();
   });
 

@@ -1,6 +1,6 @@
 # React Native View Shot - Web Example
 
-Web example demonstrating `react-native-view-shot` in browsers using `html2canvas`.
+Web example demonstrating `react-native-view-shot` in browsers using `html2canvas-pro`.
 
 ## Quick Start
 
@@ -14,7 +14,7 @@ Opens at `http://localhost:3000`
 ## What's Included
 
 - **Basic ViewShot**: Simple captures with PNG/JPG formats and Base64/Data URI output
-- **Transparency Test**: PNG transparency support (with html2canvas limitations)
+- **Transparency Test**: PNG transparency support (with html2canvas-pro limitations)
 - **Image Capture**: Views with styled elements and colors
 - **Complex Layouts**: Nested views with flexbox, shadows, borders, and gradients
 
@@ -38,7 +38,7 @@ const capture = async () => {
 ## Tech Stack
 
 - React Native Web for cross-platform components
-- html2canvas for web screenshot capture
+- html2canvas-pro for web screenshot capture
 - Webpack for bundling
 - TypeScript for type safety
 
@@ -46,7 +46,7 @@ const capture = async () => {
 
 - `result: 'tmpfile'` falls back to 'data-uri' (with warning)
 - `snapshotContentContainer` not implemented
-- Transparency edge cases due to html2canvas
+- Transparency edge cases due to html2canvas-pro
 - CORS restrictions on external images
 
 ## Build
@@ -96,22 +96,20 @@ See `.github/workflows/ci.yml` - the `test-web-example` job runs all Playwright 
 
 **CI Artifacts:**
 
-- `web-snapshots-reference`: Current reference snapshots (download to update local snapshots)
-- `web-snapshots-diff`: Visual diffs when tests fail (actual vs expected)
+- `web-snapshots-actual`: Actual, expected and diff images from failed comparisons
 - `playwright-report`: Full HTML test report
 - `playwright-test-results`: Detailed test results
 
 **When snapshots differ:**
 
 - The CI will show a clear message in the GitHub Actions summary
-- Download the `web-snapshots-reference` artifact
-- Replace `example-web/e2e/snapshots/reference/` with the downloaded files
-- Commit the updated snapshots
+- Run `./scripts/update-snapshots-from-ci.sh <RUN_ID>` from `example-web/` to import only the actual images from `web-snapshots-actual`
+- Review every changed reference image and commit only intended visual changes
 
-**Note:** Snapshots are platform-specific (Linux vs macOS). The CI runs on Linux, so you may need to update snapshots when running locally on macOS.
+**Note:** Committed reference images are generated on Linux. Local non-Linux runs use separate platform-suffixed images; do not replace the Linux references with macOS or Windows output. See [snapshot guidance](e2e/snapshots/README.md).
 
 ## Related
 
 - [Main Library](../)
 - [Native Example](../example/)
-- [html2canvas](https://html2canvas.hertzen.com/)
+- [html2canvas-pro](https://github.com/yorickshan/html2canvas-pro)

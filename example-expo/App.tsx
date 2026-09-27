@@ -9,11 +9,11 @@ import {
   Alert,
   Platform,
 } from "react-native";
-import ViewShot, {captureRef} from "react-native-view-shot";
+import ViewShot, {captureRef, type ViewShotRef} from "react-native-view-shot";
 
 export default function App() {
   const viewRef = useRef<View>(null);
-  const viewShotRef = useRef<ViewShot>(null);
+  const viewShotRef = useRef<ViewShotRef>(null);
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<"view-ref" | "viewshot">("view-ref");
@@ -137,26 +137,30 @@ export default function App() {
       <View style={styles.buttons}>
         <Text style={styles.sectionTitle}>Capture Options:</Text>
 
-        <TouchableOpacity
-          style={[styles.btn, {backgroundColor: "#007AFF"}]}
-          onPress={() => capture("png", "data-uri")}
-        >
-          <Text style={styles.btnText}>PNG (Data URI)</Text>
-        </TouchableOpacity>
+        {mode === "view-ref" && (
+          <>
+            <TouchableOpacity
+              style={[styles.btn, {backgroundColor: "#007AFF"}]}
+              onPress={() => capture("png", "data-uri")}
+            >
+              <Text style={styles.btnText}>PNG (Data URI)</Text>
+            </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.btn, {backgroundColor: "#34C759"}]}
-          onPress={() => capture("jpg", "data-uri")}
-        >
-          <Text style={styles.btnText}>JPG (Data URI)</Text>
-        </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.btn, {backgroundColor: "#34C759"}]}
+              onPress={() => capture("jpg", "data-uri")}
+            >
+              <Text style={styles.btnText}>JPG (Data URI)</Text>
+            </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.btn, {backgroundColor: "#FF9500"}]}
-          onPress={() => capture("png", "base64")}
-        >
-          <Text style={styles.btnText}>PNG (Base64)</Text>
-        </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.btn, {backgroundColor: "#FF9500"}]}
+              onPress={() => capture("png", "base64")}
+            >
+              <Text style={styles.btnText}>PNG (Base64)</Text>
+            </TouchableOpacity>
+          </>
+        )}
 
         <TouchableOpacity
           style={[styles.btn, {backgroundColor: "#FF3B30"}]}

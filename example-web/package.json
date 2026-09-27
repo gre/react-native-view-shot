@@ -1,7 +1,7 @@
 {
   "name": "viewshot-web-example",
   "version": "1.0.0",
-  "description": "Web example for react-native-view-shot demonstrating html2canvas integration",
+  "description": "Web example for react-native-view-shot demonstrating html2canvas-pro integration",
   "private": true,
   "scripts": {
     "start": "webpack serve --mode development --open",
@@ -13,7 +13,7 @@
     "test:e2e:update-snapshots": "node scripts/require-linux.js && playwright test --update-snapshots"
   },
   "dependencies": {
-    "html2canvas": "^1.4.1",
+    "html2canvas-pro": "^2.4.4",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "react-native-web": "^0.19.13"

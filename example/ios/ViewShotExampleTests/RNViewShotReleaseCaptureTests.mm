@@ -117,18 +117,11 @@
   XCTAssertFalse([self.fm fileExistsAtPath:missing]);
 }
 
-- (void)testReleaseCapture_currentlyDeletesPrefixOnlyImposterDirectories_KNOWN_LOOSE_GUARD
+- (void)testReleaseCapture_preservesFilesInPrefixOnlyImposterDirectories
 {
-  // KNOWN LOOSE GUARD — this test documents EXISTING (buggy) behaviour, not the
-  // desired one.
-  //
-  // A path that starts with `<tmp>/ReactNative` as a string prefix but is NOT
-  // inside the directory (e.g. `<tmp>/ReactNativeImposter/foo`) is currently
-  // deleted, because the implementation uses [hasPrefix:] without a path
-  // component boundary check. This is a latent bug that should be tightened in
-  // a future PR (e.g. require the prefix to end with "/" or compare path
-  // components). When that fix lands, flip this test to assert the imposter
-  // file is preserved and rename accordingly.
+  // A path that starts with `<tmp>/ReactNative` as a string prefix but is not
+  // inside the directory (e.g. `<tmp>/ReactNativeImposter/foo`) must be left
+  // alone.
   NSString *imposterDir = [NSTemporaryDirectory()
                            stringByAppendingPathComponent:@"ReactNativeImposter"];
   NSString *imposterPath = [imposterDir stringByAppendingPathComponent:@"file.png"];
@@ -137,14 +130,9 @@
 
   [self.module releaseCapture:imposterPath];
 
-  // With the current `hasPrefix:` check, the file IS deleted because
-  // "<tmp>/ReactNativeImposter/file.png" starts with "<tmp>/ReactNative".
-  // Asserting observed behaviour so a future hardening of the guard is caught
-  // here as a failure (and prompts a rename of this test).
-  XCTAssertFalse([self.fm fileExistsAtPath:imposterPath],
-                 @"current impl deletes prefix-matching paths; once the guard "
-                 @"is tightened to require a path-component boundary, flip this "
-                 @"assertion and rename the test");
+  XCTAssertTrue([self.fm fileExistsAtPath:imposterPath],
+                @"releaseCapture must not delete files outside %@",
+                self.reactNativeTmpDir);
 
   // Cleanup
   [self.fm removeItemAtPath:imposterDir error:NULL];

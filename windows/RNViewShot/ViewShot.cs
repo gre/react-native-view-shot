@@ -39,7 +39,19 @@ namespace RNViewShot
                         throw new InvalidOperationException("Capture is too large to base64-encode (" + ras.Size + " bytes)");
                     }
                     var imageBytes = new byte[(int)ras.Size];
-                    await ras.AsStream().ReadAsync(imageBytes, 0, imageBytes.Length);
+                    using (var input = ras.GetInputStreamAt(0).AsStreamForRead())
+                    {
+                        var offset = 0;
+                        while (offset < imageBytes.Length)
+                        {
+                            var read = await input.ReadAsync(imageBytes, offset, imageBytes.Length - offset);
+                            if (read == 0)
+                            {
+                                throw new EndOfStreamException("Capture stream ended before all image bytes were read");
+                            }
+                            offset += read;
+                        }
+                    }
                     var data = Convert.ToBase64String(imageBytes);
                     if (result == "data-uri")
                     {
@@ -77,7 +89,7 @@ namespace RNViewShot
             {
                 var propertySet = new BitmapPropertySet
                 {
-                    { "ImageQuality", new BitmapTypedValue(quality, Windows.Foundation.PropertyType.Single) },
+                    { "ImageQuality", new BitmapTypedValue((float)quality, Windows.Foundation.PropertyType.Single) },
                 };
                 encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream, propertySet);
             }

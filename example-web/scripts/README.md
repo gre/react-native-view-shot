@@ -28,9 +28,10 @@ When the CI generates new snapshots for Linux (chromium-linux), you can easily i
 ### What it does
 
 1. Downloads the `web-snapshots-actual` artifact from the specified CI run
-2. Extracts the snapshots
-3. Copies them to `e2e/snapshots/reference/viewshot.spec.ts-snapshots/`
-4. Renames `-actual.png` files to the standard naming convention
+2. Stages only `*-actual.png` images; expected/diff images are ignored
+3. Rejects empty or duplicate-name artifacts before changing references
+4. Copies the staged images to `e2e/snapshots/reference/viewshot.spec.ts-snapshots/`, dropping the `-actual` suffix
+5. Removes its temporary download directory on exit
 
 ### After running
 
@@ -38,4 +39,6 @@ When the CI generates new snapshots for Linux (chromium-linux), you can easily i
 2. Commit: `git add e2e/snapshots/reference/ && git commit -m "Update Linux snapshots from CI"`
 3. Push: `git push`
 
-The next CI run will use these new reference snapshots and should pass ✅
+The next CI run uses the reviewed references. Other functional failures or
+unintended visual changes still need investigation; importing images is not a
+substitute for checking correctness.

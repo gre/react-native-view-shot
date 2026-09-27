@@ -56,7 +56,8 @@ const BasicTestScreen: React.FC<Props> = ({goBack}) => {
 
     const link = document.createElement("a");
     link.href = imageUri;
-    link.download = `viewshot-${Date.now()}.png`;
+    const extension = imageUri.startsWith("data:image/jpeg;") ? "jpg" : "png";
+    link.download = `viewshot-${Date.now()}.${extension}`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -76,14 +77,14 @@ const BasicTestScreen: React.FC<Props> = ({goBack}) => {
           <View style={styles.captureContent}>
             <Text style={styles.title}>Hello from View Shot! 👋</Text>
             <Text style={styles.subtitle}>
-              This view is being captured using html2canvas on the web
+              This view is being captured using html2canvas-pro on the web
             </Text>
 
             <View style={styles.card}>
               <Text style={styles.cardTitle}>✅ Web Support</Text>
               <Text style={styles.cardText}>
                 The library automatically detects web platform and uses
-                html2canvas
+                html2canvas-pro
               </Text>
             </View>
 

@@ -30,7 +30,8 @@ const ImageTestScreen: React.FC = () => {
 
   const onCapture = useCallback(
     (base64: string) => {
-      const uri = `data:image/${captureFormat};base64,${base64}`;
+      const mimeType = captureFormat === "jpg" ? "jpeg" : captureFormat;
+      const uri = `data:image/${mimeType};base64,${base64}`;
       setCapturedUri(uri);
       setIsCapturing(false);
     },
