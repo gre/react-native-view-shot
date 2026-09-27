@@ -270,7 +270,11 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
 
     private void rejectCapture(final String message, @Nullable final Throwable cause) {
         if (output != null) output.delete();
-        promise.reject(ERROR_UNABLE_TO_SNAPSHOT, message, cause);
+        if (cause == null) {
+            promise.reject(ERROR_UNABLE_TO_SNAPSHOT, message);
+        } else {
+            promise.reject(ERROR_UNABLE_TO_SNAPSHOT, message, cause);
+        }
     }
 
     private void saveToTempFileOnDevice(@NonNull final View view) throws IOException {
