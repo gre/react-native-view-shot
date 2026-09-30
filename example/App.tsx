@@ -30,6 +30,7 @@ export type RootStackParamList = {
   // Rendering correctness
   Rendering: undefined;
   StyleFilters: undefined;
+  RenderInContext: undefined;
 };
 
 // Import all test screens
@@ -47,6 +48,7 @@ import FSTestScreen from './src/screens/FSTestScreen';
 import ScrollViewTestScreen from './src/screens/ScrollViewTestScreen';
 import RenderingTestScreen from './src/screens/RenderingTestScreen';
 import StyleFiltersTestScreen from './src/screens/StyleFiltersTestScreen';
+import RenderInContextTestScreen from './src/screens/RenderInContextTestScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -151,6 +153,11 @@ function App(): React.JSX.Element {
           name="StyleFilters"
           component={StyleFiltersTestScreen}
           options={{ title: '🎨 Style filters (Bug #578)' }}
+        />
+        <Stack.Screen
+          name="RenderInContext"
+          component={RenderInContextTestScreen}
+          options={{ title: '🩹 useRenderInContext (Bug #677)' }}
         />
       </Stack.Navigator>
     </NavigationContainer>
