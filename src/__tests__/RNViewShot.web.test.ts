@@ -8,7 +8,7 @@ const mockCanvas = {
 
 jest.mock("html2canvas-pro", () => ({
   __esModule: true,
-  default: jest.fn().mockResolvedValue(mockCanvas),
+  default: jest.fn(() => Promise.resolve(mockCanvas)),
 }));
 
 import html2canvas from "html2canvas-pro";

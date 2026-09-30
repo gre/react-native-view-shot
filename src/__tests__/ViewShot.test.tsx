@@ -6,10 +6,15 @@ const mockCaptureRef = jest.fn().mockResolvedValue("/tmp/captured.png");
 const mockReleaseCapture = jest.fn();
 jest.mock("../RNViewShot", () => ({
   __esModule: true,
+  // Getters: babel-jest hoists imports above the mock consts, so read lazily.
   default: {
-    captureRef: mockCaptureRef,
+    get captureRef() {
+      return mockCaptureRef;
+    },
     captureScreen: jest.fn(),
-    releaseCapture: mockReleaseCapture,
+    get releaseCapture() {
+      return mockReleaseCapture;
+    },
   },
 }));
 

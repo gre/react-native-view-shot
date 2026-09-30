@@ -54,8 +54,10 @@
     }
   },
   "devDependencies": {
+    "@babel/core": "^8.0.6",
     "@babel/preset-env": "^8.0.6",
     "@babel/preset-react": "^8.0.1",
+    "@babel/preset-typescript": "^8.0.1",
     "@eslint/js": "^10",
     "@types/jest": "^30.0.0",
     "@types/react": "^19.1.1",
@@ -72,7 +74,6 @@
     "react-dom": "^19.2.4",
     "react-native": "^0.84.1",
     "react-test-renderer": "^19.2.4",
-    "ts-jest": "^29.4.6",
     "typescript": "^7.0.2"
   },
   "engines": {
