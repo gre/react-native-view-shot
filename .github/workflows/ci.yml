@@ -10,6 +10,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 env:
   # Harden npm installs against transient registry network blips (e.g.
   # ECONNRESET) seen intermittently on hosted runners.
