@@ -1,20 +1,13 @@
 // swift-tools-version: 6.0
-// AUTO-SCAFFOLDED by react-native spm scaffold — safe to edit & commit via patch-package.
-// AUTO-SCAFFOLDED-VERSION: 19
-// Cache slot: 0.87.1/dual-flavor
-// Edit the contents below if needed and re-run `npx patch-package <dep-name>`
-// to persist across `npm install`. To regenerate from the podspec, remove
-// this file (or just this marker) and re-run `npx react-native spm scaffold`.
-//
-// Package references are plain relative paths, computed when this file was
-// scaffolded. They stay correct because the file is re-scaffolded per app
-// and cache slot, and any node_modules relayout reinstalls this package
-// (dropping the file) anyway.
-
 import PackageDescription
 
+// Swift Package Manager support for React Native's SwiftPM autolinking
+// (react-native >= 0.87). CocoaPods users are unaffected; see the podspec.
+// The two React Native packages are resolved by the autolinker relative to
+// build/generated/autolinking/libs/ReactNativeViewShot in the app.
 let package = Package(
     name: "ReactNativeViewShot",
+    // Must not exceed RN's generated Autolinked aggregate (iOS 15.0).
     platforms: [.iOS(.v15)],
     products: [
         .library(name: "ReactNativeViewShot", targets: ["ReactNativeViewShot"]),
@@ -26,16 +19,32 @@ let package = Package(
     targets: [
         .target(
             name: "ReactNativeViewShot",
-            dependencies: [.product(name: "ReactHeaders", package: "ReactNative"), .product(name: "ReactNativeHeaders", package: "ReactNative"), .product(name: "ReactNativeDependenciesHeaders", package: "ReactNative"), .product(name: "ReactAppHeaders", package: "React-GeneratedCode")],
-            path: ".",
-            sources: [
-                "ios/RNViewShot.h",
-                "ios/RNViewShot.mm",
+            dependencies: [
+                .product(name: "ReactHeaders", package: "ReactNative"),
+                .product(name: "ReactNativeHeaders", package: "ReactNative"),
+                .product(name: "ReactNativeDependenciesHeaders", package: "ReactNative"),
+                .product(name: "ReactAppHeaders", package: "React-GeneratedCode"),
             ],
-            publicHeadersPath: "ios",
-            cSettings: [.headerSearchPath("ios"), .headerSearchPath("."), .unsafeFlags(["-include", "react-native-spm-prefix.h"])],
-            cxxSettings: [.headerSearchPath("ios"), .headerSearchPath("."), .unsafeFlags(["-include", "react-native-spm-prefix.h"]), .define("DEBUG", .when(configuration: .debug)), .define("NDEBUG", .when(configuration: .release))],
-            linkerSettings: [.linkedFramework("UIKit"), .linkedFramework("Foundation"), .linkedFramework("CoreGraphics")]
+            path: "ios",
+            exclude: ["RNViewShot.xcodeproj"],
+            sources: ["RNViewShot.h", "RNViewShot.mm"],
+            resources: [.copy("PrivacyInfo.xcprivacy")],
+            publicHeadersPath: ".",
+            cSettings: [
+                // SwiftPM autolinking is New Architecture only; CocoaPods gets
+                // this from install_modules_dependencies.
+                .define("RCT_NEW_ARCH_ENABLED", to: "1"),
+            ],
+            cxxSettings: [
+                .define("RCT_NEW_ARCH_ENABLED", to: "1"),
+                .define("DEBUG", .when(configuration: .debug)),
+                .define("NDEBUG", .when(configuration: .release)),
+            ],
+            linkerSettings: [
+                .linkedFramework("UIKit"),
+                .linkedFramework("Foundation"),
+                .linkedFramework("CoreGraphics"),
+            ]
         ),
     ],
     cxxLanguageStandard: .cxx20
