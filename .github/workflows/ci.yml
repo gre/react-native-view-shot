@@ -148,6 +148,67 @@ jobs:
       - name: Lint podspec
         run: pod lib lint --allow-warnings --quick
 
+  build-ios-spm:
+    name: Build iOS App (SwiftPM)
+    runs-on: macos-15
+    needs: lint-and-type-check
+    env:
+      RN_VERSION: '0.87.1'  # first RN with SwiftPM autolinking
+      RN_CLI_VERSION: '20.2.0'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'  # RN 0.87 requires Node >= 22.13
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Pack library
+        run: |
+          npm pack --pack-destination "$RUNNER_TEMP"
+          # The published tarball must carry the SwiftPM manifest
+          tar -tzf "$RUNNER_TEMP"/react-native-view-shot-*.tgz | grep -qx 'package/Package.swift'
+
+      - name: Create SwiftPM test app
+        working-directory: ${{ runner.temp }}
+        run: |
+          npx --yes @react-native-community/cli@"$RN_CLI_VERSION" init SpmTest \
+            --version "$RN_VERSION" --skip-git-init --install-pods false
+          cd SpmTest
+          npm install "$RUNNER_TEMP"/react-native-view-shot-*.tgz
+
+      - name: Switch test app to SwiftPM
+        working-directory: ${{ runner.temp }}/SpmTest
+        run: |
+          npx react-native spm add --deintegrate --yes | tee spm.log
+          # Must use the manifest we ship, not a scaffolded one
+          grep -q 'Self-managed: ReactNativeViewShot' spm.log
+
+      - name: Build iOS (SwiftPM)
+        working-directory: ${{ runner.temp }}/SpmTest/ios
+        run: |
+          xcodebuild -project SpmTest.xcodeproj \
+            -scheme SpmTest \
+            -configuration Release \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/dd \
+            build CODE_SIGNING_ALLOWED=NO
+
+      - name: Check build output
+        working-directory: ${{ runner.temp }}/SpmTest/ios
+        run: |
+          test -f build/dd/Build/Products/Release-iphonesimulator/SpmTest.app/ReactNativeViewShot_ReactNativeViewShot.bundle/PrivacyInfo.xcprivacy
+          # Compiled as a TurboModule (RCT_NEW_ARCH_ENABLED), not via the legacy interop
+          OBJ=$(find build/dd/Build/Intermediates.noindex -path '*Release-iphonesimulator*' -name RNViewShot.o | head -1)
+          nm "$OBJ" > rnviewshot.syms
+          grep -q 'getTurboModule:' rnviewshot.syms
+
   build-ios:
     name: Build iOS App
     runs-on: macos-15  # Use latest macOS with Xcode 16.1+
