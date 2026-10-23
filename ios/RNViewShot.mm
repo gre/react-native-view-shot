@@ -128,8 +128,10 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
       rendered = view;
     }
 
+    // Size of the capture when width/height are not given
+    CGSize naturalSize = snapshotContentContainer ? scrollView.contentSize : view.bounds.size;
     if (size.width < 0.1 || size.height < 0.1) {
-      size = snapshotContentContainer ? scrollView.contentSize : view.bounds.size;
+      size = naturalSize;
     }
     if (size.width < 0.1 || size.height < 0.1) {
       reject(RCTErrorUnspecified, [NSString stringWithFormat:@"The content size must not be zero or negative. Got: (%g, %g)", size.width, size.height], nil);
@@ -155,6 +157,10 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
     UIImage *image = [renderer imageWithActions:^(UIGraphicsImageRendererContext * _Nonnull rendererContext) {
       if (renderInContext) {
         // this comes with some trade-offs such as inability to capture gradients or scrollview's content in full but it works for large views
+        // renderInContext: draws the layer unscaled; scale the natural-size capture to the requested width/height like drawViewHierarchyInRect: does
+        if (!CGSizeEqualToSize(size, naturalSize) && naturalSize.width > 0 && naturalSize.height > 0) {
+          CGContextScaleCTM(rendererContext.CGContext, size.width / naturalSize.width, size.height / naturalSize.height);
+        }
         [rendered.layer renderInContext:rendererContext.CGContext];
         success = YES;
       }
