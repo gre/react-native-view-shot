@@ -1,0 +1,463 @@
+# React Native compatibility watch.
+#
+# Weekly, checks the `latest` and `next` react-native releases on npm. For each
+# version that has no "RN compat" issue yet, builds a fresh app at that version
+# with the packed library (type-check, release bundle, Android and iOS builds,
+# new architecture) and opens an issue with the result and any compiler
+# warnings in the library's native code: a heads-up on what needs adapting
+# before it breaks.
+#
+# Run it by hand with a specific version (e.g. a nightly) via workflow_dispatch;
+# `force` re-tests a version that already has an issue and comments on it.
+# Pull requests that change this workflow run it as a dry run on `latest`: the
+# report goes to the job summary instead of an issue.
+
+name: RN compatibility
+
+on:
+  schedule:
+    - cron: '0 6 * * 1' # Mondays 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'react-native version to test (default: npm latest + next)'
+        required: false
+        type: string
+      force:
+        description: 'Re-test versions that already have an issue'
+        required: false
+        type: boolean
+        default: false
+  pull_request:
+    paths:
+      - .github/workflows/rn-compat.yml
+      - .github/scripts/rn-compat-app.sh
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rn-compat-${{ github.event_name == 'pull_request' && github.ref || inputs.version || 'watch' }}
+  cancel-in-progress: false
+
+# Explicit bash runs steps with `-eo pipefail`, so `cmd | tee log` fails when
+# cmd does.
+defaults:
+  run:
+    shell: bash
+
+env:
+  ISSUE_LABEL: rn-compat
+  TITLE_PREFIX: 'RN compat: react-native@'
+
+jobs:
+  resolve:
+    name: Resolve versions
+    runs-on: ubuntu-latest
+    permissions:
+      issues: read
+    outputs:
+      versions: ${{ steps.resolve.outputs.versions }}
+    steps:
+      - name: Pick versions to test
+        id: resolve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_FORCE: ${{ inputs.force }}
+          DRY_RUN: ${{ github.event_name == 'pull_request' }}
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "versions=$(npm view react-native dist-tags.latest --json | jq -c '[.]')" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ -n "$INPUT_VERSION" ]; then
+            # Resolve tags (e.g. "nightly"); npm prints nothing for an unknown version.
+            candidates=$( (npm view "react-native@$INPUT_VERSION" version --json 2>/dev/null || true) \
+              | jq -r 'if type == "array" then .[-1] else . end')
+            if [ -z "$candidates" ]; then
+              echo "::error::react-native@$INPUT_VERSION not found on npm"
+              exit 1
+            fi
+          else
+            tags=$(npm view react-native dist-tags --json)
+            latest=$(jq -r '.latest // empty' <<<"$tags")
+            next=$(jq -r '.next // empty' <<<"$tags")
+            candidates="$latest"
+            # `next` lingers on the last RC after the release; keep it only
+            # when it targets a newer minor than `latest`.
+            minor() { cut -d. -f1-2 <<<"$1"; }
+            if [ -n "$next" ] && [ "$(printf '%s\n%s\n' "$(minor "$latest")" "$(minor "$next")" | sort -V | tail -1)" != "$(minor "$latest")" ]; then
+              candidates="$candidates $next"
+            fi
+          fi
+
+          # Versions already reported compatible are done; failing ones are
+          # re-tested every week (the report only comments when the result
+          # changes), so a transient failure doesn't stick.
+          versions=()
+          for v in $candidates; do
+            title=$(gh issue list --label "$ISSUE_LABEL" --state all --limit 100 \
+              --search "\"$TITLE_PREFIX$v \" in:title" --json title \
+              | jq -r --arg p "$TITLE_PREFIX$v " '[.[] | select(.title | startswith($p))][0].title // ""')
+            if [[ "$title" == *"✅"* ]] && [ "$INPUT_FORCE" != "true" ]; then
+              echo "react-native@$v already reported compatible, skipping"
+            else
+              versions+=("$v")
+            fi
+          done
+          json=$(printf '%s\n' "${versions[@]}" | jq -R . | jq -sc 'map(select(length > 0))')
+          echo "Versions to test: $json"
+          echo "versions=$json" >> "$GITHUB_OUTPUT"
+
+  android:
+    name: Android (RN ${{ matrix.version }})
+    needs: resolve
+    if: needs.resolve.outputs.versions != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ${{ fromJSON(needs.resolve.outputs.versions) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      # Same cleanup as ci.yml: the new-arch Android build exhausts the
+      # runner's free disk otherwise.
+      - name: Free up disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet \
+                      /opt/ghc /usr/local/.ghcup \
+                      /opt/hostedtoolcache/CodeQL \
+                      /usr/local/share/boost \
+                      /usr/local/share/powershell \
+                      /usr/local/lib/node_modules || true
+          sudo docker image prune --all --force || true
+          df -h /
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v6
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Pack library and create app
+        id: setup
+        continue-on-error: true
+        env:
+          VERSION: ${{ matrix.version }}
+        run: |
+          {
+            npm install --legacy-peer-deps --no-audit --no-fund # builds lib/ (prepare)
+            npm pack --ignore-scripts
+            .github/scripts/rn-compat-app.sh "$VERSION" react-native-view-shot-*.tgz "$RUNNER_TEMP/app"
+          } 2>&1 | tee "$RUNNER_TEMP/setup.log"
+
+      - name: Type-check
+        id: typecheck
+        if: steps.setup.outcome == 'success'
+        continue-on-error: true
+        working-directory: ${{ runner.temp }}/app
+        run: npx tsc --noEmit 2>&1 | tee "$RUNNER_TEMP/typecheck.log"
+
+      - name: Bundle (release)
+        id: bundle
+        if: steps.setup.outcome == 'success'
+        continue-on-error: true
+        working-directory: ${{ runner.temp }}/app
+        run: |
+          npx react-native bundle --platform android --dev false \
+            --entry-file index.js --bundle-output "$RUNNER_TEMP/index.android.bundle" \
+            2>&1 | tee "$RUNNER_TEMP/bundle.log"
+
+      - name: Build Android
+        id: build
+        if: steps.setup.outcome == 'success'
+        continue-on-error: true
+        working-directory: ${{ runner.temp }}/app/android
+        run: |
+          ./gradlew assembleDebug --no-daemon --warning-mode all \
+            -PreactNativeArchitectures=x86_64 \
+            2>&1 | tee "$RUNNER_TEMP/build.log"
+
+      - name: Collect result
+        if: always()
+        env:
+          VERSION: ${{ matrix.version }}
+          SETUP: ${{ steps.setup.outcome }}
+          TYPECHECK: ${{ steps.typecheck.outcome }}
+          BUNDLE: ${{ steps.bundle.outcome }}
+          BUILD: ${{ steps.build.outcome }}
+        run: |
+          mkdir -p result
+          # Compiler warnings that point into the library's own sources (not
+          # its codegen output under android/build/): javac puts "warning:"
+          # after the path, kotlinc prefixes "w: ", and Gradle prints
+          # "Build file '<path>': line N" with the deprecation on the next line.
+          {
+            grep -hiE '^w: .*react-native-view-shot/android/|react-native-view-shot/android/.*warning' "$RUNNER_TEMP/build.log"
+            awk '/^Build file .*react-native-view-shot\/android\// { line = $0; getline; print line " " $0 }' \
+              "$RUNNER_TEMP/build.log" | grep -i deprecat
+          } 2>/dev/null | grep -v 'react-native-view-shot/android/build/' \
+            | sed -E 's#^.*node_modules/##' | sort -u > result/warnings.txt || true
+          for f in setup typecheck bundle build; do
+            tail -n 80 "$RUNNER_TEMP/$f.log" > "result/$f.log" 2>/dev/null || true
+          done
+          jq -n --arg platform android --arg version "$VERSION" \
+            --arg setup "$SETUP" --arg typecheck "$TYPECHECK" --arg bundle "$BUNDLE" --arg build "$BUILD" \
+            '{platform: $platform, version: $version, steps: {setup: $setup, typecheck: $typecheck, bundle: $bundle, build: $build}}' \
+            > result/result.json
+          cat result/result.json
+
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: rn-compat-android-${{ matrix.version }}
+          path: result/
+
+  ios:
+    name: iOS (RN ${{ matrix.version }})
+    needs: resolve
+    if: needs.resolve.outputs.versions != '[]'
+    runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ${{ fromJSON(needs.resolve.outputs.versions) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: Setup CocoaPods
+        uses: maxim-lobanov/setup-cocoapods@v1
+        with:
+          version: latest
+
+      - name: Pack library and create app
+        id: setup
+        continue-on-error: true
+        env:
+          VERSION: ${{ matrix.version }}
+        run: |
+          {
+            npm install --legacy-peer-deps --no-audit --no-fund # builds lib/ (prepare)
+            npm pack --ignore-scripts
+            .github/scripts/rn-compat-app.sh "$VERSION" react-native-view-shot-*.tgz "$RUNNER_TEMP/app"
+          } 2>&1 | tee "$RUNNER_TEMP/setup.log"
+
+      - name: Pod install
+        id: pods
+        if: steps.setup.outcome == 'success'
+        continue-on-error: true
+        working-directory: ${{ runner.temp }}/app/ios
+        run: pod install 2>&1 | tee "$RUNNER_TEMP/pods.log"
+
+      - name: Build iOS
+        id: build
+        continue-on-error: true
+        if: steps.pods.outcome == 'success'
+        working-directory: ${{ runner.temp }}/app/ios
+        run: |
+          xcodebuild -workspace RNCompat.xcworkspace -scheme RNCompat \
+            -configuration Debug -destination 'generic/platform=iOS Simulator' \
+            build CODE_SIGNING_ALLOWED=NO ARCHS=arm64 2>&1 | tee "$RUNNER_TEMP/build.log"
+
+      - name: Collect result
+        if: always()
+        env:
+          VERSION: ${{ matrix.version }}
+          SETUP: ${{ steps.setup.outcome }}
+          PODS: ${{ steps.pods.outcome }}
+          BUILD: ${{ steps.build.outcome }}
+        run: |
+          mkdir -p result
+          grep -hE 'react-native-view-shot/ios/.*warning:' \
+            "$RUNNER_TEMP"/build.log 2>/dev/null \
+            | sed -E 's#^.*node_modules/##' | sort -u > result/warnings.txt || true
+          tail -n 80 "$RUNNER_TEMP/setup.log" > result/setup.log 2>/dev/null || true
+          for f in pods build; do
+            [ -f "$RUNNER_TEMP/$f.log" ] || continue
+            grep -E 'error:|\*\* BUILD|\[!\]' "$RUNNER_TEMP/$f.log" | tail -n 40 > "result/$f.log" || true
+            # Not every failure prints those markers (Ruby exception, download error).
+            [ -s "result/$f.log" ] || tail -n 60 "$RUNNER_TEMP/$f.log" > "result/$f.log"
+          done
+          jq -n --arg platform ios --arg version "$VERSION" \
+            --arg setup "$SETUP" --arg pods "$PODS" --arg build "$BUILD" \
+            '{platform: $platform, version: $version, steps: {setup: $setup, pods: $pods, build: $build}}' \
+            > result/result.json
+          cat result/result.json
+
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: rn-compat-ios-${{ matrix.version }}
+          path: result/
+
+  report:
+    name: Report
+    needs: [resolve, android, ios]
+    # Not always(): a cancelled run must not be reported as a failure.
+    if: ${{ !cancelled() && needs.resolve.result == 'success' && needs.resolve.outputs.versions != '[]' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Download results
+        uses: actions/download-artifact@v7
+        with:
+          pattern: rn-compat-*
+          path: results
+
+      - name: Open or update issues
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSIONS: ${{ needs.resolve.outputs.versions }}
+          INPUT_FORCE: ${{ inputs.force }}
+          DRY_RUN: ${{ github.event_name == 'pull_request' }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ "$DRY_RUN" != "true" ]; then
+            gh label create "$ISSUE_LABEL" --color FBCA04 \
+              --description "React Native compatibility watch (rn-compat.yml)" --force
+          fi
+
+          example_rn=$(jq -r '.dependencies["react-native"]' example/package.json | sed -E 's/^[^0-9]*//')
+
+          for v in $(jq -r '.[]' <<<"$VERSIONS"); do
+            body=$(mktemp)
+            ok=true
+            failed=()
+            {
+              echo "Automated check of \`react-native-view-shot@$(jq -r .version package.json)\` (\`${GITHUB_SHA::7}\`) in a fresh \`react-native@$v\` app (new architecture). [Workflow run]($RUN_URL)"
+              echo
+              echo "| Platform | Step | Result |"
+              echo "|---|---|---|"
+              for platform in android ios; do
+                f="results/rn-compat-$platform-$v/result.json"
+                if [ ! -f "$f" ]; then
+                  echo "| $platform | (job) | ❌ no result |"
+                  ok=false
+                  failed+=("$platform")
+                  continue
+                fi
+                # Only a step that ran and passed counts: "skipped" follows an
+                # earlier failure and must not read as compatible.
+                while IFS=$'\t' read -r step outcome; do
+                  case "$outcome" in
+                    success) icon='✅' ;;
+                    skipped) icon='⏭️'; ok=false ;;
+                    *) icon='❌'; ok=false; failed+=("$platform $step") ;;
+                  esac
+                  echo "| $platform | $step | $icon $outcome |"
+                done < <(jq -r '.steps | to_entries[] | "\(.key)\t\(.value)"' "$f")
+              done
+              echo
+
+              warnings=$(cat results/rn-compat-*-"$v"/warnings.txt 2>/dev/null | sort -u)
+              if [ -n "$warnings" ]; then
+                echo "### Warnings in the library's code"
+                echo
+                echo "Likely adaptations to make before they turn into errors:"
+                echo
+                echo '```'
+                head -n 60 <<<"$warnings"
+                echo '```'
+              else
+                echo "No compiler warnings point into the library's code."
+              fi
+              echo
+
+              for platform in android ios; do
+                for log in results/rn-compat-$platform-"$v"/*.log; do
+                  [ -s "$log" ] || continue
+                  step=$(basename "$log" .log)
+                  outcome=$(jq -r --arg s "$step" '.steps[$s] // ""' "results/rn-compat-$platform-$v/result.json" 2>/dev/null)
+                  [ "$outcome" = "failure" ] || continue
+                  echo "<details><summary>$platform $step log (tail)</summary>"
+                  echo
+                  echo '```'
+                  cat "$log"
+                  echo '```'
+                  echo "</details>"
+                  echo
+                done
+              done
+
+              echo "### Next steps"
+              echo
+              if [[ "$v" == *-nightly-* ]]; then
+                echo "- Nightly build: no release notes or Upgrade Helper diff yet."
+              else
+                echo "- Release notes: https://github.com/facebook/react-native/releases/tag/v$v"
+              fi
+              if [ "$example_rn" != "$v" ] && [[ "$v" != *-nightly-* ]]; then
+                echo "- Upgrade the example app from $example_rn ([Upgrade Helper](https://react-native-community.github.io/upgrade-helper/?from=$example_rn&to=$v)) and run Detox."
+              fi
+              if [ -n "$warnings" ]; then
+                echo "- Address the warnings above before they become errors."
+              fi
+              echo "- Raise the \`peerDependencies\` floor / README badge if the library starts requiring this version."
+            } > "$body"
+
+            if $ok; then
+              title="$TITLE_PREFIX$v — ✅ compatible"
+            else
+              title="$TITLE_PREFIX$v — ❌ $(printf '%s, ' "${failed[@]:-checks}" | sed 's/, $//') failed"
+            fi
+
+            if [ "$DRY_RUN" = "true" ]; then
+              { echo "## $title"; echo; cat "$body"; } >> "$GITHUB_STEP_SUMMARY"
+              # The checks use continue-on-error, so fail here: a PR that
+              # breaks the harness (or meets an incompatible `latest`) is red.
+              $ok || dry_run_failed=true
+              continue
+            fi
+
+            existing=$(gh issue list --label "$ISSUE_LABEL" --state all --limit 100 \
+              --search "\"$TITLE_PREFIX$v \" in:title" --json number,title,state \
+              | jq -c --arg p "$TITLE_PREFIX$v " '[.[] | select(.title | startswith($p))][0] // empty')
+            if [ -z "$existing" ]; then
+              gh issue create --title "$title" --label "$ISSUE_LABEL" --body-file "$body"
+              continue
+            fi
+            number=$(jq -r .number <<<"$existing")
+            # Failing versions are re-tested weekly: only comment when the
+            # result changed (or on a forced re-test).
+            if [ "$(jq -r .title <<<"$existing")" = "$title" ] && [ "$INPUT_FORCE" != "true" ]; then
+              echo "#$number unchanged: $title"
+              continue
+            fi
+            gh issue edit "$number" --title "$title"
+            gh issue comment "$number" --body-file "$body"
+            # A failure must be visible in the open issues; a pass leaves the
+            # state to the maintainer (the example upgrade may be pending).
+            if ! $ok && [ "$(jq -r .state <<<"$existing")" = "CLOSED" ]; then
+              gh issue reopen "$number"
+            fi
+            echo "Updated #$number: $title"
+          done
+
+          if [ "${dry_run_failed:-}" = "true" ]; then
+            echo "::error::Dry run did not report compatible, see the job summary"
+            exit 1
+          fi
