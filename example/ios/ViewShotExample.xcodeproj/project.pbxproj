@@ -10,6 +10,7 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		2A8A27A6FB5DE73C673F3249 /* libPods-ViewShotExampleTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FC04D99A75BA31580C9E0E75 /* libPods-ViewShotExampleTests.a */; };
 		36A755D11A5AFE0015B0DE4C /* RNViewShotEncodingTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = E8B24C6C71854D7AAFDF405D /* RNViewShotEncodingTests.mm */; };
+		4A59BD3D8D582F30A4EEF472 /* RNViewShotRenderInContextTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 672E61412E0BF41EBF749852 /* RNViewShotRenderInContextTests.mm */; };
 		58A23CD2F827398406615B76 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		7A13F0082931444BD8DE800F /* RNViewShotReleaseCaptureTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5C182E8F18E761A148F92B74 /* RNViewShotReleaseCaptureTests.mm */; };
@@ -39,6 +40,7 @@
 		18FD9AAD8492A83D10EE439B /* Pods-ViewShotExampleTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ViewShotExampleTests.debug.xcconfig"; path = "Target Support Files/Pods-ViewShotExampleTests/Pods-ViewShotExampleTests.debug.xcconfig"; sourceTree = "<group>"; };
 		2257FE4D308A78193EE13AA2 /* Pods-ViewShotExampleTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ViewShotExampleTests.release.xcconfig"; path = "Target Support Files/Pods-ViewShotExampleTests/Pods-ViewShotExampleTests.release.xcconfig"; sourceTree = "<group>"; };
 		5C182E8F18E761A148F92B74 /* RNViewShotReleaseCaptureTests.mm */ = {isa = PBXFileReference; includeInIndex = 1; path = RNViewShotReleaseCaptureTests.mm; sourceTree = "<group>"; };
+		672E61412E0BF41EBF749852 /* RNViewShotRenderInContextTests.mm */ = {isa = PBXFileReference; includeInIndex = 1; path = RNViewShotRenderInContextTests.mm; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = ViewShotExample/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = ViewShotExample/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		861C42BC0C7660F41F61AD83 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -106,6 +108,7 @@
 			children = (
 				5C182E8F18E761A148F92B74 /* RNViewShotReleaseCaptureTests.mm */,
 				E8B24C6C71854D7AAFDF405D /* RNViewShotEncodingTests.mm */,
+				672E61412E0BF41EBF749852 /* RNViewShotRenderInContextTests.mm */,
 				861C42BC0C7660F41F61AD83 /* Info.plist */,
 			);
 			name = ViewShotExampleTests;
@@ -361,6 +364,7 @@
 			files = (
 				7A13F0082931444BD8DE800F /* RNViewShotReleaseCaptureTests.mm in Sources */,
 				36A755D11A5AFE0015B0DE4C /* RNViewShotEncodingTests.mm in Sources */,
+				4A59BD3D8D582F30A4EEF472 /* RNViewShotRenderInContextTests.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
