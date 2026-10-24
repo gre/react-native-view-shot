@@ -1,2 +1,5 @@
-node = "20"
+node = "24"
 npm = "latest"
+
+[settings]
+detect-strategy = "only-prototools"
