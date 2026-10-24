@@ -15,6 +15,27 @@
     },
     "./package.json": "./package.json"
   },
+  "files": [
+    "src",
+    "lib",
+    "android",
+    "ios",
+    "windows",
+    "Package.swift",
+    "react-native-view-shot.podspec",
+    "react-native.config.cjs",
+    "!**/__tests__",
+    "!android/src/test",
+    "!android/build",
+    "!android/.gradle",
+    "!android/local.properties",
+    "!android/*.iml",
+    "!ios/**/xcuserdata",
+    "!ios/**/project.xcworkspace",
+    "!windows/RNViewShot.Tests",
+    "!windows/**/bin",
+    "!windows/**/obj"
+  ],
   "keywords": [
     "react-native",
     "screenshot",
