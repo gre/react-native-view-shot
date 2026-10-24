@@ -115,6 +115,14 @@ const testCases: { [category: string]: TestCase[] } = {
       priority: 'high',
       status: 'bug',
     },
+    {
+      key: 'Resize',
+      title: 'Resize',
+      description: 'width / height with every capture strategy',
+      emoji: '📐',
+      priority: 'high',
+      status: 'new',
+    },
   ],
   '🟠 ADVANCED TESTS': [
     // {
