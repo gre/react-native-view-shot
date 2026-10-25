@@ -96,8 +96,8 @@ namespace RNViewShot
         {
             var format = options["format"].IsNull ? "png" : options["format"].AsString();
             var quality = options["quality"].IsNull ? 1.0 : options["quality"].AsDouble();
-            var width = options["width"].IsNull ? 0 : options["width"].AsInt32();
-            var height = options["height"].IsNull ? 0 : options["height"].AsInt32();
+            var width = options["width"].IsNull ? 0.0 : options["width"].AsDouble();
+            var height = options["height"].IsNull ? 0.0 : options["height"].AsDouble();
             var result = options["result"].IsNull ? "tmpfile" : options["result"].AsString();
             var path = options["path"].IsNull ? null : options["path"].AsString();
 
