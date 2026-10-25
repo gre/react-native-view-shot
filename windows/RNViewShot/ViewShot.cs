@@ -16,7 +16,7 @@ namespace RNViewShot
     {
         public const string ErrorUnableToSnapshot = "E_UNABLE_TO_SNAPSHOT";
 
-        public static async Task<string> Execute(FrameworkElement view, string extension, double quality, int width, int height, string path, string result)
+        public static async Task<string> Execute(FrameworkElement view, string extension, double quality, double width, double height, string path, string result)
         {
             try
             {
@@ -67,7 +67,7 @@ namespace RNViewShot
             }
         }
 
-        private static async Task CaptureView(FrameworkElement view, IRandomAccessStream stream, string extension, double quality, int width, int height)
+        private static async Task CaptureView(FrameworkElement view, IRandomAccessStream stream, string extension, double quality, double width, double height)
         {
             if (view.ActualWidth <= 0 || view.ActualHeight <= 0)
             {
@@ -108,8 +108,8 @@ namespace RNViewShot
 
             if (width > 0 && height > 0)
             {
-                var targetW = (uint)Math.Round(width * scale);
-                var targetH = (uint)Math.Round(height * scale);
+                var targetW = (uint)Math.Round(width * scale, MidpointRounding.AwayFromZero);
+                var targetH = (uint)Math.Round(height * scale, MidpointRounding.AwayFromZero);
                 if (targetW != (uint)targetBitmap.PixelWidth || targetH != (uint)targetBitmap.PixelHeight)
                 {
                     encoder.BitmapTransform.ScaledWidth = targetW;

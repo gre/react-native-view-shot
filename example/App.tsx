@@ -31,6 +31,7 @@ export type RootStackParamList = {
   Rendering: undefined;
   StyleFilters: undefined;
   Resize: undefined;
+  CaptureResolution: undefined;
 };
 
 // Import all test screens
@@ -49,6 +50,7 @@ import ScrollViewTestScreen from './src/screens/ScrollViewTestScreen';
 import RenderingTestScreen from './src/screens/RenderingTestScreen';
 import StyleFiltersTestScreen from './src/screens/StyleFiltersTestScreen';
 import ResizeTestScreen from './src/screens/ResizeTestScreen';
+import CaptureResolutionTestScreen from './src/screens/CaptureResolutionTestScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -158,6 +160,11 @@ function App(): React.JSX.Element {
           name="Resize"
           component={ResizeTestScreen}
           options={{ title: '📐 Resize (width / height)' }}
+        />
+        <Stack.Screen
+          name="CaptureResolution"
+          component={CaptureResolutionTestScreen}
+          options={{ title: '🔍 Capture resolution (#537, #505)' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

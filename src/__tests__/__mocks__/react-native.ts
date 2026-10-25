@@ -10,6 +10,10 @@ export const View = React.forwardRef((props: any, ref: any) => {
 
 export const Platform = {OS: "ios"};
 
+export const PixelRatio = {
+  get: () => 2,
+};
+
 export const findNodeHandle = jest.fn((ref: any) => {
   if (ref && ref._nativeTag) return ref._nativeTag;
   return 42;
