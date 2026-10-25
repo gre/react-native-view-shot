@@ -7,7 +7,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Handler;
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
@@ -786,22 +785,15 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
                 } else if (child instanceof SurfaceView && handleGLSurfaceView) {
                     final SurfaceView svChild = (SurfaceView)child;
 
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        final Bitmap childBitmapBuffer = captureSurfaceView(svChild);
-                        if (childBitmapBuffer != null) {
-                            final int countCanvasSave = c.save();
-                            try {
-                                applyTransformations(c, view, child);
-                                c.drawBitmap(childBitmapBuffer, 0, 0, paint);
-                            } finally {
-                                c.restoreToCount(countCanvasSave);
-                                recycleBitmap(childBitmapBuffer);
-                            }
-                        }
-                    } else {
-                        Bitmap cache = svChild.getDrawingCache();
-                        if (cache != null) {
-                            c.drawBitmap(cache, 0, 0, paint);
+                    final Bitmap childBitmapBuffer = captureSurfaceView(svChild);
+                    if (childBitmapBuffer != null) {
+                        final int countCanvasSave = c.save();
+                        try {
+                            applyTransformations(c, view, child);
+                            c.drawBitmap(childBitmapBuffer, 0, 0, paint);
+                        } finally {
+                            c.restoreToCount(countCanvasSave);
+                            recycleBitmap(childBitmapBuffer);
                         }
                     }
                 }

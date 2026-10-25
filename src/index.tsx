@@ -29,6 +29,13 @@ export interface CaptureOptions {
    */
   fileName?: string;
   /**
+   * (Windows only) a plain file name (no directories) to write when `result` is `"tmpfile"`, created
+   * in the app's `ApplicationData.Current.LocalFolder` (persistent: call releaseCapture when done).
+   * Used as-is (include the extension); an existing file with the same name is overwritten.
+   * Defaults to a random GUID name. Ignored on other platforms.
+   */
+  path?: string;
+  /**
    * the width and height of the final image (resized from the View bound. don't provide it if you want
    * the original pixel size).
    */
@@ -54,6 +61,7 @@ export interface CaptureOptions {
    *   lags (the string is sent over the bridge). N.B. This is not a data uri, use data-uri instead.
    * - data-uri: same as base64 but also includes the Data URI scheme header.
    * - zip-base64 (Android only): compress data with zip deflate algorithm and than convert to base64 and return as a raw string.
+   *   On other platforms it falls back to tmpfile (with a console.warn).
    */
   result?: "tmpfile" | "base64" | "data-uri" | "zip-base64";
   /**
