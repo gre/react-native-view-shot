@@ -123,6 +123,14 @@ const testCases: { [category: string]: TestCase[] } = {
       priority: 'high',
       status: 'new',
     },
+    {
+      key: 'CaptureResolution',
+      title: 'Capture resolution',
+      description: 'full-res + sharp capture, tall views (#537, #505)',
+      emoji: '🔍',
+      priority: 'high',
+      status: 'bug',
+    },
   ],
   '🟠 ADVANCED TESTS': [
     // {
