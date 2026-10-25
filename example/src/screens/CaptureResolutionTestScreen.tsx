@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   ScrollView,
   PixelRatio,
+  Platform,
   type LayoutChangeEvent,
 } from 'react-native';
 import { captureRef, type CaptureOptions } from 'react-native-view-shot';
@@ -25,9 +26,13 @@ import { CaptureButton } from '../components/shared/CaptureButton';
  *    to pure black or pure white. A downscaled (then re-upscaled) capture
  *    turns 1dp stripes grey.
  *
- * `explicit-dp` passes the source's own dp size as width/height. iOS treats
- * width/height as points (output = points x scale); this case asserts that
- * same contract so the two platforms agree.
+ * The explicit-size cases pass width/height:
+ *  - `explicit-dp`: the source's dp size with `sizeUnit: "dp"`, which must
+ *    give the full-resolution image on every platform;
+ *  - `explicit-px`: `sizeUnit: "px"`, exactly that many pixels everywhere;
+ *  - `explicit-default`: no `sizeUnit`, each platform's default unit
+ *    (points/dp on iOS and Windows, pixels on Android and web), so a dp
+ *    size gives a 1/PixelRatio downscaled image on Android and web.
  */
 
 const PR = PixelRatio.get();
@@ -47,9 +52,16 @@ interface ResolutionCase {
   label: string;
   source: SourceId;
   options: CaptureOptions;
-  /** Requested size in dp (iOS semantics), when width/height are passed. */
-  requestedDp?: { width: number; height: number };
+  /** Expected image size in px; defaults to the source dp size x PR. */
+  expectedPx?: { width: number; height: number };
+  /** Stripe crispness only holds for full-resolution captures. */
+  checkSharpness?: boolean;
 }
+
+// Native default unit of width/height (see the sizeUnit option).
+const DEFAULT_UNIT_IS_DP = Platform.OS === 'ios' || Platform.OS === 'windows';
+const PX_WIDTH = 600;
+const PX_HEIGHT = 400;
 
 const CASES: ResolutionCase[] = [
   {
@@ -72,10 +84,30 @@ const CASES: ResolutionCase[] = [
   },
   {
     id: 'explicit-dp',
-    label: `normal, width/height = ${SOURCE_WIDTH}x${NORMAL_HEIGHT} (dp)`,
+    label: `normal, ${SOURCE_WIDTH}x${NORMAL_HEIGHT}, sizeUnit "dp"`,
+    source: 'normal',
+    options: { width: SOURCE_WIDTH, height: NORMAL_HEIGHT, sizeUnit: 'dp' },
+  },
+  {
+    id: 'explicit-px',
+    label: `normal, ${PX_WIDTH}x${PX_HEIGHT}, sizeUnit "px"`,
+    source: 'normal',
+    options: { width: PX_WIDTH, height: PX_HEIGHT, sizeUnit: 'px' },
+    expectedPx: { width: PX_WIDTH, height: PX_HEIGHT },
+    checkSharpness: false,
+  },
+  {
+    id: 'explicit-default',
+    label: `normal, ${SOURCE_WIDTH}x${NORMAL_HEIGHT}, no sizeUnit (platform default)`,
     source: 'normal',
     options: { width: SOURCE_WIDTH, height: NORMAL_HEIGHT },
-    requestedDp: { width: SOURCE_WIDTH, height: NORMAL_HEIGHT },
+    expectedPx: DEFAULT_UNIT_IS_DP
+      ? {
+          width: Math.round(SOURCE_WIDTH * PR),
+          height: Math.round(NORMAL_HEIGHT * PR),
+        }
+      : { width: SOURCE_WIDTH, height: NORMAL_HEIGHT },
+    checkSharpness: DEFAULT_UNIT_IS_DP,
   },
 ];
 
@@ -136,12 +168,13 @@ const bandsFor = (source: SourceId): number[] => {
   }
 };
 
-const analyze = (
-  base64: string,
+const analyze = async (
+  uri: string,
   c: ResolutionCase,
   sourceDp: Size,
-): CaseResult => {
-  const image = Skia.Image.MakeImageFromEncoded(Skia.Data.fromBase64(base64));
+): Promise<CaseResult> => {
+  const data = await Skia.Data.fromURI(uri);
+  const image = Skia.Image.MakeImageFromEncoded(data);
   if (!image) throw new Error('could not decode capture');
   const width = image.width();
   const height = image.height();
@@ -152,18 +185,18 @@ const analyze = (
     alphaType: AlphaType.Unpremul,
   });
   if (!pixels) throw new Error('could not read capture pixels');
-  const expectedDp = c.requestedDp ?? sourceDp;
-  const expected = {
-    width: Math.round(expectedDp.width * PR),
-    height: Math.round(expectedDp.height * PR),
+  const expected = c.expectedPx ?? {
+    width: Math.round(sourceDp.width * PR),
+    height: Math.round(sourceDp.height * PR),
   };
   const sharpness = bandsFor(c.source).map(top =>
     bandSharpness(pixels, width, height, top, sourceDp.height),
   );
   const dimsOk = near(width, expected.width) && near(height, expected.height);
-  const sharpOk = sharpness.every(s => s >= SHARPNESS_MIN);
+  const sharpOk =
+    c.checkSharpness === false || sharpness.every(s => s >= SHARPNESS_MIN);
   return {
-    uri: `data:image/png;base64,${base64}`,
+    uri,
     width,
     height,
     expected,
@@ -269,23 +302,15 @@ const CaptureResolutionTestScreen: React.FC = () => {
       try {
         const sourceDp = layouts.current[c.source];
         if (!sourceDp) throw new Error('source not laid out');
-        const base64 = await captureRef(refFor(c.source), {
-          format: 'png',
-          result: 'base64',
-          ...c.options,
-        });
-        const analyzed = analyze(base64, c, sourceDp);
-        // Also write a tmpfile (the reporters' result type) so the encoded
-        // file can be pulled with adb for side-by-side inspection.
+        // tmpfile, the reporters' result type: analysed, previewed below,
+        // and kept on device so it can be pulled for inspection.
         const uri = await captureRef(refFor(c.source), {
           format: 'png',
           result: 'tmpfile',
           fileName: `resolution-${c.id}`,
           ...c.options,
         });
-        console.log(`[CaptureResolution] ${c.id} tmpfile ${uri}`);
-        // Preview the tmpfile (what apps typically display / share).
-        next[c.id] = { ...analyzed, uri };
+        next[c.id] = await analyze(uri, c, sourceDp);
       } catch (e) {
         next[c.id] = { error: e instanceof Error ? e.message : String(e) };
       }

@@ -4,9 +4,10 @@
  * Navigates to the Capture resolution screen, which captures a high-detail
  * source (1dp stripes, checkerboard, small text) as a normal view, a tall
  * view (> 1000dp) and a ScrollView with snapshotContentContainer, plus the
- * normal view with width/height given in dp. The screen decodes each capture
- * and checks its pixel size against layout dp x PixelRatio and that the 1dp
- * stripes stay crisp; this test asserts every case reports PASS.
+ * normal view with explicit width/height in `sizeUnit` "dp", "px" and the
+ * platform default unit. The screen decodes each capture and checks its
+ * pixel size (layout dp x PixelRatio, or the expected px size) and that the
+ * 1dp stripes stay crisp; this test asserts every case reports PASS.
  * Dimension-based, so it does not depend on pixel reference snapshots.
  */
 
@@ -28,7 +29,14 @@ const scrollUntilVisible = async (testID, scrollViewId) => {
   await expect(element(by.id(testID))).toBeVisible();
 };
 
-const CASES = ['normal', 'tall', 'scroll', 'explicit-dp'];
+const CASES = [
+  'normal',
+  'tall',
+  'scroll',
+  'explicit-dp',
+  'explicit-px',
+  'explicit-default',
+];
 
 describe('ViewShot - Capture resolution (#537, #505)', () => {
   beforeAll(async () => {
@@ -63,12 +71,19 @@ describe('ViewShot - Capture resolution (#537, #505)', () => {
   });
 
   for (const id of CASES) {
-    it(`captures "${id}" at full device resolution, without blur`, async () => {
-      // On failure the -details text (got/expected px, sharpness) shows up
-      // in the Detox error output alongside the status mismatch.
-      await expect(element(by.id(`resolution-${id}-status`))).toHaveText(
-        'PASS',
-      );
+    it(`captures "${id}" at the expected size, without blur`, async () => {
+      try {
+        await expect(element(by.id(`resolution-${id}-status`))).toHaveText(
+          'PASS',
+        );
+      } catch (e) {
+        // Surface got/expected px and sharpness in the failure output.
+        // (No -details element when the capture itself errored.)
+        const details = await element(by.id(`resolution-${id}-details`))
+          .getAttributes()
+          .catch(() => ({ text: '(no details)' }));
+        throw new Error(`${id}: ${details.text}\n${e.message}`, { cause: e });
+      }
     });
   }
 });
