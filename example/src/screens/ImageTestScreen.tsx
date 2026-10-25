@@ -167,6 +167,7 @@ const ImageTestScreen: React.FC = () => {
             <View style={styles.previewContainer}>
               <Text style={styles.previewTitle}>✅ Captured Image:</Text>
               <Image
+                testID="capture-preview"
                 source={{ uri: capturedUri }}
                 style={styles.capturedImage}
                 resizeMode="contain"

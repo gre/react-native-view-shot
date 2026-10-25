@@ -2,11 +2,14 @@
  * snapshotContentContainer demo test
  *
  * Navigates to the ScrollView & Lists screen, scrolls down to the
- * `snapshotContentContainer` section, taps the capture button and asserts
- * that the resulting preview becomes visible.
+ * `snapshotContentContainer` section, taps the capture button and compares
+ * the preview with the `snapshot_content_container` reference.
  *
  * Mirrors the style of `viewshot-all-screens.test.js`.
  */
+
+const { scrollToElement } = require('../helpers/test-actions');
+const { expectSnapshot } = require('../helpers/snapshot-matcher');
 
 describe('ViewShot - snapshotContentContainer (ScrollView)', () => {
   beforeAll(async () => {
@@ -107,35 +110,11 @@ describe('ViewShot - snapshotContentContainer (ScrollView)', () => {
       .toBeVisible()
       .withTimeout(10000);
 
-    // Scroll the inner ScrollView until the new section's capture button
-    // is visible. The section sits below the older ScrollView/FlatList/
-    // SectionList demos, so we expect to scroll a fair amount.
-    try {
-      await waitFor(element(by.id('snapshotContentContainer-capture')))
-        .toBeVisible()
-        .whileElement(by.id('scrollViewTestScrollView'))
-        .scroll(300, 'down');
-    } catch {
-      for (let i = 0; i < 10; i++) {
-        try {
-          await expect(
-            element(by.id('snapshotContentContainer-capture')),
-          ).toBeVisible();
-          break;
-        } catch {
-          try {
-            await element(by.id('scrollViewTestScrollView')).swipe(
-              'up',
-              'slow',
-              0.6,
-            );
-            await new Promise(resolve => setTimeout(resolve, 500));
-          } catch {
-            break;
-          }
-        }
-      }
-    }
+    // The section sits below the older ScrollView/FlatList/SectionList demos.
+    await scrollToElement(
+      by.id('snapshotContentContainer-capture'),
+      'scrollViewTestScrollView',
+    );
 
     await waitFor(element(by.id('snapshotContentContainer-capture')))
       .toBeVisible()
@@ -148,10 +127,11 @@ describe('ViewShot - snapshotContentContainer (ScrollView)', () => {
     await element(by.id('snapshotContentContainer-capture')).tap();
 
     await waitFor(element(by.id('snapshotContentContainer-preview')))
-      .toBeVisible()
+      .toExist()
       .withTimeout(15000);
 
-    // Take a CI artifact screenshot for visual inspection.
-    await device.takeScreenshot('snapshot_content_container');
+    // Only this section's preview is shown (no other capture was taken).
+    const preview = by.id('capture-preview');
+    await expectSnapshot('snapshot_content_container', preview);
   });
 });

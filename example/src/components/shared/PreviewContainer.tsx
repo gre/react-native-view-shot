@@ -31,6 +31,7 @@ export const PreviewContainer: React.FC<PreviewContainerProps> = ({
     <View style={styles.container}>
       <Text style={styles.title}>{title}</Text>
       <Image
+        testID="capture-preview"
         source={{ uri: capturedUri }}
         style={[styles.image, { width: imageWidth, height: imageHeight }]}
         resizeMode={resizeMode}

@@ -1,14 +1,14 @@
 /**
  * Style filters repro test (#578)
  *
- * Navigates to the Style filters screen, taps capture and asserts the
- * preview wrapper becomes visible. This is a sanity test only — it
- * exercises the path so the screen doesn't break silently. There is
- * no pixel-snapshot reference because the captured output is currently
- * unfiltered (which is the bug we're tracking).
+ * Navigates to the Style filters screen, taps capture and compares the
+ * preview with the `style_filters` reference. The reference records the
+ * current behavior (on iOS, blur is missing from the capture); a fix for
+ * #578 is expected to change it.
  */
 
 const { goHome, scrollToElement } = require('../helpers/test-actions');
+const { expectSnapshot } = require('../helpers/snapshot-matcher');
 
 describe('ViewShot - Style filters (#578)', () => {
   beforeAll(async () => {
@@ -48,10 +48,10 @@ describe('ViewShot - Style filters (#578)', () => {
     await element(by.id('capture-button')).tap();
 
     await waitFor(element(by.id('styleFilters-preview')))
-      .toBeVisible()
+      .toExist()
       .withTimeout(15000);
 
-    // Take a CI artifact screenshot for visual inspection.
-    await device.takeScreenshot('style_filters');
+    const preview = by.id('capture-preview');
+    await expectSnapshot('style_filters', preview);
   });
 });

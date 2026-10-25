@@ -1,7 +1,20 @@
 /**
  * Comprehensive ViewShot Tests - All Screens
- * Tests that each screen can navigate, capture, and show success.
+ *
+ * Each test navigates to a screen, captures, waits for the success text and,
+ * for deterministic screens, compares the on-screen capture preview
+ * (`capture-preview`) with `e2e/snapshots/reference/<platform>/<name>.png`.
+ *
+ * Screens without a snapshot only assert that the capture succeeds:
+ * - Full Screen: captureScreen() includes the scroll position and pressed
+ *   button state, which the swipes do not reproduce exactly.
+ * - Video: the captured frame depends on playback timing.
+ * - SVG URI: renders a remote SVG (network).
+ * - WebView: not tested (capture button below the fold, remote page).
  */
+
+const { scrollToElement } = require('../helpers/test-actions');
+const { expectSnapshot } = require('../helpers/snapshot-matcher');
 
 describe('ViewShot - All Screens', () => {
   beforeAll(async () => {
@@ -14,137 +27,69 @@ describe('ViewShot - All Screens', () => {
     // With sync disabled, waitFor polls without waiting for app idle
     await waitFor(element(by.text('🚀 React Native ViewShot')))
       .toBeVisible()
-      .withTimeout(60000);
+      .withTimeout(120000);
   });
 
+  // The home title scrolls out of view, so detect home by its ScrollView.
   const goBackToHome = async () => {
-    try {
-      await expect(element(by.text('🚀 React Native ViewShot'))).toBeVisible();
-      return;
-    } catch {
-      // Not on home, need to navigate back
-    }
-
-    try {
-      for (let attempt = 0; attempt < 3; attempt++) {
-        try {
-          await element(by.label('Back')).atIndex(0).tap();
-          await new Promise(resolve => setTimeout(resolve, 500));
-          try {
-            await expect(
-              element(by.text('🚀 React Native ViewShot')),
-            ).toBeVisible();
-            return;
-          } catch {
-            // Not home yet
-          }
-        } catch {
-          break;
-        }
+    const home = element(by.id('homeScrollView'));
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        await expect(home).toBeVisible();
+        return;
+      } catch {
+        // Not home yet
       }
-
-      if (device.getPlatform() === 'android') {
-        await device.pressBack();
+      try {
+        await element(by.label('Back')).atIndex(0).tap();
+      } catch {
+        if (device.getPlatform() === 'android') await device.pressBack();
       }
-
       await new Promise(resolve => setTimeout(resolve, 1000));
-      await expect(element(by.text('🚀 React Native ViewShot'))).toBeVisible();
-    } catch {
-      // Continue anyway - will fail if home screen button not found
     }
+    await expect(home).toBeVisible();
   };
 
-  /**
-   * Navigate to a screen, tap capture, verify success text appears.
-   */
-  const captureScreen = async (screenTitle, successText, scrollViewId) => {
+  const openScreen = async screenTitle => {
     await goBackToHome();
-
     const testId = `nav-${screenTitle.toLowerCase().replace(/\s+/g, '-')}`;
-
-    // Scroll home screen to top, then find nav button
     try {
       await element(by.id('homeScrollView')).scrollTo('top');
       await new Promise(resolve => setTimeout(resolve, 500));
     } catch {
       // Ignore scroll errors
     }
-
-    for (let i = 0; i < 8; i++) {
-      try {
-        await expect(element(by.id(testId))).toBeVisible();
-        break;
-      } catch {
-        try {
-          await element(by.id('homeScrollView')).swipe('up', 'slow', 0.3);
-          await new Promise(resolve => setTimeout(resolve, 500));
-        } catch {
-          break;
-        }
-      }
-    }
-
-    // Wait for scroll momentum to settle before tapping
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    try {
-      await element(by.id(testId)).tap();
-    } catch {
-      await element(by.text(screenTitle)).atIndex(0).tap();
-    }
+    await scrollToElement(by.id(testId), 'homeScrollView');
+    await element(by.id(testId)).tap();
     await new Promise(resolve => setTimeout(resolve, 3000));
+  };
 
-    // Scroll to find the capture button
-    if (scrollViewId) {
-      try {
-        await waitFor(element(by.id('capture-button')))
-          .toBeVisible()
-          .whileElement(by.id(scrollViewId))
-          .scroll(200, 'down');
-      } catch {
-        for (let i = 0; i < 5; i++) {
-          try {
-            await expect(element(by.id('capture-button'))).toBeVisible();
-            break;
-          } catch {
-            try {
-              await element(by.id(scrollViewId)).swipe('up', 'slow', 0.5);
-              await new Promise(resolve => setTimeout(resolve, 500));
-            } catch {
-              break;
-            }
-          }
-        }
-      }
-    }
+  /**
+   * Navigate to a screen, tap capture, require the success text and, when
+   * `snapshot` is given, compare the preview with the reference.
+   */
+  const captureScreen = async (
+    screenTitle,
+    successText,
+    scrollViewId,
+    snapshot,
+  ) => {
+    await openScreen(screenTitle);
 
-    await waitFor(element(by.id('capture-button')))
-      .toBeVisible()
-      .withTimeout(10000);
-
-    // Tap capture and wait for result
+    await scrollToElement(by.id('capture-button'), scrollViewId);
     await element(by.id('capture-button')).tap();
-    await new Promise(resolve => setTimeout(resolve, 3000));
 
-    // Try to scroll to success message (best-effort, may be below fold)
-    for (let i = 0; i < 5; i++) {
-      try {
-        await expect(element(by.text(successText))).toBeVisible();
-        console.log(`✅ ${screenTitle}: success text visible`);
-        break;
-      } catch {
-        if (scrollViewId && i < 4) {
-          try {
-            await element(by.id(scrollViewId)).swipe('up', 'slow', 0.5);
-            await new Promise(resolve => setTimeout(resolve, 800));
-          } catch {
-            // Can't scroll more
-          }
-        }
-      }
+    await waitFor(element(by.text(successText)))
+      .toExist()
+      .withTimeout(15000);
+
+    if (snapshot) {
+      await expectSnapshot(snapshot, by.id('capture-preview'));
+    } else {
+      await device.takeScreenshot(
+        screenTitle.toLowerCase().replace(/\s+/g, '_'),
+      );
     }
-
-    // Take screenshot for CI artifacts
-    await device.takeScreenshot(screenTitle.toLowerCase().replace(/\s+/g, '_'));
   };
 
   describe('Basic Tests', () => {
@@ -153,6 +98,7 @@ describe('ViewShot - All Screens', () => {
         'Basic ViewShot',
         '✅ Capture Success:',
         'basicTestScrollView',
+        'basic',
       );
     });
 
@@ -165,28 +111,21 @@ describe('ViewShot - All Screens', () => {
     });
 
     it('should capture Transparency', async () => {
-      await goBackToHome();
-
-      try {
-        await element(by.id('nav-transparency')).tap();
-      } catch {
-        await element(by.text('Transparency')).atIndex(0).tap();
-      }
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
-      try {
-        await waitFor(element(by.text('✅ Transparency Working!')))
-          .toBeVisible()
-          .withTimeout(10000);
-      } catch {
-        // Auto-capture may have failed, but continuing
-      }
-
-      await device.takeScreenshot('transparency');
+      // captureMode="mount": captures on mount, no button.
+      await openScreen('Transparency');
+      await waitFor(element(by.text('✅ Transparency Working!')))
+        .toExist()
+        .withTimeout(15000);
+      await expectSnapshot('transparency', by.id('capture-preview'));
     });
 
     it('should capture File System save', async () => {
-      await captureScreen('File System', '✅ File Saved:', 'fsScrollView');
+      await captureScreen(
+        'File System',
+        '✅ File Saved:',
+        'fsScrollView',
+        'filesystem',
+      );
     });
   });
 
@@ -204,16 +143,19 @@ describe('ViewShot - All Screens', () => {
         'Image Capture',
         '✅ Captured Image:',
         'imageScrollView',
+        'image',
       );
     });
-
-    // TODO: WebView test disabled - capture button is too far below the fold
-    // due to the WebView + controls. Needs layout rework to fix.
   });
 
   describe('Advanced Tests', () => {
     it('should capture SVG Inline', async () => {
-      await captureScreen('SVG Inline', '✅ SVG Captured:', 'svgScrollView');
+      await captureScreen(
+        'SVG Inline',
+        '✅ SVG Captured:',
+        'svgScrollView',
+        'svg',
+      );
     });
 
     it('should capture SVG URI', async () => {
@@ -225,7 +167,12 @@ describe('ViewShot - All Screens', () => {
     });
 
     it('should capture Modal', async () => {
-      await captureScreen('Modal', '✅ Modal Captured:', 'modalScrollView');
+      await captureScreen(
+        'Modal',
+        '✅ Modal Captured:',
+        'modalScrollView',
+        'modal',
+      );
     });
   });
 
@@ -235,6 +182,7 @@ describe('ViewShot - All Screens', () => {
         'Rendering test card',
         '✅ Rendering Captured:',
         'renderingTestScrollView',
+        'rendering',
       );
     });
   });

@@ -259,6 +259,7 @@ const ModalTestScreen: React.FC = () => {
             <View style={styles.previewContainer}>
               <Text style={styles.previewTitle}>✅ Modal Captured:</Text>
               <Image
+                testID="capture-preview"
                 source={{ uri: capturedUri }}
                 style={styles.previewImage}
                 fadeDuration={0}
