@@ -129,6 +129,59 @@ describe("validateOptions (via captureRef)", () => {
   });
 });
 
+describe("zip-base64 result per platform", () => {
+  let mockCaptureRef: jest.Mock;
+
+  // Drop the registry holding the mutated Platform.OS so it can't leak.
+  afterEach(() => jest.resetModules());
+
+  // acceptedResults is computed from Platform.OS at module load, so set the
+  // (mocked) platform before requiring ../index.
+  function loadCaptureRef(os: string): typeof import("../index").captureRef {
+    jest.resetModules();
+    mockCaptureRef = jest.fn().mockResolvedValue("/tmp/test.png");
+    jest.mock("../RNViewShot", () => ({
+      __esModule: true,
+      default: {
+        captureRef: mockCaptureRef,
+        captureScreen: jest.fn(),
+        releaseCapture: jest.fn(),
+      },
+    }));
+    require("react-native").Platform.OS = os;
+    return require("../index").captureRef;
+  }
+
+  it("keeps zip-base64 on android", async () => {
+    const warnSpy = jest.spyOn(console, "warn").mockImplementation();
+    const captureRef = loadCaptureRef("android");
+    await captureRef(42, {result: "zip-base64"});
+    expect(mockCaptureRef).toHaveBeenCalledWith(
+      42,
+      expect.objectContaining({result: "zip-base64"}),
+    );
+    expect(warnSpy).not.toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+
+  it.each(["ios", "web", "windows"])(
+    "falls back to tmpfile with a warning on %s",
+    async os => {
+      const warnSpy = jest.spyOn(console, "warn").mockImplementation();
+      const captureRef = loadCaptureRef(os);
+      await captureRef(42, {result: "zip-base64"});
+      expect(mockCaptureRef).toHaveBeenCalledWith(
+        42,
+        expect.objectContaining({result: "tmpfile"}),
+      );
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("option result 'zip-base64' is not a valid"),
+      );
+      warnSpy.mockRestore();
+    },
+  );
+});
+
 describe("captureScreen", () => {
   let captureScreen: typeof import("../index").captureScreen;
   let mockCaptureScreen: jest.Mock;

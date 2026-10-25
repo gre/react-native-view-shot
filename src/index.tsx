@@ -54,6 +54,7 @@ export interface CaptureOptions {
    *   lags (the string is sent over the bridge). N.B. This is not a data uri, use data-uri instead.
    * - data-uri: same as base64 but also includes the Data URI scheme header.
    * - zip-base64 (Android only): compress data with zip deflate algorithm and than convert to base64 and return as a raw string.
+   *   On other platforms it falls back to tmpfile (with a console.warn).
    */
   result?: "tmpfile" | "base64" | "data-uri" | "zip-base64";
   /**
