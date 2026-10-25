@@ -58,7 +58,7 @@
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "type-check": "tsc --noEmit",
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json",
     "prepare": "npm run build"
   },
   "peerDependencies": {
@@ -108,6 +108,5 @@
     "android": {
       "javaPackageName": "fr.greweb.reactnativeviewshot"
     }
-  },
-  "stableVersion": "4.0.2"
+  }
 }
