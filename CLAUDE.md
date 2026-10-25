@@ -45,6 +45,7 @@ npm run start          # Start Metro bundler
 # E2E tests (Detox)
 npm run build:e2e:ios
 npm run test:e2e:ios
+npm run test:e2e:ios:update-snapshots   # Rewrite reference snapshots
 
 npm run build:e2e:android
 npm run test:e2e:android
@@ -83,9 +84,7 @@ The compiled output goes to `lib/` (gitignored). The `package.json` `"main"` fie
 
 ### Example App (`example/`)
 
-A full React Native app demonstrating all features. Each feature has its own screen in `example/src/screens/`. The E2E tests (Detox, `example/e2e/tests/`) navigate between these screens, check on-screen results and take `device.takeScreenshot` artifacts.
-
-Reference images live in `example/e2e/snapshots/reference/{ios,android}/` (platform-separated because rendering differs), but the current tests do not compare against them: `e2e/helpers/snapshot-matcher.js` is not used by any test and nothing reads `UPDATE_SNAPSHOTS`.
+A full React Native app demonstrating all features. Each feature has its own screen in `example/src/screens/`. The E2E tests (Detox, `example/e2e/tests/`) navigate between these screens, capture, and compare an element screenshot of the capture preview (`testID="capture-preview"`) with `example/e2e/snapshots/reference/{ios,android}/<name>.png` via `e2e/helpers/snapshot-matcher.js` (pixelmatch). Mismatches write `.actual.png`/`.diff.png` to `e2e/snapshots/output/` (uploaded by CI). iOS references must come from the CI simulator (Xcode 16.4, iPhone 16 Pro), e.g. from the `detox-screenshots-ios` artifact. See `example/e2e/README.md`.
 
 ### Web Example App (`example-web/`)
 
