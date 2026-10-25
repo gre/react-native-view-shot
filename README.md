@@ -170,6 +170,8 @@ Returns a Promise of the image URI.
 - **`options`** may include:
   - **`fileName`** _(string)_: (Android only) the file name of the file. Must be at least 3 characters long.
   - **`width`** / **`height`** _(number)_: the width and height of the final image (resized from the View bound. don't provide it if you want the original pixel size).
+    Default unit: points/dp on iOS and Windows, pixels on Android and web. Use `sizeUnit` in cross-platform code.
+  - **`sizeUnit`** _(`"dp"` | `"px"`)_: unit of `width` / `height`, the same on every platform: `"dp"` gives an image of `round(value × PixelRatio.get())` pixels, `"px"` `round(value)` pixels. When omitted, each platform keeps its default unit.
   - **`format`** _(string)_: `png` or `jpg`, plus `webp` and `raw` on Android. Defaults to `png`. `webm` is a deprecated alias for `webp`; it produces WebP image data, not a video.
   - **`quality`** _(number)_: the quality. 0.0 - 1.0 (default). (only available on lossy formats like jpg)
   - **`result`** _(string)_, the method you want to use to save the snapshot, one of:

@@ -9,6 +9,7 @@ import React, {
 import {
   View,
   Platform,
+  PixelRatio,
   findNodeHandle,
   StyleProp,
   ViewStyle,
@@ -31,12 +32,22 @@ export interface CaptureOptions {
   /**
    * the width and height of the final image (resized from the View bound. don't provide it if you want
    * the original pixel size).
+   *
+   * Unit by default: points/dp on iOS and Windows, pixels on Android and web. Set `sizeUnit` for the same
+   * result on every platform.
    */
   width?: number;
   /**
    * @see {CaptureOptions#width}
    */
   height?: number;
+  /**
+   * the unit of `width` / `height`, identical on every platform:
+   * - "dp": density-independent; the image is `round(value × PixelRatio.get())` pixels.
+   * - "px": the image is `round(value)` pixels.
+   * When omitted, each platform keeps its default unit (see `width`).
+   */
+  sizeUnit?: "dp" | "px";
   /**
    * either png, jpg, webp (Android), or raw (Android, ARGB pixel array). Defaults to png.
    * `webm` is accepted as a deprecated alias for `webp` (it has always produced WEBP-encoded
@@ -195,7 +206,49 @@ function validateOptions(input?: CaptureOptions): {
         acceptedResults.join(" | "),
     );
   }
+  if ("sizeUnit" in options) {
+    const {sizeUnit} = options;
+    delete options.sizeUnit;
+    if (sizeUnit === "dp" || sizeUnit === "px") {
+      applySizeUnit(options, sizeUnit, errors);
+    } else if (sizeUnit !== undefined) {
+      errors.push(
+        "option sizeUnit '" + sizeUnit + "' is not a valid unit: dp | px",
+      );
+    }
+  }
   return {options, errors};
+}
+
+// Native width/height units: points (dp) on iOS and Windows, pixels on
+// Android and web. With `sizeUnit`, compute the target pixel count once in
+// JS (so rounding is identical everywhere), then express it in the native
+// unit: native multiplies points back by its scale, which round-trips
+// exactly (iOS scales are integers, Windows rounds the product).
+// Proposal: make "dp" the default in the next major version, so
+// width/height mean the same thing on every platform.
+const nativeUnitIsDp = Platform.OS === "ios" || Platform.OS === "windows";
+
+function applySizeUnit(
+  options: CaptureOptions,
+  unit: "dp" | "px",
+  errors: string[],
+): void {
+  const ratio = PixelRatio.get();
+  for (const key of ["width", "height"] as const) {
+    const value = options[key];
+    if (value === undefined) continue;
+    // Round to the nearest pixel rather than truncating (#291).
+    const px = Math.round(unit === "dp" ? value * ratio : value);
+    if (px < 1) {
+      errors.push(
+        "option " + key + " is below 1 pixel with sizeUnit '" + unit + "'",
+      );
+      delete options[key];
+      continue;
+    }
+    options[key] = nativeUnitIsDp ? px / ratio : px;
+  }
 }
 
 // `HostElement` is the minimal shape of an HTMLElement; web callers can pass
