@@ -10,7 +10,7 @@
 npm ls react-native react-native-view-shot #<- PASTE CMD RESULT IN HERE
 ```
 
-**Platform:** iOS? Android?
+**Platform:** iOS? Android? Windows? Web?
 
 #### Expected behavior
 

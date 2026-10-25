@@ -7,7 +7,10 @@ Comprehensive end-to-end tests for react-native-view-shot with snapshot validati
 ```
 e2e/
 ├── tests/                          # Test files
-│   ├── viewshot-with-validation.test.js  # Main test suite with snapshot validation
+│   ├── viewshot-all-screens.test.js      # Main suite: every example screen
+│   ├── resize.test.js                    # width/height resize
+│   ├── snapshot-content-container.test.js
+│   ├── style-filters.test.js
 │   └── README.md                   # This file
 ├── helpers/                        # Test helper utilities
 │   ├── snapshot-matcher.js         # Snapshot comparison and validation
@@ -41,6 +44,10 @@ npm run build:e2e:android
 ```
 
 ## 📸 Snapshot Testing
+
+> **Note:** the current tests do not use `snapshotMatcher` and nothing reads
+> `UPDATE_SNAPSHOTS`; they only save `device.takeScreenshot` artifacts. The
+> flow below describes the helper, not what CI runs.
 
 ### How It Works
 
@@ -202,7 +209,7 @@ To improve comparison accuracy, consider integrating:
 
 ## 🧹 Cleanup
 
-Old snapshots are automatically cleaned up after tests:
+`snapshotMatcher.cleanup(keep)` (default 5) prunes old output snapshots; no test calls it:
 
 ```javascript
 // Keep last 10 snapshots per test
@@ -273,4 +280,4 @@ it('should test new feature', async () => {
 
 - [Detox Documentation](https://wix.github.io/Detox/)
 - [react-native-view-shot API](../../README.md)
-- [Test Configuration](./.detoxrc.js)
+- [Test Configuration](../../.detoxrc.js)

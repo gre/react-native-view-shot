@@ -11,7 +11,7 @@ This library fully supports React Native's **new architecture** (Fabric + TurboM
 **Requirements:**
 
 - React Native >= 0.80.0
-- Node.js >= 20
+- Node.js >= 20.19.4
 
 Both old and new architectures are supported for seamless migration.
 
@@ -27,7 +27,7 @@ yarn add react-native-view-shot
 npx expo install react-native-view-shot
 ```
 
-**Since React Native 0.60+, [autolink](https://github.com/react-native-community/cli/blob/master/docs/autolinking.md) handles the linking automatically.** On iOS, install the CocoaPods dependencies:
+**Since React Native 0.60+, [autolink](https://github.com/react-native-community/cli/blob/main/docs/autolinking.md) handles the linking automatically.** On iOS, install the CocoaPods dependencies:
 
 ```bash
 npx pod-install
@@ -147,6 +147,8 @@ function ExampleCaptureScrollContent() {
   - `"update"` EXPERIMENTAL, this will capture images each time React redraw (on did update). For very specific use-cases.
 - **`onCapture`**: when a `captureMode` is defined, this callback will be called with the capture result.
 - **`onCaptureFailure`**: when a `captureMode` is defined, this callback will be called when a capture fails.
+- **`onLayout`**: forwarded to the inner `View`.
+- **`style`**: style of the inner `View`.
 
 ## `captureRef(view, options)` lower level imperative API
 
@@ -174,7 +176,9 @@ Returns a Promise of the image URI.
     - `"tmpfile"` (default): save to a temporary file _(that will only exist for as long as the app is running)_.
     - `"base64"`: encode as base64 and returns the raw string. Use only with small images as this may result of lags (the string is sent over the bridge). _N.B. This is not a data uri, use `data-uri` instead_.
     - `"data-uri"`: same as `base64` but also includes the [Data URI scheme](https://en.wikipedia.org/wiki/Data_URI_scheme) header.
-  - **`snapshotContentContainer`** _(bool)_: if true and when the captured ref is a `ScrollView`, the entire scrollable content is captured rather than just the visible viewport. Works on both iOS and Android (the lib temporarily expands the ScrollView to its full content size during the draw, then restores). **Android caveat**: only vertical `<ScrollView>` is supported — horizontal scroll views (`<ScrollView horizontal>`, backed by `HorizontalScrollView`) are not expanded and will fall back to capturing the visible bounds. iOS handles both axes via `UIScrollView`. **Windows: not supported** — UWP's `RenderTargetBitmap` respects the live `ScrollViewer` clip and we have no reliable way to capture the full scrollable area; the option is ignored and only the visible viewport is captured (a `console.warn` fires in `__DEV__`). **FlatList note**: virtualization (`removeClippedSubviews`, `windowSize`) means off-screen items aren't mounted at the React layer and will be missing from the capture. Set `removeClippedSubviews={false}` and a large `windowSize`, or use a plain `<ScrollView>` for content up to a few hundred items. See `example/src/screens/ScrollViewTestScreen.tsx` for a working demo.
+    - `"zip-base64"` (Android only): zlib-compressed, then base64-encoded. See [zip-base64](#zip-base64).
+  - **`snapshotContentContainer`** _(bool)_: if true and when the captured ref is a `ScrollView`, the entire scrollable content is captured rather than just the visible viewport. Works on both iOS and Android (the lib temporarily expands the ScrollView to its full content size during the draw, then restores). **Android caveat**: only vertical `<ScrollView>` is supported — horizontal scroll views (`<ScrollView horizontal>`, backed by `HorizontalScrollView`) are not expanded and will fall back to capturing the visible bounds. iOS handles both axes via `UIScrollView`. **Windows: not supported** — UWP's `RenderTargetBitmap` respects the live `ScrollViewer` clip and we have no reliable way to capture the full scrollable area; the option is ignored and only the visible viewport is captured (a `console.warn` fires). **FlatList note**: virtualization (`removeClippedSubviews`, `windowSize`) means off-screen items aren't mounted at the React layer and will be missing from the capture. Set `removeClippedSubviews={false}` and a large `windowSize`, or use a plain `<ScrollView>` for content up to a few hundred items. See `example/src/screens/ScrollViewTestScreen.tsx` for a working demo.
+  - [Android] **`handleGLSurfaceViewOnAndroid`** _(bool)_: also capture `SurfaceView`s (e.g. GL views) in the view tree. Defaults to `false` (it can have a significant performance cost).
   - [iOS] **`useRenderInContext`** _(bool)_: change the iOS snapshot strategy to use method `renderInContext` instead of `drawViewHierarchyInRect` which may help for some use cases.
 
 ## `releaseCapture(uri)`
@@ -183,7 +187,7 @@ This method release a previously captured `uri`. For tmpfile it will clean them 
 
 NB: the tmpfile captures are automatically cleaned out after the app closes, so you might not have to worry about this unless advanced usecases. The `ViewShot` component will use it each time you capture more than once (useful for continuous capture to not leak files).
 
-## `captureScreen()` Android, iOS, and Windows
+## `captureScreen()` Android, iOS, Windows, and Web
 
 ```js
 import {captureScreen} from "react-native-view-shot";
@@ -197,7 +201,7 @@ captureScreen({
 );
 ```
 
-This method will capture the contents of the currently displayed screen as a native hardware screenshot. It does not require a ref input, as it does not work at the view level. This means that ScrollViews will not be captured in their entirety - only the portions currently visible to the user.
+This method will capture the contents of the currently displayed screen as a native hardware screenshot (on web, it captures `document.body`). It does not require a ref input, as it does not work at the view level. This means that ScrollViews will not be captured in their entirety - only the portions currently visible to the user.
 
 Returns a Promise of the image URI.
 
@@ -212,6 +216,10 @@ Returns a Promise of the image URI.
 ### Web Example
 
 [Checkout react-native-view-shot-web-example](example-web) - Web example demonstrating how the library works in browsers using html2canvas-pro.
+
+### Expo and Windows Examples
+
+[example-expo](example-expo) (Expo dev client) and [example-windows](example-windows) (React Native Windows).
 
 ## Interoperability Table
 
@@ -234,7 +242,7 @@ Model tested: iPhone 6 (iOS), Nexus 5 (Android).
 1. Only supported by wrapping a `<View collapsable={false}>` parent and snapshotting it.
 2. It returns an empty image (not a failure Promise).
 3. Component itself lacks platform support.
-4. But you can just use the react-native-maps snapshot function: https://github.com/airbnb/react-native-maps#take-snapshot-of-map
+4. But you can just use the react-native-maps snapshot function: https://github.com/react-native-maps/react-native-maps#take-snapshot-of-map
 5. Web support via html2canvas-pro has limitations with SVG rendering. Basic SVG works, complex SVG may have issues.
 
 ## Performance Optimization

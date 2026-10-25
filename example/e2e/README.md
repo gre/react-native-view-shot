@@ -13,11 +13,14 @@ interactive or visual checks pass.
 - Android Detox jobs are commented out in `.github/workflows/ci.yml`. Android
   library unit tests and the example APK build still run; they do not exercise
   the Detox scenarios.
-- The Android example enables the new architecture. Do not disable Fabric based
-  on older setup guidance without checking the installed React Native version.
-- Several existing scenarios treat missing success text as best-effort, and the
-  snapshot helper compares compressed file sizes/bytes rather than decoded
-  pixels. These checks do not establish pixel-level rendering correctness.
+- The Android example runs RN 0.84, where the new architecture can no longer be
+  disabled (`newArchEnabled=false` in `android/gradle.properties` is a leftover;
+  CI passes `-PnewArchEnabled=true`).
+- Several existing scenarios treat missing success text as best-effort. The
+  tests only save `device.takeScreenshot` artifacts; they do not compare them
+  against the committed references (`e2e/helpers/snapshot-matcher.js`, which
+  compares compressed file sizes/bytes, is not used by any test). These checks
+  do not establish rendering correctness.
 
 ## Run locally
 
@@ -52,9 +55,9 @@ setup or runtime failures must be resolved before claiming Android E2E coverage.
 
 Native references are separated under `e2e/snapshots/reference/ios/` and
 `e2e/snapshots/reference/android/` because rendering differs by platform.
-To intentionally regenerate references, set `UPDATE_SNAPSHOTS=true` on the
-matching test command, then review every image change before committing it.
-Do not regenerate references merely to hide a regression.
+No test currently reads `UPDATE_SNAPSHOTS` or writes references; update them by
+hand and review every image change before committing it. Do not regenerate
+references merely to hide a regression.
 
 The iOS CI job uploads `detox-screenshots-ios` and `detox-test-results-ios`.
 These are diagnostic artifacts, not an automatically approved set of replacement
