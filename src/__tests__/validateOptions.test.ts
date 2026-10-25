@@ -127,6 +127,14 @@ describe("validateOptions (via captureRef)", () => {
       expect.objectContaining({result: "data-uri"}),
     );
   });
+
+  it("passes the Windows-only path option through", async () => {
+    await captureRef(42, {path: "capture.png"});
+    expect(mockCaptureRef).toHaveBeenCalledWith(
+      42,
+      expect.objectContaining({path: "capture.png"}),
+    );
+  });
 });
 
 describe("zip-base64 result per platform", () => {
