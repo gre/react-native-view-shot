@@ -24,4 +24,4 @@ npx react-native run-windows --arch x64
 
 The home screen lists every test screen mirrored from `example/` (BasicTest, FullScreen, Transparency, ScrollView, Image, FS, Modal, Rendering, StyleFilters). Video / WebView / SVG screens are skipped because the underlying RN modules don't have Windows native support.
 
-`snapshotContentContainer` is documented as not supported on Windows — see the lib's `README.md`. The flag is silently ignored and a `console.warn` fires in `__DEV__`.
+`snapshotContentContainer` is documented as not supported on Windows — see the lib's `README.md`. The flag is ignored and a `console.warn` fires.

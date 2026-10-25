@@ -14,9 +14,10 @@ Opens at `http://localhost:3000`
 ## What's Included
 
 - **Basic ViewShot**: Simple captures with PNG/JPG formats and Base64/Data URI output
-- **Transparency Test**: PNG transparency support (with html2canvas-pro limitations)
 - **Image Capture**: Views with styled elements and colors
 - **Complex Layouts**: Nested views with flexbox, shadows, borders, and gradients
+- **CORS Image Capture**: Cross-origin images (`useCORS`)
+- **ViewShot Component**: `ref.capture()` and `captureMode`
 
 ## Usage Example
 

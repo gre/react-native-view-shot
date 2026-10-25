@@ -1,1 +1,1 @@
-Android reference snapshots will be generated here when running UPDATE_SNAPSHOTS=true on Android
+Android reference snapshots (Detox). No test currently writes or compares them.
