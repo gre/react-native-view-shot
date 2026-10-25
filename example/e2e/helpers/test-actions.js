@@ -25,42 +25,33 @@ async function navigateToScreen(buttonText, screenTitle, timeout = 5000) {
  * @param {string} scrollViewId - ID of the scroll view (optional)
  * @param {number} maxAttempts - Maximum scroll attempts
  */
-async function scrollToElement(matcher, scrollViewId = null, maxAttempts = 10) {
-  try {
-    // First check if element is already visible
-    await waitFor(element(matcher)).toBeVisible().withTimeout(1000);
-    return true;
-  } catch {
-    // Element not visible, need to scroll
-  }
+async function scrollToElement(matcher, scrollViewId = null, maxAttempts = 12) {
+  // Swipe rather than Detox `scroll`: `scroll` starts near the bottom edge and
+  // fails with "not scrollable at the given start point" on these screens.
+  const scrollView = scrollViewId
+    ? element(by.id(scrollViewId))
+    : element(
+        by.type(
+          device.getPlatform() === 'ios'
+            ? 'RCTScrollView'
+            : 'android.widget.ScrollView',
+        ),
+      ).atIndex(0);
 
-  let attempts = 0;
-  const direction = 'down';
-
-  while (attempts < maxAttempts) {
+  for (let attempt = 0; attempt <= maxAttempts; attempt++) {
     try {
-      // Try to find element again
-      await waitFor(element(matcher)).toBeVisible().withTimeout(500);
+      await waitFor(element(matcher))
+        .toBeVisible()
+        .withTimeout(attempt === 0 ? 1000 : 500);
+      // A tap during scroll deceleration only stops the scroll; let it settle.
+      if (attempt > 0) await new Promise(resolve => setTimeout(resolve, 1500));
       return true;
     } catch {
-      // Scroll to reveal more content
-      if (scrollViewId) {
-        await element(by.id(scrollViewId)).scroll(200, direction);
-      } else {
-        // Scroll the first scrollable element found
-        await element(
-          by.type(
-            device.getPlatform() === 'ios'
-              ? 'RCTScrollView'
-              : 'android.widget.ScrollView',
-          ),
-        )
-          .atIndex(0)
-          .scroll(200, direction);
-      }
-
-      attempts++;
-      await new Promise(resolve => setTimeout(resolve, 300));
+      if (attempt === maxAttempts) break;
+      // Start near the left edge so the swipe doesn't land on a nested
+      // ScrollView (e.g. the snapshotContentContainer demo).
+      await scrollView.swipe('up', 'slow', 0.3, 0.04, 0.6);
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
   }
 

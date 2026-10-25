@@ -641,10 +641,20 @@ jobs:
     name: Detox E2E Tests (iOS)
     runs-on: macos-15
     needs: build-ios
+    env:
+      # Snapshot references in example/e2e/snapshots/reference/ios were
+      # produced with this Xcode + simulator; change both together.
+      IOS_SIMULATOR: iPhone 16 Pro
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode_16.4.app
+          # Show matching devices with their runtime ("-- iOS x.y --" headers).
+          xcrun simctl list devices available | grep -E -- "^-- |$IOS_SIMULATOR \("
 
       - name: Setup Node.js
         uses: actions/setup-node@v7
@@ -703,15 +713,16 @@ jobs:
       - name: Start Metro Bundler
         working-directory: example
         run: |
-          npm start &
+          npm start > metro.log 2>&1 &
           echo $! > metro.pid
-          sleep 30
+          # Build the bundle once so the first app launch doesn't time out.
+          curl -sf --retry 30 --retry-delay 5 --retry-all-errors --max-time 600 \
+            -o /dev/null \
+            'http://localhost:8081/index.bundle?platform=ios&dev=true&minify=false'
 
       - name: Run Detox Tests
         working-directory: example
         run: npm run test:e2e:ios
-        continue-on-error: true
-        id: detox_ios_tests
 
       - name: Stop Metro Bundler
         if: always()
@@ -727,7 +738,11 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: detox-screenshots-ios
-          path: example/artifacts/**/*.png
+          # output/ holds <name>.actual.png and <name>.diff.png for snapshot
+          # mismatches and missing references.
+          path: |
+            example/artifacts/**/*.png
+            example/e2e/snapshots/output/**/*.png
 
       - name: Upload Detox Test Results
         if: always()
@@ -737,17 +752,7 @@ jobs:
           path: |
             example/e2e/test-results/**/*
             example/artifacts/**/*.xml
-
-      - name: Report iOS test results
-        if: always()
-        # Non-blocking: Jest SummaryReporter crashes (isSet TypeError) and the
-        # snapshot-content-container / style-filters suites are known-failing.
-        run: |
-          if [ "${{ steps.detox_ios_tests.outcome }}" == "failure" ]; then
-            echo "⚠️ Detox exited with error (may be Jest reporter crash, check artifacts for actual results)"
-          else
-            echo "✅ Detox iOS tests completed"
-          fi
+            example/metro.log
 
   # Android Detox is disabled on CI: native library conflicts not yet
   # reproduced outside the runner. Track via the PR description.

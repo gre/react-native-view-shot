@@ -6,21 +6,15 @@ interactive or visual checks pass.
 
 ## Current CI configuration
 
-- The iOS Detox job runs after the iOS build, but its test step is non-blocking
-  (`continue-on-error: true`). The workflow records known reporter and
-  snapshot-content-container/style-filter failures. Inspect test results and
-  screenshots rather than treating a green workflow as an all-tests-pass result.
+- The iOS Detox job (`test-detox-ios`) is blocking: a failing scenario or
+  snapshot mismatch fails CI. It pins Xcode 16.4 and the `iPhone 16 Pro`
+  simulator, which the iOS references were produced with.
 - Android Detox jobs are commented out in `.github/workflows/ci.yml`. Android
   library unit tests and the example APK build still run; they do not exercise
   the Detox scenarios.
 - The Android example runs RN 0.84, where the new architecture can no longer be
   disabled (`newArchEnabled=false` in `android/gradle.properties` is a leftover;
   CI passes `-PnewArchEnabled=true`).
-- Several existing scenarios treat missing success text as best-effort. The
-  tests only save `device.takeScreenshot` artifacts; they do not compare them
-  against the committed references (`e2e/helpers/snapshot-matcher.js`, which
-  compares compressed file sizes/bytes, is not used by any test). These checks
-  do not establish rendering correctness.
 
 ## Run locally
 
@@ -51,14 +45,18 @@ setup or runtime failures must be resolved before claiming Android E2E coverage.
 - `e2e/helpers/`: screenshot comparison and interaction helpers.
 - `e2e/tests/`: the actual scenario assertions.
 
-## Review snapshots
+## Snapshots
 
-Native references are separated under `e2e/snapshots/reference/ios/` and
-`e2e/snapshots/reference/android/` because rendering differs by platform.
-No test currently reads `UPDATE_SNAPSHOTS` or writes references; update them by
-hand and review every image change before committing it. Do not regenerate
-references merely to hide a regression.
+Tests compare an element screenshot of the on-screen capture preview
+(`testID="capture-preview"`) with `e2e/snapshots/reference/<platform>/<name>.png`
+using `e2e/helpers/snapshot-matcher.js` (pixelmatch, per-pixel threshold 0.1,
+at most 0.1% differing pixels). Full Screen, Video and SVG URI only assert that
+the capture succeeds (scroll position, playback timing, network).
 
-The iOS CI job uploads `detox-screenshots-ios` and `detox-test-results-ios`.
-These are diagnostic artifacts, not an automatically approved set of replacement
-reference images. Check `.github/workflows/ci.yml` for the current artifact paths.
+- Mismatch or missing reference: the test fails and writes `<name>.actual.png`
+  (and `<name>.diff.png`) to `e2e/snapshots/output/<platform>/`. CI uploads
+  them in the `detox-screenshots-ios` artifact.
+- Update references: `npm run test:e2e:ios:update-snapshots`. References only
+  match the simulator/Xcode that produced them, so take iOS references from
+  the CI artifact (rename `<name>.actual.png` to `<name>.png`) rather than from
+  a different local setup. Review every image change before committing it.

@@ -78,6 +78,7 @@ const TransparencyTestScreen: React.FC = () => {
             <View style={styles.redBackground}>
               {capturedUri ? (
                 <Image
+                  testID="capture-preview"
                   source={{ uri: capturedUri }}
                   style={styles.capturedImage}
                   fadeDuration={0}

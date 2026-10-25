@@ -78,7 +78,11 @@ const BasicTestScreen: React.FC = () => {
           {imageUri && (
             <View style={styles.previewContainer}>
               <Text style={styles.previewTitle}>✅ Capture Success:</Text>
-              <Image source={{ uri: imageUri }} style={styles.previewImage} />
+              <Image
+                testID="capture-preview"
+                source={{ uri: imageUri }}
+                style={styles.previewImage}
+              />
               <Text style={styles.uriText} numberOfLines={2}>
                 {imageUri}
               </Text>
