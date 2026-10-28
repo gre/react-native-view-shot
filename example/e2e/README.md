@@ -13,8 +13,7 @@ interactive or visual checks pass.
   library unit tests and the example APK build still run; they do not exercise
   the Detox scenarios.
 - The Android example runs RN 0.88, where the new architecture can no longer be
-  disabled (`newArchEnabled=false` in `android/gradle.properties` is a leftover;
-  CI passes `-PnewArchEnabled=true`).
+  disabled (`newArchEnabled=true` in `android/gradle.properties`).
 
 ## Run locally
 
