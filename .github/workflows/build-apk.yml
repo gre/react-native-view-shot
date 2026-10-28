@@ -57,12 +57,6 @@ jobs:
 
       - name: Build release APK
         working-directory: example/android
-        env:
-          # RN 0.88's Gradle plugin fetches React/Hermes artifacts from the
-          # repo.reactnative.dev mirror first; downloading the release Hermes
-          # AAR (~85 MB) from it timed out on GitHub runners. The same
-          # artifacts are on Maven Central.
-          RCT_REACT_NATIVE_MAVEN_MIRROR_ENABLED: 'false'
         run: ./gradlew assembleRelease --no-daemon --stacktrace -PnewArchEnabled=true
 
       - name: Upload APK
