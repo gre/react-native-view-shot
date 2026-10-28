@@ -280,9 +280,9 @@ const Pattern: React.FC<{ source: SourceId; height: number }> = ({
 };
 
 const CaptureResolutionTestScreen: React.FC = () => {
-  const normalRef = useRef<View>(null);
-  const tallRef = useRef<View>(null);
-  const scrollRef = useRef<ScrollView>(null);
+  const normalRef = useRef<React.ComponentRef<typeof View>>(null);
+  const tallRef = useRef<React.ComponentRef<typeof View>>(null);
+  const scrollRef = useRef<React.ComponentRef<typeof ScrollView>>(null);
   const layouts = useRef<Partial<Record<SourceId, Size>>>({});
   const [isCapturing, setIsCapturing] = useState(false);
   const [results, setResults] = useState<

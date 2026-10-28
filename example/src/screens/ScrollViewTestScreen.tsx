@@ -82,7 +82,8 @@ const ScrollViewTestScreen: React.FC = () => {
   const sectionListRef = useRef<ViewShotRef>(null);
   // Refs for the `snapshotContentContainer` demo — these point at the raw
   // ScrollView / FlatList so the native module can read their content size.
-  const contentContainerScrollRef = useRef<ScrollView>(null);
+  const contentContainerScrollRef =
+    useRef<React.ComponentRef<typeof ScrollView>>(null);
   const contentContainerFlatListRef = useRef<FlatList>(null);
 
   const [scrollViewCapture, setScrollViewCapture] = useState<SectionState>({
@@ -130,7 +131,9 @@ const ScrollViewTestScreen: React.FC = () => {
   // option so the resulting image contains the full scrollable content, not
   // just the visible viewport.
   const captureContentContainer = async (
-    ref: React.RefObject<ScrollView | FlatList | null>,
+    ref: React.RefObject<
+      React.ComponentRef<typeof ScrollView> | FlatList | null
+    >,
     setter: (s: SectionState) => void,
   ) => {
     try {

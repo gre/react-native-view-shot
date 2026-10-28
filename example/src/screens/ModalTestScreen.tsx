@@ -159,10 +159,7 @@ const ModalTestScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={[styles.container, backgroundStyle]}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
+      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       <ScrollView style={styles.scrollView} testID="modalScrollView">
         <View style={styles.content}>
           <Text style={styles.emoji}>📱</Text>

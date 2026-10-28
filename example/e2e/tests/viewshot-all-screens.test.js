@@ -17,6 +17,9 @@ const { scrollToElement } = require('../helpers/test-actions');
 const { expectSnapshot } = require('../helpers/snapshot-matcher');
 
 describe('ViewShot - All Screens', () => {
+  // The largest file runs first and absorbs the first app launch of the run
+  // (dev bundle load on a freshly booted simulator), which has exceeded the
+  // 180 s default on CI.
   beforeAll(async () => {
     await device.launchApp({
       newInstance: true,
@@ -28,7 +31,7 @@ describe('ViewShot - All Screens', () => {
     await waitFor(element(by.text('🚀 React Native ViewShot')))
       .toBeVisible()
       .withTimeout(120000);
-  });
+  }, 300000);
 
   // The home title scrolls out of view, so detect home by its ScrollView.
   const goBackToHome = async () => {
