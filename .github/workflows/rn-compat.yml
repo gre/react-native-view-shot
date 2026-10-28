@@ -1,14 +1,17 @@
 # React Native compatibility watch.
 #
 # Weekly, checks the `latest` and `next` react-native releases on npm. For each
-# version that has no "RN compat" issue yet, builds a fresh app at that version
+# version not yet known to be compatible, builds a fresh app at that version
 # with the packed library (type-check, release bundle, Android and iOS builds,
-# new architecture) and opens an issue with the result and any compiler
-# warnings in the library's native code: a heads-up on what needs adapting
-# before it breaks.
+# new architecture). It opens an issue only when there is something to act on:
+# a failed check, or compiler warnings in the library's native code (a heads-up
+# on what needs adapting before it breaks). A clean pass only goes to the job
+# summary and leaves an `rn-compat-clean-<version>` artifact (kept 90 days) so
+# that version isn't rebuilt every week.
 #
 # Run it by hand with a specific version (e.g. a nightly) via workflow_dispatch;
-# `force` re-tests a version that already has an issue and comments on it.
+# `force` re-tests a version already known to be compatible (and comments on
+# its issue, if any).
 # Pull requests that change this workflow run it as a dry run on `latest`: the
 # report goes to the job summary instead of an issue.
 
@@ -55,6 +58,7 @@ jobs:
     name: Resolve versions
     runs-on: ubuntu-latest
     permissions:
+      actions: read # clean-pass marker artifacts
       issues: read
     outputs:
       versions: ${{ steps.resolve.outputs.versions }}
@@ -94,16 +98,23 @@ jobs:
             fi
           fi
 
-          # Versions already reported compatible are done; failing ones are
-          # re-tested every week (the report only comments when the result
-          # changes), so a transient failure doesn't stick.
+          # Versions known to be compatible (a ✅ issue, or a clean-pass marker
+          # artifact) are done; failing ones are re-tested every week (the
+          # report only comments when the result changes), so a transient
+          # failure doesn't stick.
           versions=()
           for v in $candidates; do
             title=$(gh issue list --label "$ISSUE_LABEL" --state all --limit 100 \
               --search "\"$TITLE_PREFIX$v \" in:title" --json title \
               | jq -r --arg p "$TITLE_PREFIX$v " '[.[] | select(.title | startswith($p))][0].title // ""')
-            if [[ "$title" == *"✅"* ]] && [ "$INPUT_FORCE" != "true" ]; then
+            clean=$(gh api "repos/$GH_REPO/actions/artifacts?name=rn-compat-clean-$v" \
+              --jq '[.artifacts[] | select(.expired | not)] | length')
+            if [ "$INPUT_FORCE" = "true" ]; then
+              versions+=("$v")
+            elif [[ "$title" == *"✅"* ]]; then
               echo "react-native@$v already reported compatible, skipping"
+            elif [ "$clean" != "0" ]; then
+              echo "react-native@$v already passed cleanly, skipping"
             else
               versions+=("$v")
             fi
@@ -317,6 +328,8 @@ jobs:
     permissions:
       contents: read
       issues: write
+    outputs:
+      clean: ${{ steps.report.outputs.clean }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -328,6 +341,7 @@ jobs:
           path: results
 
       - name: Open or update issues
+        id: report
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -342,6 +356,8 @@ jobs:
           fi
 
           example_rn=$(jq -r '.dependencies["react-native"]' example/package.json | sed -E 's/^[^0-9]*//')
+          clean=()
+          outcome() { echo "react-native@$v: $1"; printf '_Outcome: %s_\n\n' "$1" >> "$GITHUB_STEP_SUMMARY"; }
 
           for v in $(jq -r '.[]' <<<"$VERSIONS"); do
             body=$(mktemp)
@@ -425,8 +441,9 @@ jobs:
               title="$TITLE_PREFIX$v — ❌ $(printf '%s, ' "${failed[@]:-checks}" | sed 's/, $//') failed"
             fi
 
+            { echo "## $title"; echo; cat "$body"; } >> "$GITHUB_STEP_SUMMARY"
+
             if [ "$DRY_RUN" = "true" ]; then
-              { echo "## $title"; echo; cat "$body"; } >> "$GITHUB_STEP_SUMMARY"
               # The checks use continue-on-error, so fail here: a PR that
               # breaks the harness (or meets an incompatible `latest`) is red.
               $ok || dry_run_failed=true
@@ -437,14 +454,20 @@ jobs:
               --search "\"$TITLE_PREFIX$v \" in:title" --json number,title,state \
               | jq -c --arg p "$TITLE_PREFIX$v " '[.[] | select(.title | startswith($p))][0] // empty')
             if [ -z "$existing" ]; then
-              gh issue create --title "$title" --label "$ISSUE_LABEL" --body-file "$body"
+              # Nothing to act on: no issue, the job summary has the report.
+              if $ok && [ -z "$warnings" ]; then
+                clean+=("$v")
+                outcome "clean pass, no issue opened"
+                continue
+              fi
+              outcome "opened $(gh issue create --title "$title" --label "$ISSUE_LABEL" --body-file "$body")"
               continue
             fi
             number=$(jq -r .number <<<"$existing")
             # Failing versions are re-tested weekly: only comment when the
             # result changed (or on a forced re-test).
             if [ "$(jq -r .title <<<"$existing")" = "$title" ] && [ "$INPUT_FORCE" != "true" ]; then
-              echo "#$number unchanged: $title"
+              outcome "#$number unchanged"
               continue
             fi
             gh issue edit "$number" --title "$title"
@@ -454,10 +477,35 @@ jobs:
             if ! $ok && [ "$(jq -r .state <<<"$existing")" = "CLOSED" ]; then
               gh issue reopen "$number"
             fi
-            echo "Updated #$number: $title"
+            outcome "updated #$number"
           done
+
+          echo "clean=$(printf '%s\n' "${clean[@]}" | jq -R . | jq -sc 'map(select(length > 0))')" >> "$GITHUB_OUTPUT"
 
           if [ "${dry_run_failed:-}" = "true" ]; then
             echo "::error::Dry run did not report compatible, see the job summary"
             exit 1
           fi
+
+  record-clean:
+    name: Record clean pass (RN ${{ matrix.version }})
+    needs: report
+    if: ${{ needs.report.outputs.clean != '' && needs.report.outputs.clean != '[]' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: ${{ fromJSON(needs.report.outputs.clean) }}
+    steps:
+      - name: Write marker
+        env:
+          VERSION: ${{ matrix.version }}
+        run: echo "$VERSION" > clean.txt
+
+      # Looked up by name in the resolve job: the version is skipped while the
+      # artifact exists.
+      - name: Upload marker
+        uses: actions/upload-artifact@v7
+        with:
+          name: rn-compat-clean-${{ matrix.version }}
+          path: clean.txt
+          retention-days: 90

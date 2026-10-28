@@ -109,7 +109,7 @@ A React Native Windows example app (see `example-windows/README.md`).
 
 - `ci.yml` — lint/format/type-check/build/Jest, Android JUnit + APK build (new arch), podspec lint, iOS builds (CocoaPods and SwiftPM) + XCTest, Windows build + dotnet tests, iOS Detox (non-blocking), web build + Playwright. Android Detox is commented out.
 - `build-apk.yml` — builds the example release APK.
-- `rn-compat.yml` — weekly build of a fresh app at the `latest`/`next` react-native release; opens an "RN compat" issue with the result.
+- `rn-compat.yml` — weekly build of a fresh app at the `latest`/`next` react-native release; opens an "RN compat" issue only when a check fails or the library's native code has compiler warnings (a clean pass only goes to the job summary).
 
 ## Key Behaviors
 
