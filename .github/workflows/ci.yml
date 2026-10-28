@@ -21,7 +21,7 @@ env:
   NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: 20000
   NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: 120000
 
-# Caches that grow per branch (Gradle, NuGet, ccache) are written from master
+# Caches that grow per branch (Gradle, NuGet) are written from master
 # only and restored read-only on pull requests: the repo has a 10 GB cache
 # quota, and per-PR copies evicted master's caches.
 
@@ -281,7 +281,6 @@ jobs:
       # produced with this Xcode + simulator; change both together.
       IOS_SIMULATOR: iPhone 16 Pro
       IOS_SIMULATOR_OS: '26.2'
-      USE_CCACHE: '1'  # read by react_native_post_install (Podfile)
 
     steps:
       - name: Checkout code
@@ -324,21 +323,6 @@ jobs:
           node-version: '24'
           cache: 'npm'
 
-      - name: Install ccache
-        run: brew install ccache
-
-      - name: Restore ccache
-        id: ccache
-        uses: actions/cache/restore@v6
-        with:
-          # ccache's default directory: Xcode doesn't pass CCACHE_DIR through
-          # to the compiler (RN's ccache-clang.sh wrapper).
-          path: ~/Library/Caches/ccache
-          # The bulk of the build is the example's native dependencies: one
-          # entry per lockfile, not per commit (trimmed to 2 GB before saving).
-          key: ccache-ios-${{ hashFiles('example/package-lock.json', 'example/ios/Podfile') }}
-          restore-keys: ccache-ios-
-
       - name: Install dependencies
         # --legacy-peer-deps for react-native-windows@0.76.17; `prepare` builds the library
         run: npm ci --legacy-peer-deps
@@ -378,7 +362,6 @@ jobs:
         id: build
         working-directory: example
         run: |
-          ccache --zero-stats
           xcodebuild build-for-testing \
             -workspace ios/ViewShotExample.xcworkspace \
             -scheme ViewShotExampleTests \
@@ -386,18 +369,6 @@ jobs:
             -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath "$IOS_DERIVED_DATA" \
             CODE_SIGNING_ALLOWED=NO ARCHS=arm64
-          ccache --show-stats
-
-      - name: Trim ccache
-        if: github.ref == 'refs/heads/master' && steps.ccache.outputs.cache-hit != 'true'
-        run: ccache --max-size 2G && ccache --cleanup
-
-      - name: Save ccache
-        if: github.ref == 'refs/heads/master' && steps.ccache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v6
-        with:
-          path: ~/Library/Caches/ccache
-          key: ${{ steps.ccache.outputs.cache-primary-key }}
 
       # Installed once here; `--reuse` keeps Detox from reinstalling it before
       # every test file.
