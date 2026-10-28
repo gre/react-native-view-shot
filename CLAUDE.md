@@ -117,4 +117,4 @@ A React Native Windows example app (see `example-windows/README.md`).
 - **Web platform**: Metro resolves `*.web.ts` files automatically; no explicit config needed.
 - **`collapsable={false}`** is set automatically by the `ViewShot` component to prevent Android from collapsing the view before capture.
 - **First layout wait**: `ViewShot` delays capture until the first `onLayout` event fires, avoiding zero-size captures.
-- **Android E2E**: `example/android/gradle.properties` still sets `newArchEnabled=false` (a Detox workaround), but RN >= 0.82 (the example uses 0.84) no longer supports opting out of the new architecture; CI builds the APK with `-PnewArchEnabled=true`. Android Detox is disabled in CI; iOS is the primary E2E target.
+- **Android E2E**: `example/android/gradle.properties` still sets `newArchEnabled=false` (a Detox workaround), but RN >= 0.82 (the example uses 0.88) no longer supports opting out of the new architecture; CI builds the APK with `-PnewArchEnabled=true`. Android Detox is disabled in CI; iOS is the primary E2E target.
