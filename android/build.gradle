@@ -15,14 +15,12 @@ if (isNewArchitectureEnabled()) {
 
 
 android {
-  compileSdkVersion safeExtGet('compileSdkVersion', DEFAULT_COMPILE_SDK_VERSION)
+  compileSdk = safeExtGet('compileSdkVersion', DEFAULT_COMPILE_SDK_VERSION)
 
   namespace = "fr.greweb.reactnativeviewshot"
 
   defaultConfig {
-    minSdkVersion safeExtGet('minSdkVersion', 24)
-    versionCode 1
-    versionName "1.0"
+    minSdk = safeExtGet('minSdkVersion', 24)
     buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString())
     consumerProguardFiles "proguard-rules.pro"
   }
