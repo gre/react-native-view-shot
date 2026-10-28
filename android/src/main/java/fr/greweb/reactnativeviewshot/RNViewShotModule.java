@@ -93,7 +93,7 @@ public class RNViewShotModule extends NativeRNViewShotSpec {
                 outputFile = createTempFile(getReactApplicationContext(), extension, fileName);
             }
 
-            final Activity activity = getCurrentActivity();
+            final Activity activity = context.getCurrentActivity();
             ViewShot uiBlock = new ViewShot(
                     tag, extension, imageFormat, quality,
                     scaleWidth, scaleHeight, outputFile, resultStreamFormat,
