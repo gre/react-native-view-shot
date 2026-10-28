@@ -4,28 +4,16 @@ package fr.greweb.reactnativeviewshot;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.facebook.react.TurboReactPackage;
+import com.facebook.react.BaseReactPackage;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.module.model.ReactModuleInfo;
 import com.facebook.react.module.model.ReactModuleInfoProvider;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nonnull;
-
-public class RNViewShotPackage extends TurboReactPackage {
-  @Override
-  @Nonnull
-  public List<NativeModule> createNativeModules(@Nonnull ReactApplicationContext reactContext) {
-    List<NativeModule> modules = new ArrayList<>();
-    modules.add(new RNViewShotModule(reactContext));
-    return modules;
-  }
-  
+public class RNViewShotPackage extends BaseReactPackage {
   @Nullable
   @Override
   public NativeModule getModule(@NonNull String name, @NonNull ReactApplicationContext reactApplicationContext) {
