@@ -67,8 +67,9 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
     UIView *view;
 
     if ([target intValue] == -1) {
-      UIWindow *window = [[UIApplication sharedApplication] keyWindow];
-      view = window;
+      // Key window of the foreground scene (UIApplication.keyWindow is
+      // deprecated and spans all connected scenes).
+      view = RCTKeyWindow();
     } else {
       view = viewRegistry[target];
     }
