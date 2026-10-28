@@ -173,7 +173,11 @@ const analyze = async (
   c: ResolutionCase,
   sourceDp: Size,
 ): Promise<CaseResult> => {
-  const data = await Skia.Data.fromURI(uri);
+  // iOS tmpfile results are bare paths; Skia's loader needs a file:// URL
+  // (a scheme-less NSURL reads nothing).
+  const data = await Skia.Data.fromURI(
+    uri.startsWith('/') ? `file://${encodeURI(uri)}` : uri,
+  );
   const image = Skia.Image.MakeImageFromEncoded(data);
   if (!image) throw new Error('could not decode capture');
   const width = image.width();
