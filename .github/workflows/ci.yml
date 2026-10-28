@@ -268,11 +268,11 @@ jobs:
           grep -q 'getTurboModule:' rnviewshot.syms
 
   # One macOS job builds the example once (arm64, for the Detox simulator) and
-  # runs the podspec lint, the XCTest unit tests and Detox on that build.
+  # runs Detox, the XCTest unit tests and the podspec lint on that build.
   # React Native >= 0.82 is new-architecture only, so there is no separate
   # old/new architecture build.
   ios:
-    name: iOS (build, XCTest, Detox)
+    name: iOS (build, Detox, XCTest)
     runs-on: macos-15
     needs: [lint-and-type-check, changes]
     if: needs.changes.outputs.ios == 'true'
@@ -282,7 +282,6 @@ jobs:
       IOS_SIMULATOR: iPhone 16 Pro
       IOS_SIMULATOR_OS: '26.2'
       USE_CCACHE: '1'  # read by react_native_post_install (Podfile)
-      CCACHE_MAXSIZE: 2G
 
     steps:
       - name: Checkout code
@@ -295,9 +294,7 @@ jobs:
       # build. .detoxrc.js reads IOS_DERIVED_DATA for the app path. (The
       # runner context isn't available in job-level env.)
       - name: Set build paths
-        run: |
-          echo "IOS_DERIVED_DATA=$RUNNER_TEMP/DerivedData" >> "$GITHUB_ENV"
-          echo "CCACHE_DIR=$RUNNER_TEMP/ccache" >> "$GITHUB_ENV"
+        run: echo "IOS_DERIVED_DATA=$RUNNER_TEMP/DerivedData" >> "$GITHUB_ENV"
 
       # Booting takes minutes on a fresh runner; start it now so it overlaps
       # the build. Detox later targets this exact UDID. The references were
@@ -334,9 +331,11 @@ jobs:
         id: ccache
         uses: actions/cache/restore@v6
         with:
-          path: ${{ runner.temp }}/ccache
+          # ccache's default directory: Xcode doesn't pass CCACHE_DIR through
+          # to the compiler (RN's ccache-clang.sh wrapper).
+          path: ~/Library/Caches/ccache
           # The bulk of the build is the example's native dependencies: one
-          # entry per lockfile, not per commit (each is up to CCACHE_MAXSIZE).
+          # entry per lockfile, not per commit (trimmed to 2 GB before saving).
           key: ccache-ios-${{ hashFiles('example/package-lock.json', 'example/ios/Podfile') }}
           restore-keys: ccache-ios-
 
@@ -389,48 +388,16 @@ jobs:
             CODE_SIGNING_ALLOWED=NO ARCHS=arm64
           ccache --show-stats
 
+      - name: Trim ccache
+        if: github.ref == 'refs/heads/master' && steps.ccache.outputs.cache-hit != 'true'
+        run: ccache --max-size 2G && ccache --cleanup
+
       - name: Save ccache
         if: github.ref == 'refs/heads/master' && steps.ccache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v6
         with:
-          path: ${{ runner.temp }}/ccache
+          path: ~/Library/Caches/ccache
           key: ${{ steps.ccache.outputs.cache-primary-key }}
-
-      # On an iPhone of the runtime matching Xcode's simulator SDK (the Detox
-      # simulator's runtime is newer than Xcode 16.4 supports as a test
-      # destination); shut down afterwards to free CPU for Detox.
-      - name: Run iOS unit tests
-        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
-        working-directory: example
-        run: |
-          SDK=$(xcrun --sdk iphonesimulator --show-sdk-version)
-          # Newest runtime not newer than the SDK; non-numeric parts sort as 0.
-          TEST_UDID=$(xcrun simctl list devices available -j | jq -r --arg sdk "$SDK" '
-            def ver: split("-") | map(tonumber? // 0);
-            .devices | to_entries
-            | map(select(.key | startswith("com.apple.CoreSimulator.SimRuntime.iOS-"))
-                | .v = (.key | ltrimstr("com.apple.CoreSimulator.SimRuntime.iOS-") | ver)
-                | select(.v <= ($sdk | gsub("\\."; "-") | ver)))
-            | sort_by(.v) | map(.value[] | select(.name | startswith("iPhone ")))
-            | last | .udid // empty')
-          if [ -z "$TEST_UDID" ]; then
-            echo "::error::No iPhone simulator for an iOS runtime <= $SDK"
-            xcrun simctl list devices available
-            exit 1
-          fi
-          xcodebuild test-without-building \
-            -workspace ios/ViewShotExample.xcworkspace \
-            -scheme ViewShotExampleTests \
-            -destination "platform=iOS Simulator,id=$TEST_UDID" \
-            -derivedDataPath "$IOS_DERIVED_DATA" \
-            CODE_SIGNING_ALLOWED=NO
-
-      - name: Shut down the unit test simulator
-        if: ${{ !cancelled() }}
-        run: |
-          for udid in $(xcrun simctl list devices booted -j | jq -r '.devices[][] | .udid'); do
-            [ "$udid" = "$IOS_SIMULATOR_UDID" ] || xcrun simctl shutdown "$udid"
-          done
 
       # Installed once here; `--reuse` keeps Detox from reinstalling it before
       # every test file.
@@ -481,6 +448,46 @@ jobs:
         run: |
           echo "::error::Detox was skipped: no $IOS_SIMULATOR on iOS $IOS_SIMULATOR_OS"
           exit 1
+
+      # After Detox, on its own: booting a second simulator next to the Detox
+      # one and Metro took 29 min on the 3-core runner. On an iPhone of the
+      # runtime matching Xcode's simulator SDK (the Detox simulator's runtime
+      # is newer than Xcode 16.4 supports as a test destination).
+      - name: Free the runner for unit tests
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        working-directory: example
+        run: |
+          if [ -f metro.pid ]; then
+            kill "$(cat metro.pid)" || true
+            rm metro.pid
+          fi
+          xcrun simctl shutdown all
+
+      - name: Run iOS unit tests
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        working-directory: example
+        run: |
+          SDK=$(xcrun --sdk iphonesimulator --show-sdk-version)
+          # Newest runtime not newer than the SDK; non-numeric parts sort as 0.
+          TEST_UDID=$(xcrun simctl list devices available -j | jq -r --arg sdk "$SDK" '
+            def ver: split("-") | map(tonumber? // 0);
+            .devices | to_entries
+            | map(select(.key | startswith("com.apple.CoreSimulator.SimRuntime.iOS-"))
+                | .v = (.key | ltrimstr("com.apple.CoreSimulator.SimRuntime.iOS-") | ver)
+                | select(.v <= ($sdk | gsub("\\."; "-") | ver)))
+            | sort_by(.v) | map(.value[] | select(.name | startswith("iPhone ")))
+            | last | .udid // empty')
+          if [ -z "$TEST_UDID" ]; then
+            echo "::error::No iPhone simulator for an iOS runtime <= $SDK"
+            xcrun simctl list devices available
+            exit 1
+          fi
+          xcodebuild test-without-building \
+            -workspace ios/ViewShotExample.xcworkspace \
+            -scheme ViewShotExampleTests \
+            -destination "platform=iOS Simulator,id=$TEST_UDID" \
+            -derivedDataPath "$IOS_DERIVED_DATA" \
+            CODE_SIGNING_ALLOWED=NO
 
       # Last, so a lint error doesn't hide build/test results.
       - name: Lint podspec
