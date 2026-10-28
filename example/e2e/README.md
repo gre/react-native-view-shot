@@ -6,10 +6,13 @@ interactive or visual checks pass.
 
 ## Current CI configuration
 
-- The iOS Detox job (`test-detox-ios`) is blocking: a failing scenario or
-  snapshot mismatch fails CI. It pins Xcode 16.4 and the `iPhone 16 Pro`
-  simulator, which the iOS references were produced with.
-- Android Detox jobs are commented out in `.github/workflows/ci.yml`. Android
+- Detox runs in the `ios` job of `ci.yml` and is blocking: a failing scenario
+  or snapshot mismatch fails CI. It pins Xcode 16.4 and the `iPhone 16 Pro`
+  simulator on the iOS runtime pinned by `IOS_SIMULATOR_OS` in ci.yml (26.2),
+  which the iOS references were produced with. The job boots that
+  simulator, installs the app once and runs `detox test --reuse` with
+  `IOS_SIMULATOR_UDID` set, so Detox doesn't reinstall the app per test file.
+- Android Detox does not run in `.github/workflows/ci.yml`. Android
   library unit tests and the example APK build still run; they do not exercise
   the Detox scenarios.
 - The Android example runs RN 0.88, where the new architecture can no longer be

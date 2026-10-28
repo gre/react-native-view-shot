@@ -11,7 +11,7 @@
  *   `output/` and the test fails.
  *
  * References are only valid for the simulator/OS that produced them; CI pins
- * the device (see `.detoxrc.js` and the `test-detox-ios` job).
+ * the device (see `.detoxrc.js` and the `ios` job in ci.yml).
  */
 const fs = require('fs');
 const path = require('path');
