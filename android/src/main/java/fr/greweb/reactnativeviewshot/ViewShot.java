@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
@@ -100,12 +101,28 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
         int PNG = 1;  // Bitmap.CompressFormat.PNG.ordinal();
         int WEBP = 2; // Bitmap.CompressFormat.WEBP.ordinal();
         int RAW = -1;
+    }
 
-        Bitmap.CompressFormat[] mapping = {
-                Bitmap.CompressFormat.JPEG,
-                Bitmap.CompressFormat.PNG,
-                Bitmap.CompressFormat.WEBP
-        };
+    /**
+     * Maps a {@link Formats} value (other than RAW) to the bitmap compress format. WEBP keeps the
+     * behavior of the deprecated {@code CompressFormat.WEBP}: lossless at quality 100, lossy
+     * otherwise.
+     */
+    @SuppressWarnings("deprecation")
+    static Bitmap.CompressFormat compressFormat(@Formats final int format, final int quality) {
+        switch (format) {
+            case Formats.JPEG:
+                return Bitmap.CompressFormat.JPEG;
+            case Formats.WEBP:
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    return quality >= 100
+                            ? Bitmap.CompressFormat.WEBP_LOSSLESS
+                            : Bitmap.CompressFormat.WEBP_LOSSY;
+                }
+                return Bitmap.CompressFormat.WEBP;
+            default:
+                return Bitmap.CompressFormat.PNG;
+        }
     }
 
     /**
@@ -819,9 +836,9 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
                 bitmap.copyPixelsToBuffer(rbaos.asBuffer(total));
                 rbaos.setSize(total);
             } else {
-                final Bitmap.CompressFormat cf = Formats.mapping[this.format];
+                final int q = (int) (100.0 * quality);
 
-                if (!bitmap.compress(cf, (int) (100.0 * quality), os)) {
+                if (!bitmap.compress(compressFormat(this.format, q), q, os)) {
                     throw new RuntimeException("Failed to encode snapshot bitmap");
                 }
             }
