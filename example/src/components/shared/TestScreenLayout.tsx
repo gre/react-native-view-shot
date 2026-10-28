@@ -73,10 +73,7 @@ export const TestScreenLayout: React.FC<TestScreenLayoutProps> = ({
 
   return (
     <SafeAreaView style={[styles.container, backgroundStyle]}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
+      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       <ScrollView style={styles.scrollView} testID={scrollViewTestID}>
         <View style={styles.content}>
           {/* Header */}

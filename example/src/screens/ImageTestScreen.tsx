@@ -23,7 +23,7 @@ const ImageTestScreen: React.FC = () => {
   const [captureFormat, setCaptureFormat] = useState<'png' | 'jpg'>('jpg');
   const [isCapturing, setIsCapturing] = useState(false);
 
-  const imageRef = useRef<Image>(null);
+  const imageRef = useRef<React.ComponentRef<typeof Image>>(null);
 
   const onCapture = useCallback(
     (base64: string) => {
@@ -66,10 +66,7 @@ const ImageTestScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={[styles.container, backgroundStyle]}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
+      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       <ScrollView style={styles.scrollView} testID="imageScrollView">
         <View style={styles.content}>
           <Text style={styles.emoji}>🖼️</Text>

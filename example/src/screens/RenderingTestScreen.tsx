@@ -137,7 +137,7 @@ const ZIndexCell: React.FC = () => (
 );
 
 const ScrolledCell: React.FC = () => {
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<React.ComponentRef<typeof ScrollView>>(null);
 
   useEffect(() => {
     const t = setTimeout(() => {

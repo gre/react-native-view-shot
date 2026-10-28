@@ -132,7 +132,7 @@ const analyze = (base64: string): CaseResult => {
 };
 
 const ResizeTestScreen: React.FC = () => {
-  const sourceRef = useRef<View>(null);
+  const sourceRef = useRef<React.ComponentRef<typeof View>>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [results, setResults] = useState<
     Record<string, CaseResult | { error: string }>
