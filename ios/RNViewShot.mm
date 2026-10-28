@@ -17,6 +17,24 @@
 #import <rnviewshot/rnviewshot.h>
 #endif
 
+// Window captured by captureScreen. UIApplication.keyWindow is deprecated
+// and spans all connected scenes; RCTKeyWindow() picks the foreground
+// scene's key window but returns nil when every scene is backgrounded, so
+// fall back to any scene's key window to keep background captures working.
+static UIWindow *RNViewShotScreenWindow(void)
+{
+  UIWindow *window = RCTKeyWindow();
+  if (window) {
+    return window;
+  }
+  for (UIScene *scene in RCTSharedApplication().connectedScenes) {
+    if ([scene isKindOfClass:[UIWindowScene class]] && ((UIWindowScene *)scene).keyWindow) {
+      return ((UIWindowScene *)scene).keyWindow;
+    }
+  }
+  return nil;
+}
+
 @implementation RNViewShot
 
 RCT_EXPORT_MODULE()
@@ -67,9 +85,11 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
     UIView *view;
 
     if ([target intValue] == -1) {
-      // Key window of the foreground scene (UIApplication.keyWindow is
-      // deprecated and spans all connected scenes).
-      view = RCTKeyWindow();
+      view = RNViewShotScreenWindow();
+      if (!view) {
+        reject(RCTErrorUnspecified, @"No key window found to capture the screen", nil);
+        return;
+      }
     } else {
       view = viewRegistry[target];
     }
