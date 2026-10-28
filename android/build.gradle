@@ -15,25 +15,18 @@ if (isNewArchitectureEnabled()) {
 
 
 android {
-  compileSdkVersion safeExtGet('compileSdkVersion', DEFAULT_COMPILE_SDK_VERSION)
+  compileSdk = safeExtGet('compileSdkVersion', DEFAULT_COMPILE_SDK_VERSION)
 
-  def agpVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
-  // Check the AGP version, add namespace if the AGP version is above 7.
-  // Once we have fully moved on, we can remove it from the AndroidManifest.xml of the package
-  if (agpVersion.tokenize('.')[0].toInteger() >= 7) {
-    namespace "fr.greweb.reactnativeviewshot"
-  }
+  namespace = "fr.greweb.reactnativeviewshot"
 
   defaultConfig {
-    minSdkVersion safeExtGet('minSdkVersion', 24)
-    versionCode 1
-    versionName "1.0"
+    minSdk = safeExtGet('minSdkVersion', 24)
     buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString())
     consumerProguardFiles "proguard-rules.pro"
   }
 
   buildFeatures {
-    buildConfig true
+    buildConfig = true
   }
 
   sourceSets.main {
@@ -54,7 +47,7 @@ android {
 repositories {
   maven {
     // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
-    url "$projectDir/../node_modules/react-native/android"
+    url = "$projectDir/../node_modules/react-native/android"
   }
   google()
   mavenCentral()
