@@ -3,9 +3,10 @@
 # Weekly, checks the `latest` and `next` react-native releases on npm. For each
 # version that has no "RN compat" issue yet, builds a fresh app at that version
 # with the packed library (type-check, release bundle, Android and iOS builds,
-# new architecture) and opens an issue with the result and any compiler
-# warnings in the library's native code: a heads-up on what needs adapting
-# before it breaks.
+# new architecture). It opens an issue only when there is something to act on:
+# a failed check, or compiler warnings in the library's native code (a heads-up
+# on what needs adapting before it breaks). A clean pass only goes to the job
+# summary, and that version is re-checked the next week.
 #
 # Run it by hand with a specific version (e.g. a nightly) via workflow_dispatch;
 # `force` re-tests a version that already has an issue and comments on it.
@@ -94,9 +95,10 @@ jobs:
             fi
           fi
 
-          # Versions already reported compatible are done; failing ones are
-          # re-tested every week (the report only comments when the result
-          # changes), so a transient failure doesn't stick.
+          # Versions already reported compatible are done; failing ones, and
+          # clean passes (which get no issue), are re-tested every week (the
+          # report only comments when the result changes), so a transient
+          # failure doesn't stick.
           versions=()
           for v in $candidates; do
             title=$(gh issue list --label "$ISSUE_LABEL" --state all --limit 100 \
@@ -425,8 +427,9 @@ jobs:
               title="$TITLE_PREFIX$v — ❌ $(printf '%s, ' "${failed[@]:-checks}" | sed 's/, $//') failed"
             fi
 
+            { echo "## $title"; echo; cat "$body"; } >> "$GITHUB_STEP_SUMMARY"
+
             if [ "$DRY_RUN" = "true" ]; then
-              { echo "## $title"; echo; cat "$body"; } >> "$GITHUB_STEP_SUMMARY"
               # The checks use continue-on-error, so fail here: a PR that
               # breaks the harness (or meets an incompatible `latest`) is red.
               $ok || dry_run_failed=true
@@ -437,6 +440,11 @@ jobs:
               --search "\"$TITLE_PREFIX$v \" in:title" --json number,title,state \
               | jq -c --arg p "$TITLE_PREFIX$v " '[.[] | select(.title | startswith($p))][0] // empty')
             if [ -z "$existing" ]; then
+              # Nothing to act on: no issue, the job summary has the report.
+              if $ok && [ -z "$warnings" ]; then
+                echo "react-native@$v: clean pass, no issue opened"
+                continue
+              fi
               gh issue create --title "$title" --label "$ISSUE_LABEL" --body-file "$body"
               continue
             fi
