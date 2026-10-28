@@ -111,6 +111,8 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
     @SuppressWarnings("deprecation")
     static Bitmap.CompressFormat compressFormat(@Formats final int format, final int quality) {
         switch (format) {
+            case Formats.RAW:
+                throw new IllegalArgumentException("RAW captures are not compressed");
             case Formats.JPEG:
                 return Bitmap.CompressFormat.JPEG;
             case Formats.WEBP:
