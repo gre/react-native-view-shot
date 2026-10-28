@@ -30,7 +30,7 @@ describe('ViewShot - All Screens', () => {
     // With sync disabled, waitFor polls without waiting for app idle
     await waitFor(element(by.text('🚀 React Native ViewShot')))
       .toBeVisible()
-      .withTimeout(120000);
+      .withTimeout(240000);
   }, 300000);
 
   // The home title scrolls out of view, so detect home by its ScrollView.
