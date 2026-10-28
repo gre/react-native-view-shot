@@ -6,16 +6,13 @@ import static com.facebook.react.uimanager.common.UIManagerType.FABRIC;
 import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
-import android.os.AsyncTask;
 import androidx.annotation.NonNull;
 import androidx.annotation.OptIn;
 import android.util.DisplayMetrics;
 import android.util.Log;
 
-import com.facebook.react.bridge.GuardedAsyncTask;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.UIManager;
@@ -48,7 +45,7 @@ public class RNViewShotModule extends NativeRNViewShotSpec {
     @Override
     public void invalidate() {
         super.invalidate();
-        new CleanTask(getReactApplicationContext()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        executor.execute(new CleanTask(getReactApplicationContext()));
     }
 
     @ReactMethod
@@ -127,29 +124,31 @@ public class RNViewShotModule extends NativeRNViewShotSpec {
     private static final String TEMP_FILE_PREFIX = "ReactNative-snapshot-image";
 
     /**
-     * Asynchronous task that cleans up cache dirs (internal and, if available, external) of cropped
-     * image files. This is run when the catalyst instance is being destroyed (i.e. app is shutting
-     * down) and when the module is instantiated, to handle the case where the app crashed.
+     * Background task that cleans up cache dirs (internal and, if available, external) of snapshot
+     * image files. This is run when the module is invalidated (i.e. the React instance is being
+     * destroyed).
      */
-    private static class CleanTask extends GuardedAsyncTask<Void, Void> implements FilenameFilter {
+    private static class CleanTask implements Runnable, FilenameFilter {
         private final File cacheDir;
         private final File externalCacheDir;
 
-        private CleanTask(ReactContext context) {
-            super(context);
-
+        private CleanTask(Context context) {
             cacheDir = context.getCacheDir();
             externalCacheDir = context.getExternalCacheDir();
         }
 
         @Override
-        protected void doInBackgroundGuarded(Void... params) {
-            if (null != cacheDir) {
-                cleanDirectory(cacheDir);
-            }
+        public void run() {
+            try {
+                if (null != cacheDir) {
+                    cleanDirectory(cacheDir);
+                }
 
-            if (externalCacheDir != null) {
-                cleanDirectory(externalCacheDir);
+                if (externalCacheDir != null) {
+                    cleanDirectory(externalCacheDir);
+                }
+            } catch (final RuntimeException ex) {
+                Log.w(NAME, "Failed to clean up snapshot files", ex);
             }
         }
 
