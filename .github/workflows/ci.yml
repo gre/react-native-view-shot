@@ -21,7 +21,7 @@ env:
   NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: 20000
   NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: 120000
 
-# Caches that grow per branch (Gradle, NuGet) are written from master
+# Caches that grow per branch (Gradle, NuGet, ccache) are written from master
 # only and restored read-only on pull requests: the repo has a 10 GB cache
 # quota, and per-PR copies evicted master's caches.
 
@@ -292,7 +292,9 @@ jobs:
       # .detoxrc.js reads IOS_DERIVED_DATA for the app path. (The runner
       # context isn't available in job-level env.)
       - name: Set build paths
-        run: echo "IOS_DERIVED_DATA=$RUNNER_TEMP/DerivedData" >> "$GITHUB_ENV"
+        run: |
+          echo "IOS_DERIVED_DATA=$RUNNER_TEMP/DerivedData" >> "$GITHUB_ENV"
+          echo "CCACHE_DIR=$RUNNER_TEMP/ccache" >> "$GITHUB_ENV"
 
       # Booting takes minutes on a fresh runner; start it now so it overlaps
       # the build. Detox later targets this exact UDID. The references were
@@ -322,6 +324,25 @@ jobs:
           node-version: '24'
           cache: 'npm'
 
+      # RN's compiler wrapper (scripts/xcode/ccache-clang.sh) runs
+      # `$CCACHE_BINARY clang`. Pod install also sets CCACHE_BINARY as a build
+      # setting, but Xcode doesn't pass build settings to compilers, so
+      # without the environment variable the wrapper ran plain clang.
+      - name: Install ccache
+        run: |
+          brew install ccache
+          echo "CCACHE_BINARY=$(command -v ccache)" >> "$GITHUB_ENV"
+
+      - name: Restore ccache
+        id: ccache
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ runner.temp }}/ccache
+          # The bulk of the build is the example's native dependencies: one
+          # entry per lockfile, not per commit (trimmed to 2 GB before saving).
+          key: ccache-ios-${{ hashFiles('example/package-lock.json', 'example/ios/Podfile') }}
+          restore-keys: ccache-ios-
+
       - name: Install dependencies
         # --legacy-peer-deps for react-native-windows@0.76.17; `prepare` builds the library
         run: npm ci --legacy-peer-deps
@@ -337,6 +358,8 @@ jobs:
 
       - name: Pod install
         working-directory: example/ios
+        env:
+          USE_CCACHE: '1'  # read by react_native_post_install (Podfile)
         run: pod install
 
       # The ViewShotExampleTests scheme builds the app and its unit tests;
@@ -351,14 +374,30 @@ jobs:
         working-directory: example
         env:
           FORCE_BUNDLING: '1'
+          # Line-buffered output, so log timestamps match the build's progress.
+          NSUnbufferedIO: 'YES'
         run: |
+          ccache --zero-stats
           xcodebuild build-for-testing \
             -workspace ios/ViewShotExample.xcworkspace \
             -scheme ViewShotExampleTests \
             -configuration Debug \
             -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath "$IOS_DERIVED_DATA" \
-            CODE_SIGNING_ALLOWED=NO ARCHS=arm64
+            -showBuildTimingSummary \
+            CODE_SIGNING_ALLOWED=NO ARCHS=arm64 COMPILER_INDEX_STORE_ENABLE=NO
+          ccache --show-stats
+
+      - name: Trim ccache
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && github.ref == 'refs/heads/master' && steps.ccache.outputs.cache-hit != 'true' }}
+        run: ccache --max-size 2G && ccache --cleanup
+
+      - name: Save ccache
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && github.ref == 'refs/heads/master' && steps.ccache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ runner.temp }}/ccache
+          key: ${{ steps.ccache.outputs.cache-primary-key }}
 
       # Installed once here; `--reuse` keeps Detox from reinstalling it before
       # every test file.
