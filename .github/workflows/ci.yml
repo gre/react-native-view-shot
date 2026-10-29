@@ -389,11 +389,11 @@ jobs:
           ccache --show-stats
 
       - name: Trim ccache
-        if: ${{ !cancelled() && steps.build.outcome == 'success' && github.ref == 'refs/heads/master' && steps.ccache.outputs.cache-hit != 'true' }}
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && (github.ref == 'refs/heads/master' || github.head_ref == 'ci/ios-ccache') && steps.ccache.outputs.cache-hit != 'true' }}
         run: ccache --max-size 2G && ccache --cleanup
 
       - name: Save ccache
-        if: ${{ !cancelled() && steps.build.outcome == 'success' && github.ref == 'refs/heads/master' && steps.ccache.outputs.cache-hit != 'true' }}
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && (github.ref == 'refs/heads/master' || github.head_ref == 'ci/ios-ccache') && steps.ccache.outputs.cache-hit != 'true' }}
         uses: actions/cache/save@v6
         with:
           path: ${{ runner.temp }}/ccache
