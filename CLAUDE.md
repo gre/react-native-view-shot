@@ -84,7 +84,7 @@ The compiled output goes to `lib/` (gitignored). The `package.json` `"main"` fie
 
 ### Example App (`example/`)
 
-A full React Native app demonstrating all features. Each feature has its own screen in `example/src/screens/`. The E2E tests (Detox, `example/e2e/tests/`) navigate between these screens, capture, and compare an element screenshot of the capture preview (`testID="capture-preview"`) with `example/e2e/snapshots/reference/{ios,android}/<name>.png` via `e2e/helpers/snapshot-matcher.js` (pixelmatch). Mismatches write `.actual.png`/`.diff.png` to `e2e/snapshots/output/` (uploaded by CI). iOS references must come from the CI simulator (Xcode 16.4, iPhone 16 Pro), e.g. from the `detox-screenshots-ios` artifact. See `example/e2e/README.md`.
+A full React Native app demonstrating all features. Each feature has its own screen in `example/src/screens/`. The E2E tests (Detox, `example/e2e/tests/`) navigate between these screens, capture, and compare an element screenshot of the capture preview (`testID="capture-preview"`) with `example/e2e/snapshots/reference/{ios,android}/<name>.png` via `e2e/helpers/snapshot-matcher.js` (pixelmatch). Mismatches write `.actual.png`/`.diff.png` to `e2e/snapshots/output/` (uploaded by CI). iOS references must come from the CI simulator (Xcode 16.4, iPhone 16 Pro on the iOS runtime pinned by `IOS_SIMULATOR_OS` in ci.yml, currently 26.2, not Xcode 16.4's own 18.x SDK), e.g. from the `detox-screenshots-ios` artifact. See `example/e2e/README.md`.
 
 ### Web Example App (`example-web/`)
 
@@ -107,8 +107,8 @@ A React Native Windows example app (see `example-windows/README.md`).
 
 ### CI (`.github/workflows/`)
 
-- `ci.yml` — lint/format/type-check/build/Jest, Android JUnit + APK build (new arch), podspec lint, iOS builds (CocoaPods and SwiftPM) + XCTest, Windows build + dotnet tests, iOS Detox (non-blocking), web build + Playwright. Android Detox is commented out.
-- `build-apk.yml` — builds the example release APK.
+- `ci.yml` — lint/format/type-check/build/Jest, Android JUnit (old architecture) + APK build (new architecture, arm64-v8a only), iOS SwiftPM build, one `ios` job (podspec lint, a single arm64 build, then Detox and XCTest on that build; Detox uses the iPhone 16 Pro on the pinned `IOS_SIMULATOR_OS` runtime, which the references come from), Windows build + dotnet tests, web build + Playwright. On pull requests a `changes` job (dorny/paths-filter) skips the platforms a PR doesn't touch; pushes to master run everything. Gradle/NuGet caches are written from master only (10 GB repo cache quota). Android Detox is not run (native library conflicts in Detox's test APK).
+- `build-apk.yml` — release APK artifact (all ABIs), on master pushes, manual runs and pull requests touching Android, the example or the library.
 - `rn-compat.yml` — weekly build of a fresh app at the `latest`/`next` react-native release; opens an "RN compat" issue only when a check fails or the library's native code has compiler warnings (a clean pass only goes to the job summary).
 
 ## Key Behaviors

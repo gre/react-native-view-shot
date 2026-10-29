@@ -1,15 +1,33 @@
 name: Build Example APK
 
+# Release APK (all ABIs) as a downloadable artifact. On pull requests, only
+# when the release build can change (ci.yml covers a debug arm64 build). Keep
+# `paths` in sync with the shared/example/android filters in ci.yml.
 on:
   workflow_dispatch:
   push:
     branches: [main, master]
   pull_request:
     branches: [main, master]
+    paths:
+      - 'android/**'
+      - 'src/**'
+      - 'example/android/**'
+      - 'example/src/**'
+      - 'example/App.tsx'
+      - 'example/*.js'
+      - 'example/*.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig*.json'
+      - 'babel.config.*'
+      - '.npmrc'
+      - 'react-native.config.cjs'
+      - '.github/workflows/build-apk.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -35,21 +53,18 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Cache Gradle
-        uses: actions/cache@v6
+      # Read-only: ci.yml's build-android writes this cache from master.
+      - name: Restore Gradle cache
+        uses: actions/cache/restore@v6
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', 'example/package-lock.json') }}
+          restore-keys: ${{ runner.os }}-gradle-
 
-      - name: Install dependencies
-        run: npm install --legacy-peer-deps
-
-      - name: Build library
-        run: npm run build
+      - name: Install dependencies  # `prepare` builds the library
+        run: npm ci --legacy-peer-deps
 
       - name: Install example dependencies
         working-directory: example

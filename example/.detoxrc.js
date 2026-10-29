@@ -1,3 +1,6 @@
+// CI sets IOS_DERIVED_DATA (outside the repo); locally it's ios/build.
+const iosDerivedData = process.env.IOS_DERIVED_DATA || 'ios/build';
+
 module.exports = {
   testRunner: {
     args: {
@@ -17,10 +20,8 @@ module.exports = {
   apps: {
     'ios.debug': {
       type: 'ios.app',
-      binaryPath:
-        'ios/build/Build/Products/Debug-iphonesimulator/ViewShotExample.app',
-      build:
-        'xcodebuild -workspace ios/ViewShotExample.xcworkspace -scheme ViewShotExample -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build',
+      binaryPath: `${iosDerivedData}/Build/Products/Debug-iphonesimulator/ViewShotExample.app`,
+      build: `xcodebuild -workspace ios/ViewShotExample.xcworkspace -scheme ViewShotExample -configuration Debug -sdk iphonesimulator -derivedDataPath ${iosDerivedData}`,
     },
     'android.debug': {
       type: 'android.apk',
@@ -34,9 +35,11 @@ module.exports = {
   devices: {
     simulator: {
       type: 'ios.simulator',
-      device: {
-        type: process.env.IOS_SIMULATOR || 'iPhone 16 Pro',
-      },
+      // CI boots and installs the app on a known simulator up front and passes
+      // its UDID (see the `ios` job in ci.yml).
+      device: process.env.IOS_SIMULATOR_UDID
+        ? { id: process.env.IOS_SIMULATOR_UDID }
+        : { type: process.env.IOS_SIMULATOR || 'iPhone 16 Pro' },
     },
     emulator: {
       type: 'android.emulator',
