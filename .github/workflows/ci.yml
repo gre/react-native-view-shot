@@ -289,9 +289,8 @@ jobs:
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_16.4.app
 
-      # Outside the repo: Metro (watching the monorepo root) runs during the
-      # build. .detoxrc.js reads IOS_DERIVED_DATA for the app path. (The
-      # runner context isn't available in job-level env.)
+      # .detoxrc.js reads IOS_DERIVED_DATA for the app path. (The runner
+      # context isn't available in job-level env.)
       - name: Set build paths
         run: echo "IOS_DERIVED_DATA=$RUNNER_TEMP/DerivedData" >> "$GITHUB_ENV"
 
@@ -340,30 +339,18 @@ jobs:
         working-directory: example/ios
         run: pod install
 
-      # Bundling overlaps the native build (with 2 workers, leaving cores to
-      # clang); the first app launch would otherwise time out waiting for Metro.
-      # The query must match what the Debug app requests (RCTBundleURLProvider:
-      # lazy, Fusebox's excludeSource/sourcePaths, app), or Metro builds a
-      # different bundle on the first launch.
-      - name: Start Metro and prefetch the bundle
-        working-directory: example
-        run: |
-          npm start -- --max-workers 2 > metro.log 2>&1 &
-          echo $! > metro.pid
-          (if curl -sf --retry 30 --retry-delay 5 --retry-all-errors --max-time 600 \
-            -o /dev/null \
-            'http://localhost:8081/index.bundle?platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server&app=org.reactjs.native.example.ViewShotExample'; then
-            touch metro.ready
-          else
-            touch metro.failed
-          fi) &
-
       # The ViewShotExampleTests scheme builds the app and its unit tests;
       # Detox runs the same ViewShotExample.app. arm64 only: the runners are
       # Apple Silicon, and a generic destination builds every architecture.
+      # FORCE_BUNDLING embeds the (dev) JS bundle, so no Metro runs: a Debug
+      # app only uses Metro if its 6 s /status check passes, which failed on
+      # the first launch on a fresh simulator and left the app without a
+      # bundle (the recurring first-launch Detox timeout).
       - name: Build iOS
         id: build
         working-directory: example
+        env:
+          FORCE_BUNDLING: '1'
         run: |
           xcodebuild build-for-testing \
             -workspace ios/ViewShotExample.xcworkspace \
@@ -384,23 +371,9 @@ jobs:
           xcrun simctl install "$IOS_SIMULATOR_UDID" \
             "$IOS_DERIVED_DATA/Build/Products/Debug-iphonesimulator/ViewShotExample.app"
 
-      - name: Wait for Metro
-        id: metro
-        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        working-directory: example
-        run: |
-          for _ in $(seq 1 120); do
-            [ -f metro.ready ] && exit 0
-            [ -f metro.failed ] && break
-            sleep 5
-          done
-          echo "::error::Metro did not serve the bundle"
-          tail -50 metro.log
-          exit 1
-
       - name: Install applesimutils
         id: applesimutils
-        if: ${{ !cancelled() && steps.install.outcome == 'success' && steps.metro.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: |
           # Homebrew's tap-trust gate refuses community taps by default.
           if brew tap wix/brew && brew trust wix/brew && brew install applesimutils; then
@@ -424,18 +397,13 @@ jobs:
           exit 1
 
       # After Detox, on its own: booting a second simulator next to the Detox
-      # one and Metro took 29 min on the 3-core runner. On an iPhone of the
+      # one took 29 min on the 3-core runner. On an iPhone of the
       # runtime matching Xcode's simulator SDK (the Detox simulator's runtime
       # is newer than Xcode 16.4 supports as a test destination).
       - name: Free the runner for unit tests
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         working-directory: example
-        run: |
-          if [ -f metro.pid ]; then
-            kill "$(cat metro.pid)" || true
-            rm metro.pid
-          fi
-          xcrun simctl shutdown all
+        run: xcrun simctl shutdown all
 
       - name: Run iOS unit tests
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
@@ -468,15 +436,6 @@ jobs:
         if: ${{ !cancelled() }}
         run: pod lib lint --allow-warnings --quick
 
-      - name: Stop Metro Bundler
-        if: always()
-        working-directory: example
-        run: |
-          if [ -f metro.pid ]; then
-            kill "$(cat metro.pid)" || true
-            rm metro.pid
-          fi
-
       - name: Upload Detox Screenshots
         if: always()
         uses: actions/upload-artifact@v7
@@ -496,7 +455,6 @@ jobs:
           path: |
             example/e2e/test-results/**/*
             example/artifacts/**/*.xml
-            example/metro.log
 
       - name: Upload iOS Build Logs
         if: failure()
