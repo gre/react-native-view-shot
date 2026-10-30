@@ -344,8 +344,10 @@ jobs:
           path: ${{ runner.temp }}/ccache
           # The bulk of the build is the example's native dependencies: one
           # entry per lockfile, not per commit (trimmed to 2 GB before saving).
-          key: ccache-ios-${{ hashFiles('example/package-lock.json', 'example/ios/Podfile') }}
-          restore-keys: ccache-ios-
+          # An exact hit is never re-saved: bump the version when a ccache
+          # setting changes what the entries are keyed on.
+          key: ccache-ios-v2-${{ hashFiles('example/package-lock.json', 'example/ios/Podfile') }}
+          restore-keys: ccache-ios-v2-
 
       - name: Install dependencies
         # --legacy-peer-deps for react-native-windows@0.76.17; `prepare` builds the library
