@@ -328,10 +328,14 @@ jobs:
       # `$CCACHE_BINARY clang`. Pod install also sets CCACHE_BINARY as a build
       # setting, but Xcode doesn't pass build settings to compilers, so
       # without the environment variable the wrapper ran plain clang.
+      # COMPILERCHECK=content: the default (the compiler's mtime) differs
+      # between runner image versions for the same Xcode, and a run on a newer
+      # image missed every entry.
       - name: Install ccache
         run: |
           brew install ccache
           echo "CCACHE_BINARY=$(command -v ccache)" >> "$GITHUB_ENV"
+          echo "CCACHE_COMPILERCHECK=content" >> "$GITHUB_ENV"
 
       - name: Restore ccache
         id: ccache
