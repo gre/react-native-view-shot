@@ -58,11 +58,7 @@ const MODES: { key: ModeKey; label: string; useRenderInContext: boolean }[] = [
 ];
 
 type CardKey =
-  | 'plain'
-  | 'border'
-  | 'border-clipped'
-  | 'nested-border'
-  | 'scroll-border';
+  'plain' | 'border' | 'border-clipped' | 'nested-border' | 'scroll-border';
 
 interface CardSpec {
   key: CardKey;
@@ -130,7 +126,16 @@ type Results = Partial<Record<`${ModeKey}-${CardKey}`, string>>;
 type Errors = Partial<Record<`${ModeKey}-${CardKey}`, string>>;
 
 const RenderInContextTestScreen: React.FC = () => {
-  const refs = useRef<Partial<Record<CardKey, React.Component | null>>>({});
+  const refs = useRef<
+    Partial<
+      Record<
+        CardKey,
+        | React.ComponentRef<typeof View>
+        | React.ComponentRef<typeof ScrollView>
+        | null
+      >
+    >
+  >({});
   const [results, setResults] = useState<Results>({});
   const [errors, setErrors] = useState<Errors>({});
   const [capturing, setCapturing] = useState<ModeKey | null>(null);
