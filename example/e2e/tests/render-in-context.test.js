@@ -138,6 +138,8 @@ describe('ViewShot - useRenderInContext (#677)', () => {
     }
   };
 
+  // Same navigation as resize/capture-resolution: `scroll` fails on the home
+  // ScrollView, so swipe, and keep swiping when a swipe throws.
   const navigateToScreen = async () => {
     const navTestId = 'nav-renderincontext';
 
@@ -146,22 +148,15 @@ describe('ViewShot - useRenderInContext (#677)', () => {
         await expect(element(by.id(navTestId))).toBeVisible();
         break;
       } catch {
-        try {
-          await element(by.id('homeScrollView')).swipe('up', 'slow', 0.4);
-          await new Promise(resolve => setTimeout(resolve, 400));
-        } catch {
-          break;
-        }
+        await element(by.id('homeScrollView')).swipe('up', 'slow', 0.3);
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
+    await expect(element(by.id(navTestId))).toBeVisible();
 
     // Let scroll momentum settle before tapping.
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    try {
-      await element(by.id(navTestId)).tap();
-    } catch {
-      await element(by.text('RenderInContext')).atIndex(0).tap();
-    }
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    await element(by.id(navTestId)).tap();
 
     await waitFor(element(by.id('renderInContextTestScrollView')))
       .toBeVisible()
