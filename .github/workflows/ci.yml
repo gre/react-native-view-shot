@@ -406,15 +406,22 @@ jobs:
           key: ${{ steps.ccache.outputs.cache-primary-key }}
 
       # Installed once here; `--reuse` keeps Detox from reinstalling it before
-      # every test file.
+      # every test file. Then launched once: with a cached build, Detox starts
+      # minutes after the simulator booted, and its first launchApp calls hung
+      # past the 300 s hook timeout while later ones took ~1 min.
       - name: Install app on the simulator
         id: install
         if: ${{ !cancelled() && steps.build.outcome == 'success' && env.IOS_SIMULATOR_UDID != '' }}
         working-directory: example
+        env:
+          APP_ID: org.reactjs.native.example.ViewShotExample
         run: |
           xcrun simctl bootstatus "$IOS_SIMULATOR_UDID" -b
           xcrun simctl install "$IOS_SIMULATOR_UDID" \
             "$IOS_DERIVED_DATA/Build/Products/Debug-iphonesimulator/ViewShotExample.app"
+          time xcrun simctl launch "$IOS_SIMULATOR_UDID" "$APP_ID"
+          sleep 30
+          xcrun simctl terminate "$IOS_SIMULATOR_UDID" "$APP_ID" || true
 
       - name: Install applesimutils
         id: applesimutils
