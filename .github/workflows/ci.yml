@@ -328,10 +328,14 @@ jobs:
       # `$CCACHE_BINARY clang`. Pod install also sets CCACHE_BINARY as a build
       # setting, but Xcode doesn't pass build settings to compilers, so
       # without the environment variable the wrapper ran plain clang.
+      # COMPILERCHECK=content: the default (the compiler's mtime) differs
+      # between runner image versions for the same Xcode, and a run on a newer
+      # image missed every entry.
       - name: Install ccache
         run: |
           brew install ccache
           echo "CCACHE_BINARY=$(command -v ccache)" >> "$GITHUB_ENV"
+          echo "CCACHE_COMPILERCHECK=content" >> "$GITHUB_ENV"
 
       - name: Restore ccache
         id: ccache
@@ -340,8 +344,10 @@ jobs:
           path: ${{ runner.temp }}/ccache
           # The bulk of the build is the example's native dependencies: one
           # entry per lockfile, not per commit (trimmed to 2 GB before saving).
-          key: ccache-ios-${{ hashFiles('example/package-lock.json', 'example/ios/Podfile') }}
-          restore-keys: ccache-ios-
+          # An exact hit is never re-saved: bump the version when a ccache
+          # setting changes what the entries are keyed on.
+          key: ccache-ios-v2-${{ hashFiles('example/package-lock.json', 'example/ios/Podfile') }}
+          restore-keys: ccache-ios-v2-
 
       - name: Install dependencies
         # --legacy-peer-deps for react-native-windows@0.76.17; `prepare` builds the library
@@ -389,26 +395,33 @@ jobs:
           ccache --show-stats
 
       - name: Trim ccache
-        if: ${{ !cancelled() && steps.build.outcome == 'success' && github.ref == 'refs/heads/master' && steps.ccache.outputs.cache-hit != 'true' }}
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && (github.ref == 'refs/heads/master' || github.head_ref == 'ci/ccache-compilercheck') && steps.ccache.outputs.cache-hit != 'true' }}
         run: ccache --max-size 2G && ccache --cleanup
 
       - name: Save ccache
-        if: ${{ !cancelled() && steps.build.outcome == 'success' && github.ref == 'refs/heads/master' && steps.ccache.outputs.cache-hit != 'true' }}
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && (github.ref == 'refs/heads/master' || github.head_ref == 'ci/ccache-compilercheck') && steps.ccache.outputs.cache-hit != 'true' }}
         uses: actions/cache/save@v6
         with:
           path: ${{ runner.temp }}/ccache
           key: ${{ steps.ccache.outputs.cache-primary-key }}
 
       # Installed once here; `--reuse` keeps Detox from reinstalling it before
-      # every test file.
+      # every test file. Then launched once: with a cached build, Detox starts
+      # minutes after the simulator booted, and its first launchApp calls hung
+      # past the 300 s hook timeout while later ones took ~1 min.
       - name: Install app on the simulator
         id: install
         if: ${{ !cancelled() && steps.build.outcome == 'success' && env.IOS_SIMULATOR_UDID != '' }}
         working-directory: example
+        env:
+          APP_ID: org.reactjs.native.example.ViewShotExample
         run: |
           xcrun simctl bootstatus "$IOS_SIMULATOR_UDID" -b
           xcrun simctl install "$IOS_SIMULATOR_UDID" \
             "$IOS_DERIVED_DATA/Build/Products/Debug-iphonesimulator/ViewShotExample.app"
+          time xcrun simctl launch "$IOS_SIMULATOR_UDID" "$APP_ID"
+          sleep 30
+          xcrun simctl terminate "$IOS_SIMULATOR_UDID" "$APP_ID" || true
 
       - name: Install applesimutils
         id: applesimutils
