@@ -168,7 +168,7 @@ Returns a Promise of the image URI.
 
 - **`view`** is a reference to a React Native component.
 - **`options`** may include:
-  - **`fileName`** _(string)_: (Android only) the file name of the file. Must be at least 3 characters long.
+  - [Android, iOS] **`fileName`** _(string)_: the prefix of the file name when `result` is `"tmpfile"`. A unique suffix and the format extension are appended, so captures never overwrite each other. Must be at least 3 characters long and must not contain `/`.
   - [Windows] **`path`** _(string)_: a plain file name (no directories) to write when `result` is `"tmpfile"`, created in the app's `LocalFolder` (persistent storage: call `releaseCapture` when done). Used as-is (include the extension); an existing file with that name is overwritten. Defaults to a random GUID name.
   - **`width`** / **`height`** _(number)_: the width and height of the final image (resized from the View bound. don't provide it if you want the original pixel size).
     Default unit: points/dp on iOS and Windows, pixels on Android and web. Use `sizeUnit` in cross-platform code.
