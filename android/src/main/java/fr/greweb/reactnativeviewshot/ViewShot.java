@@ -894,21 +894,31 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
      * captured. captureRef keeps the view.draw path because a window crop of
      * a partially covered view would capture the occluding content.
      *
-     * <p>Package-private (not private) so JVM tests, which run with
-     * SDK_INT == 0, can force the branch via an anonymous subclass.
+     * <p>Not with handleGLSurfaceViewOnAndroid: a window copy holds only the
+     * window's own surface, so SurfaceView content (a separate surface) would
+     * be missing. The existing path copies each SurfaceView with PixelCopy instead.
      */
     boolean useWindowPixelCopy() {
-        return tag == -1 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
+        return tag == -1 && !handleGLSurfaceView && isWindowPixelCopySupported();
+    }
+
+    /**
+     * Package-private (not private) so JVM tests, which run with
+     * SDK_INT == 0, can force it via an anonymous subclass.
+     */
+    boolean isWindowPixelCopySupported() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
     }
 
     /**
      * Attempt a window-pixel snapshot for captureScreen via
      * {@link PixelCopy#request(Window, Rect, Bitmap, PixelCopy.OnPixelCopyFinishedListener, Handler)}.
      *
-     * Unlike the view.draw + child-overlay walk below, a window snapshot is
-     * what the compositor shows, so TextureView/SurfaceView content (e.g. a
-     * map) keeps its z-order under the views drawn above it instead of being
-     * repainted on top (#492, #150).
+     * Unlike the view.draw + child-overlay walk below, a window snapshot
+     * holds what the window draws, so TextureView content (e.g. a map) keeps
+     * its z-order under the views drawn above it instead of being repainted
+     * on top (#492, #150). SurfaceViews are separate surfaces and are not in
+     * it, see useWindowPixelCopy().
      *
      * Runs on the capture executor: reads the content rect on the UI thread,
      * posts the request to the main looper and blocks on a latch for the

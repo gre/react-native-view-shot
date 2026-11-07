@@ -41,9 +41,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * captureScreen (tag -1) prefers a PixelCopy window snapshot over the
- * view.draw + TextureView-overlay walk, so TextureView/SurfaceView content
- * (e.g. a map) keeps the compositor's z-order under the views drawn above
- * it instead of being repainted on top (#492, #150).
+ * view.draw + TextureView-overlay walk, so TextureView content (e.g. a map)
+ * keeps its z-order under the views drawn above it instead of being
+ * repainted on top (#492, #150).
  *
  * <p>Drives the real {@link ViewShot} capture path with mocked views and
  * mocked framework statics. Pins the two contracts that make the window
@@ -168,17 +168,21 @@ public class CaptureScreenPixelCopyTest {
     }
 
     /**
-     * Run a captureScreen (tag -1) capture through the real ViewShot path,
-     * forcing the window-PixelCopy branch: JVM unit tests run with
-     * SDK_INT == 0, so the API-26 gate is bypassed via an anonymous subclass.
+     * Run a captureScreen (tag -1) capture through the real ViewShot path
+     * as on API 26+: JVM unit tests run with SDK_INT == 0, so the API-26 gate
+     * is bypassed via an anonymous subclass.
      */
     private static void captureScreen(Activity activity, Promise promise) {
+        captureScreen(activity, promise, false);
+    }
+
+    private static void captureScreen(Activity activity, Promise promise, boolean handleGLSurfaceView) {
         final ViewShot shot = new ViewShot(
             -1, "png", ViewShot.Formats.PNG, 1.0, null, null, null,
             ViewShot.Results.BASE_64, false,
-            mock(ReactApplicationContext.class), activity, false, promise, Runnable::run) {
+            mock(ReactApplicationContext.class), activity, handleGLSurfaceView, promise, Runnable::run) {
             @Override
-            boolean useWindowPixelCopy() {
+            boolean isWindowPixelCopySupported() {
                 return true;
             }
         };
@@ -226,6 +230,22 @@ public class CaptureScreenPixelCopyTest {
         captureScreen(activityShowing(contentView), promise);
 
         assertResolved(promise);
+        verify(contentView).draw(any(Canvas.class));
+    }
+
+    @Test
+    public void surfaceViewOptInKeepsTheViewDrawPath() {
+        // A window snapshot holds only the window's own surface, so with
+        // handleGLSurfaceViewOnAndroid the SurfaceView content would be lost.
+        final View contentView = contentViewPx();
+        final Promise promise = mock(Promise.class);
+        captureScreen(activityShowing(contentView), promise, true);
+
+        assertResolved(promise);
+        pixelCopyStatics.verify(() -> PixelCopy.request(
+            any(Window.class), any(Rect.class), any(Bitmap.class),
+            any(PixelCopy.OnPixelCopyFinishedListener.class), any(Handler.class)),
+            never());
         verify(contentView).draw(any(Canvas.class));
     }
 
