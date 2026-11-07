@@ -209,6 +209,14 @@ This method will capture the contents of the currently displayed screen as a nat
 Returns a Promise of the image URI.
 
 - **`options`**: the same options as in `captureRef` method.
+- [Android] On API 26+, `captureScreen` snapshots the window via `PixelCopy`,
+  so `TextureView`/`SurfaceView` content (maps, camera, video, GL views) keeps
+  its on-screen z-order under the views above it. Any failure silently falls
+  back to the view-draw path used by `captureRef`. `captureRef` itself always
+  uses the view-draw path: a window crop of a partially obscured view would
+  capture the occluding content, so `TextureView`s there are still repainted
+  on top (see [#492](https://github.com/gre/react-native-view-shot/issues/492)
+  and [#150](https://github.com/gre/react-native-view-shot/issues/150)).
 
 ## Examples
 
