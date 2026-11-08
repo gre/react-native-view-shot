@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
@@ -21,6 +22,7 @@ import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.ScrollView;
 
 import com.facebook.react.bridge.Promise;
@@ -83,6 +85,14 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
      * Wait timeout for surface view capture.
      */
     private static final int SURFACE_VIEW_READ_PIXELS_TIMEOUT = 5;
+    /**
+     * Wait timeout (seconds) for the captureScreen window PixelCopy below.
+     * Shorter than {@link #SURFACE_VIEW_READ_PIXELS_TIMEOUT}: callers may race
+     * the capture (e.g. dismissing the screen), and any failure silently falls
+     * back to the view.draw path, so waiting longer only delays an image the
+     * fallback would have produced sooner.
+     */
+    private static final int CAPTURE_SCREEN_PIXEL_COPY_TIMEOUT = 2;
     /**
      * Hard cap (seconds) for blocking the capture executor on the UI
      * thread (mark + view.draw + restore). The capture is rejected with
@@ -579,6 +589,17 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
      * @return screenshot resolution, Width * Height
      */
     private Point captureViewImpl(@NonNull final View view, @NonNull final OutputStream os) {
+        // captureScreen (tag == -1) on API 26+: prefer a window snapshot via
+        // PixelCopy so TextureView/SurfaceView content keeps the compositor's
+        // z-order instead of being repainted on top by the child-overlay walk
+        // below (#492, #150). Any failure returns null and silently falls
+        // through to the existing view.draw path.
+        if (useWindowPixelCopy()) {
+            final Bitmap windowBitmap = tryPixelCopyCaptureScreen(view);
+            if (windowBitmap != null) {
+                return encodeWindowBitmap(windowBitmap, os);
+            }
+        }
         // All view-state reads and the bitmap allocation happen inside the
         // UI runnable below to avoid a race with concurrent captures of the
         // same view: another capture's mark/expand window could otherwise
@@ -864,6 +885,199 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
             }
         }
     }
+
+    //region PixelCopy captureScreen path
+    /**
+     * Window PixelCopy applies to captureScreen (tag == -1) on API 26+ only:
+     * the content view is always full-screen and unobscured, so cropping the
+     * window to its on-screen rect captures exactly what the old path
+     * captured. captureRef keeps the view.draw path because a window crop of
+     * a partially covered view would capture the occluding content.
+     *
+     * <p>Not with handleGLSurfaceViewOnAndroid: a window copy holds only the
+     * window's own surface, so SurfaceView content (a separate surface) would
+     * be missing. The existing path copies each SurfaceView with PixelCopy instead.
+     */
+    boolean useWindowPixelCopy() {
+        return tag == -1 && !handleGLSurfaceView && isWindowPixelCopySupported();
+    }
+
+    /**
+     * Package-private (not private) so JVM tests, which run with
+     * SDK_INT == 0, can force it via an anonymous subclass.
+     */
+    boolean isWindowPixelCopySupported() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
+    }
+
+    /**
+     * Attempt a window-pixel snapshot for captureScreen via
+     * {@link PixelCopy#request(Window, Rect, Bitmap, PixelCopy.OnPixelCopyFinishedListener, Handler)}.
+     *
+     * Unlike the view.draw + child-overlay walk below, a window snapshot
+     * holds what the window draws, so TextureView content (e.g. a map) keeps
+     * its z-order under the views drawn above it instead of being repainted
+     * on top (#492, #150). SurfaceViews are separate surfaces and are not in
+     * it, see useWindowPixelCopy().
+     *
+     * Runs on the capture executor: reads the content rect on the UI thread,
+     * posts the request to the main looper and blocks on a latch for the
+     * callback. Any failure (no window, no visible rect, PixelCopy error or
+     * timeout) recycles the bitmap and returns null, and the caller silently
+     * takes the existing view.draw path.
+     *
+     * Scoped to captureScreen (tag == -1): the content view is always
+     * full-screen and unobscured, so cropping the window to its on-screen
+     * rect captures exactly what the old path captured. captureRef keeps the
+     * existing path because a window crop of a partially covered view would
+     * capture the occluding content.
+     *
+     * @return the window snapshot, owned by the caller, or null on failure.
+     */
+    @Nullable
+    private Bitmap tryPixelCopyCaptureScreen(@NonNull final View contentView) {
+        final Activity activity = currentActivity;
+        if (activity == null) {
+            return null;
+        }
+        final Window window;
+        try {
+            window = activity.getWindow();
+        } catch (final Throwable ex) {
+            Log.w(TAG, "PixelCopy captureScreen: no window, falling back to view.draw", ex);
+            return null;
+        }
+        if (window == null) {
+            return null;
+        }
+        // Read geometry on the UI thread: layout may be mid-flight and
+        // getLocationInWindow must run where the view lives.
+        final AtomicReference<Rect> rectRef = new AtomicReference<>();
+        final AtomicBoolean uiTaskFinished = new AtomicBoolean(false);
+        final Rect srcRect;
+        try {
+            runOnUiThreadBlocking(new CancellableUiTask() {
+                @Override
+                public void run(@NonNull AtomicBoolean cancelled) {
+                    if (cancelled.get()) return;
+                    final int[] location = new int[2];
+                    contentView.getLocationInWindow(location);
+                    rectRef.set(new Rect(
+                            location[0],
+                            location[1],
+                            location[0] + contentView.getWidth(),
+                            location[1] + contentView.getHeight()));
+                }
+            }, uiTaskFinished);
+            srcRect = rectRef.get();
+            if (srcRect == null || srcRect.isEmpty()) {
+                return null;
+            }
+        } catch (final Throwable ex) {
+            Log.w(TAG, "PixelCopy captureScreen: no content rect, falling back to view.draw", ex);
+            return null;
+        }
+        // Crops the window to the content view's on-screen rect, so the
+        // snapshot covers exactly what captureScreen captured before
+        // (android.R.id.content, i.e. below the status bar) at the same size.
+        final Bitmap buffer;
+        try {
+            buffer = getBitmapForScreenshot(srcRect.width(), srcRect.height());
+        } catch (final Throwable ex) {
+            Log.w(TAG, "PixelCopy captureScreen: no bitmap, falling back to view.draw", ex);
+            return null;
+        }
+        // Same late-callback discipline as captureSurfaceView (#681): once
+        // abandoned after a timeout, the callback recycles instead of handing
+        // over a bitmap the caller may already have recycled.
+        final AtomicReference<Bitmap> pending = new AtomicReference<>(buffer);
+        final AtomicBoolean abandoned = new AtomicBoolean(false);
+        final AtomicInteger copyResult = new AtomicInteger(-1);
+        final CountDownLatch completed = new CountDownLatch(1);
+        try {
+            PixelCopy.request(window, srcRect, buffer,
+                    new PixelCopy.OnPixelCopyFinishedListener() {
+                        @Override
+                        public void onPixelCopyFinished(int result) {
+                            copyResult.set(result);
+                            completed.countDown();
+                            if (abandoned.get()) {
+                                final Bitmap unused = pending.getAndSet(null);
+                                if (unused != null) recycleBitmap(unused);
+                            }
+                        }
+                    }, new Handler(Looper.getMainLooper()));
+        } catch (final Throwable ex) {
+            // IllegalArgumentException (bad window/rect/bitmap) or anything
+            // the platform throws synchronously: not ours to retry.
+            recycleBitmap(buffer);
+            Log.w(TAG, "PixelCopy captureScreen: request failed, falling back to view.draw", ex);
+            return null;
+        }
+        try {
+            if (completed.await(CAPTURE_SCREEN_PIXEL_COPY_TIMEOUT, TimeUnit.SECONDS)
+                    && copyResult.get() == PixelCopy.SUCCESS) {
+                return pending.getAndSet(null);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            Log.w(TAG, "PixelCopy captureScreen: interrupted, falling back to view.draw", e);
+        } finally {
+            abandoned.set(true);
+            // Covers completion immediately before abandonment. The callback
+            // covers completion after it; getAndSet gives exactly one owner.
+            if (completed.getCount() == 0) {
+                final Bitmap unused = pending.getAndSet(null);
+                if (unused != null) recycleBitmap(unused);
+            }
+        }
+        Log.w(TAG, "PixelCopy captureScreen: copy "
+                + (completed.getCount() == 0 ? "failed (" + copyResult.get() + ")" : "timed out")
+                + ", falling back to view.draw");
+        return null;
+    }
+
+    /**
+     * Scale (per the width/height options), encode and return the resolution
+     * of a PixelCopy window snapshot, sharing the same tail as the view.draw
+     * path in captureViewImpl. The bitmap is exclusively owned by the capture
+     * executor here, so unlike the draw path no UI-thread handoff applies:
+     * this method recycles both the original and the scaled bitmap (when
+     * created), the same pair the draw path's finally handles.
+     */
+    private Point encodeWindowBitmap(@NonNull Bitmap bitmap, @NonNull final OutputStream os) {
+        final Bitmap original = bitmap;
+        final Point resolution = new Point(bitmap.getWidth(), bitmap.getHeight());
+        try {
+            if (width != null && height != null && (width != resolution.x || height != resolution.y)) {
+                bitmap = Bitmap.createScaledBitmap(bitmap, width, height, true);
+                resolution.x = bitmap.getWidth();
+                resolution.y = bitmap.getHeight();
+            }
+
+            // special case, just save RAW ARGB array without any compression
+            if (Formats.RAW == this.format && os instanceof ReusableByteArrayOutputStream) {
+                final int total = bitmap.getByteCount();
+                final ReusableByteArrayOutputStream rbaos = cast(os);
+                bitmap.copyPixelsToBuffer(rbaos.asBuffer(total));
+                rbaos.setSize(total);
+            } else {
+                final int q = (int) (100.0 * quality);
+
+                if (!bitmap.compress(compressFormat(this.format, q), q, os)) {
+                    throw new RuntimeException("Failed to encode snapshot bitmap");
+                }
+            }
+
+            return resolution; // return image width and height
+        } finally {
+            recycleBitmap(original);
+            if (bitmap != original) {
+                recycleBitmap(bitmap);
+            }
+        }
+    }
+    //endregion
 
     @Nullable
     private Bitmap captureSurfaceView(@NonNull final SurfaceView view) {
