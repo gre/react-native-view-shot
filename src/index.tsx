@@ -26,7 +26,9 @@ const neverEndingPromise = new Promise(() => {});
 
 export interface CaptureOptions {
   /**
-   * (Android only) the file name of the file. Must be at least 3 characters long.
+   * (Android and iOS) the prefix of the file name when `result` is `"tmpfile"`. A unique suffix and the
+   * format extension are appended, so captures never overwrite each other. Must be at least 3 characters
+   * long and must not contain `/`.
    */
   fileName?: string;
   /**
