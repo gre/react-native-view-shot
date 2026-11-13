@@ -32,6 +32,7 @@ export type RootStackParamList = {
   StyleFilters: undefined;
   Resize: undefined;
   CaptureResolution: undefined;
+  RenderInContext: undefined;
 };
 
 // Import all test screens
@@ -51,6 +52,7 @@ import RenderingTestScreen from './src/screens/RenderingTestScreen';
 import StyleFiltersTestScreen from './src/screens/StyleFiltersTestScreen';
 import ResizeTestScreen from './src/screens/ResizeTestScreen';
 import CaptureResolutionTestScreen from './src/screens/CaptureResolutionTestScreen';
+import RenderInContextTestScreen from './src/screens/RenderInContextTestScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -165,6 +167,11 @@ function App(): React.JSX.Element {
           name="CaptureResolution"
           component={CaptureResolutionTestScreen}
           options={{ title: '🔍 Capture resolution (#537, #505)' }}
+        />
+        <Stack.Screen
+          name="RenderInContext"
+          component={RenderInContextTestScreen}
+          options={{ title: '🩹 useRenderInContext (Bug #677)' }}
         />
       </Stack.Navigator>
     </NavigationContainer>
