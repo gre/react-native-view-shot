@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
@@ -22,6 +23,7 @@ import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.view.Window;
 import android.widget.ScrollView;
 
@@ -595,9 +597,10 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
         // below (#492, #150). Any failure returns null and silently falls
         // through to the existing view.draw path.
         if (useWindowPixelCopy()) {
-            final Bitmap windowBitmap = tryPixelCopyCaptureScreen(view);
+            final List<MaskInfo> screenMasks = new ArrayList<>();
+            final Bitmap windowBitmap = tryPixelCopyCaptureScreen(view, screenMasks);
             if (windowBitmap != null) {
-                return encodeWindowBitmap(windowBitmap, os);
+                return encodeWindowBitmap(windowBitmap, os, screenMasks);
             }
         }
         // All view-state reads and the bitmap allocation happen inside the
@@ -611,6 +614,8 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
         final AtomicReference<Bitmap> originalBitmapRef = new AtomicReference<>();
         final AtomicReference<Canvas> canvasRef = new AtomicReference<>();
         final AtomicReference<Point> resolutionRef = new AtomicReference<>();
+        final AtomicReference<List<MaskInfo>> maskInfosRef = new AtomicReference<>(Collections.<MaskInfo>emptyList());
+        final AtomicReference<Set<View>> maskedNodesRef = new AtomicReference<>(Collections.<View>emptySet());
         // Recycling the canvas-backing bitmap is split between the caller
         // (background thread) and the UI runnable so we can safely return
         // the bitmap to the pool even when the caller times out mid-draw.
@@ -745,6 +750,11 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
                                 // covers the full content.
                                 forceExactLayout(scrollView, viewWidth, captureHeight);
                             }
+                            final List<MaskInfo> maskInfos = new ArrayList<>();
+                            final Set<View> maskedNodes = Collections.newSetFromMap(new WeakHashMap<View, Boolean>());
+                            collectMaskViews(view, view, maskInfos, maskedNodes);
+                            maskInfosRef.set(maskInfos);
+                            maskedNodesRef.set(maskedNodes);
                             markSubtreeAlphaLayers(view, alphaLayered);
                             view.draw(c);
                         } finally {
@@ -799,8 +809,12 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
 
             //after view is drawn, go through children
             final List<View> childrenList = getAllChildren(view);
+            final Set<View> maskedNodes = maskedNodesRef.get();
 
             for (final View child : childrenList) {
+                if (isDescendantOfAny(child, maskedNodes)) {
+                    continue; // Skip any hardware surface inside a mask
+                }
                 // skip any child that we don't know how to process
                 if (child instanceof TextureView) {
                     // skip all invisible to user child views
@@ -838,6 +852,8 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
                     }
                 }
             }
+
+            drawMasks(c, maskInfosRef.get());
 
             if (width != null && height != null && (width != w || height != h)) {
                 final Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, width, height, true);
@@ -935,7 +951,7 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
      * @return the window snapshot, owned by the caller, or null on failure.
      */
     @Nullable
-    private Bitmap tryPixelCopyCaptureScreen(@NonNull final View contentView) {
+    private Bitmap tryPixelCopyCaptureScreen(@NonNull final View contentView, @NonNull final List<MaskInfo> outMasks) {
         final Activity activity = currentActivity;
         if (activity == null) {
             return null;
@@ -960,6 +976,7 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
                 @Override
                 public void run(@NonNull AtomicBoolean cancelled) {
                     if (cancelled.get()) return;
+                    collectMaskViews(contentView, contentView, outMasks, Collections.newSetFromMap(new WeakHashMap<View, Boolean>()));
                     final int[] location = new int[2];
                     contentView.getLocationInWindow(location);
                     rectRef.set(new Rect(
@@ -1045,10 +1062,14 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
      * this method recycles both the original and the scaled bitmap (when
      * created), the same pair the draw path's finally handles.
      */
-    private Point encodeWindowBitmap(@NonNull Bitmap bitmap, @NonNull final OutputStream os) {
+    private Point encodeWindowBitmap(@NonNull Bitmap bitmap, @NonNull final OutputStream os, @NonNull final List<MaskInfo> masks) {
         final Bitmap original = bitmap;
         final Point resolution = new Point(bitmap.getWidth(), bitmap.getHeight());
         try {
+            if (!masks.isEmpty()) {
+                final Canvas c = new Canvas(bitmap);
+                drawMasks(c, masks);
+            }
             if (width != null && height != null && (width != resolution.x || height != resolution.y)) {
                 bitmap = Bitmap.createScaledBitmap(bitmap, width, height, true);
                 resolution.x = bitmap.getWidth();
@@ -1177,6 +1198,123 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
             c.rotate(v.getRotation(), v.getPivotX(), v.getPivotY());
             // scale about the view's pivot, matching how android renders the view
             c.scale(v.getScaleX(), v.getScaleY(), v.getPivotX(), v.getPivotY());
+        }
+    }
+
+    public static final String MASK_TAG_PREFIX = "rn-view-shot-mask:";
+
+    static class MaskInfo {
+        final int color;
+        final Matrix matrix;
+        final int width;
+        final int height;
+
+        MaskInfo(final int color, @NonNull final Matrix matrix, final int width, final int height) {
+            this.color = color;
+            this.matrix = matrix;
+            this.width = width;
+            this.height = height;
+        }
+    }
+
+    static int parseMaskColor(@NonNull final String tag) {
+        try {
+            String hex = tag.substring(MASK_TAG_PREFIX.length()).trim();
+            if (hex.startsWith("#")) {
+                hex = hex.substring(1);
+            }
+            if (hex.length() == 3) {
+                hex = "" + hex.charAt(0) + hex.charAt(0)
+                        + hex.charAt(1) + hex.charAt(1)
+                        + hex.charAt(2) + hex.charAt(2);
+            } else if (hex.length() == 4) {
+                hex = "" + hex.charAt(0) + hex.charAt(0)
+                        + hex.charAt(1) + hex.charAt(1)
+                        + hex.charAt(2) + hex.charAt(2)
+                        + hex.charAt(3) + hex.charAt(3);
+            }
+            if (hex.length() == 6 || hex.length() == 8) {
+                return Color.parseColor("#" + hex);
+            }
+            return Color.parseColor(hex);
+        } catch (final Throwable t) {
+            return Color.BLACK;
+        }
+    }
+
+    @NonNull
+    static Matrix computeRelativeTransform(@NonNull final View child, @NonNull final View root) {
+        final Matrix totalMatrix = new Matrix();
+        if (child == root) {
+            return totalMatrix;
+        }
+        final List<View> ancestors = walkAncestors(child, root);
+        // ancestors is in leaf-to-root order: [child, parentN, ..., parent1] (not including root)
+        for (final View v : ancestors) {
+            if (!v.getMatrix().isIdentity()) {
+                totalMatrix.postConcat(v.getMatrix());
+            }
+            final ViewParent parent = v.getParent();
+            final int scrollX = (parent instanceof View) ? ((View) parent).getScrollX() : 0;
+            final int scrollY = (parent instanceof View) ? ((View) parent).getScrollY() : 0;
+            totalMatrix.postTranslate(v.getLeft() - scrollX, v.getTop() - scrollY);
+        }
+        return totalMatrix;
+    }
+
+    static void collectMaskViews(
+            @NonNull final View v,
+            @NonNull final View root,
+            @NonNull final List<MaskInfo> masks,
+            @NonNull final Set<View> maskedViewNodes) {
+        if (v.getVisibility() != VISIBLE || v.getAlpha() < 0.01f) {
+            return;
+        }
+        final Object tag = v.getTag(com.facebook.react.R.id.view_tag_native_id);
+        if (tag instanceof String && ((String) tag).startsWith(MASK_TAG_PREFIX)) {
+            if (v.getWidth() > 0 && v.getHeight() > 0) {
+                final int color = parseMaskColor((String) tag);
+                final Matrix matrix = computeRelativeTransform(v, root);
+                masks.add(new MaskInfo(color, matrix, v.getWidth(), v.getHeight()));
+            }
+            maskedViewNodes.add(v);
+            return; // Prune recursion: nested children are covered by this mask
+        }
+        if (v instanceof ViewGroup) {
+            final ViewGroup group = (ViewGroup) v;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                collectMaskViews(group.getChildAt(i), root, masks, maskedViewNodes);
+            }
+        }
+    }
+
+    static boolean isDescendantOfAny(@NonNull final View child, @NonNull final Set<View> maskedNodes) {
+        if (maskedNodes.isEmpty()) {
+            return false;
+        }
+        ViewParent parent = child.getParent();
+        while (parent instanceof View) {
+            if (maskedNodes.contains(parent)) {
+                return true;
+            }
+            parent = parent.getParent();
+        }
+        return false;
+    }
+
+    static void drawMasks(@NonNull final Canvas c, @NonNull final List<MaskInfo> masks) {
+        if (masks.isEmpty()) return;
+        final Paint paint = new Paint();
+        paint.setStyle(Paint.Style.FILL);
+        for (final MaskInfo mask : masks) {
+            paint.setColor(mask.color);
+            final int count = c.save();
+            try {
+                c.concat(mask.matrix);
+                c.drawRect(0, 0, mask.width, mask.height, paint);
+            } finally {
+                c.restoreToCount(count);
+            }
         }
     }
 

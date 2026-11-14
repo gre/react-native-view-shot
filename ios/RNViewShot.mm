@@ -35,6 +35,84 @@ static UIWindow *RNViewShotScreenWindow(void)
   return nil;
 }
 
+static NSString *const kRNViewShotMaskPrefix = @"rn-view-shot-mask:";
+
+static NSString *RNViewShotGetNativeId(UIView *view)
+{
+  if ([view respondsToSelector:@selector(nativeId)]) {
+    id val = [view valueForKey:@"nativeId"];
+    if ([val isKindOfClass:[NSString class]]) {
+      return (NSString *)val;
+    }
+  }
+  if ([view respondsToSelector:@selector(nativeID)]) {
+    id val = [view valueForKey:@"nativeID"];
+    if ([val isKindOfClass:[NSString class]]) {
+      return (NSString *)val;
+    }
+  }
+  return nil;
+}
+
+static void RNViewShotCollectMaskViews(UIView *view, NSMutableArray<UIView *> *masks)
+{
+  if (view.hidden || view.alpha < 0.01) {
+    return;
+  }
+  NSString *nativeId = RNViewShotGetNativeId(view);
+  if ([nativeId hasPrefix:kRNViewShotMaskPrefix]) {
+    if (view.bounds.size.width > 0 && view.bounds.size.height > 0) {
+      [masks addObject:view];
+    }
+    return; // Prune recursion: inner children are already covered by this mask
+  }
+  for (UIView *subview in view.subviews) {
+    RNViewShotCollectMaskViews(subview, masks);
+  }
+}
+
+static UIColor *RNViewShotParseMaskColor(NSString *nativeId)
+{
+  NSString *hex = [nativeId substringFromIndex:kRNViewShotMaskPrefix.length];
+  if ([hex hasPrefix:@"#"]) {
+    hex = [hex substringFromIndex:1];
+  }
+  if (hex.length == 3) {
+    unichar c0 = [hex characterAtIndex:0];
+    unichar c1 = [hex characterAtIndex:1];
+    unichar c2 = [hex characterAtIndex:2];
+    hex = [NSString stringWithFormat:@"%C%C%C%C%C%C", c0, c0, c1, c1, c2, c2];
+  } else if (hex.length == 4) {
+    unichar c0 = [hex characterAtIndex:0];
+    unichar c1 = [hex characterAtIndex:1];
+    unichar c2 = [hex characterAtIndex:2];
+    unichar c3 = [hex characterAtIndex:3];
+    hex = [NSString stringWithFormat:@"%C%C%C%C%C%C%C%C", c0, c0, c1, c1, c2, c2, c3, c3];
+  }
+  unsigned int rgb = 0;
+  if ([[NSScanner scannerWithString:hex] scanHexInt:&rgb]) {
+    if (hex.length == 6) {
+      return [UIColor colorWithRed:((rgb >> 16) & 0xFF) / 255.0
+                             green:((rgb >> 8) & 0xFF) / 255.0
+                              blue:(rgb & 0xFF) / 255.0
+                             alpha:1.0];
+    } else if (hex.length == 8) {
+      return [UIColor colorWithRed:((rgb >> 16) & 0xFF) / 255.0
+                             green:((rgb >> 8) & 0xFF) / 255.0
+                              blue:(rgb & 0xFF) / 255.0
+                             alpha:((rgb >> 24) & 0xFF) / 255.0];
+    }
+  }
+  NSString *lower = [hex lowercaseString];
+  if ([lower isEqualToString:@"red"]) return [UIColor redColor];
+  if ([lower isEqualToString:@"green"]) return [UIColor greenColor];
+  if ([lower isEqualToString:@"blue"]) return [UIColor blueColor];
+  if ([lower isEqualToString:@"white"]) return [UIColor whiteColor];
+  if ([lower isEqualToString:@"yellow"]) return [UIColor yellowColor];
+  if ([lower isEqualToString:@"gray"] || [lower isEqualToString:@"grey"]) return [UIColor grayColor];
+  return [UIColor blackColor];
+}
+
 @implementation RNViewShot
 
 RCT_EXPORT_MODULE()
@@ -188,6 +266,28 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
       else {
         // this doesn't work for large views and reports incorrect success even though the image is blank
         success = [rendered drawViewHierarchyInRect:(CGRect){CGPointZero, size} afterScreenUpdates:YES];
+      }
+
+      if (success) {
+        NSMutableArray<UIView *> *maskViews = [NSMutableArray array];
+        RNViewShotCollectMaskViews(rendered, maskViews);
+        if (maskViews.count > 0) {
+          CGContextRef ctx = rendererContext.CGContext;
+          BOOL needsScale = !renderInContext && !CGSizeEqualToSize(size, naturalSize) && naturalSize.width > 0 && naturalSize.height > 0;
+          CGFloat sx = needsScale ? size.width / naturalSize.width : 1.0;
+          CGFloat sy = needsScale ? size.height / naturalSize.height : 1.0;
+
+          for (UIView *mask in maskViews) {
+            CGRect rect = [mask convertRect:mask.bounds toView:rendered];
+            if (needsScale) {
+              rect = CGRectMake(rect.origin.x * sx, rect.origin.y * sy, rect.size.width * sx, rect.size.height * sy);
+            }
+            CGContextSaveGState(ctx);
+            CGContextSetFillColorWithColor(ctx, RNViewShotParseMaskColor(RNViewShotGetNativeId(mask)).CGColor);
+            CGContextFillRect(ctx, rect);
+            CGContextRestoreGState(ctx);
+          }
+        }
       }
     }];
 

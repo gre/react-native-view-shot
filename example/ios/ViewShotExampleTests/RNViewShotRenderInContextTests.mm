@@ -120,6 +120,7 @@ static NSString *ColorName(const uint8_t *rgba)
   if (rLow && gLow && b) return @"blue";
   if (rLow && g && bLow) return @"green";
   if (r && g && bLow) return @"yellow";
+  if (rLow && gLow && bLow) return @"black";
   return [NSString stringWithFormat:@"rgba(%d,%d,%d,%d)", rgba[0], rgba[1], rgba[2], rgba[3]];
 }
 
@@ -225,6 +226,58 @@ static UIScrollView *HalfScaleScrollView(void)
 
   [self assertImage:image hasPointSize:CGSizeMake(100, 100)];
   XCTAssertEqualObjects(QuadrantColors(image), ExpectedQuadrants());
+}
+
+- (void)testMaskView_masksQuadrantWithSolidColor
+{
+  UIView *view = QuadrantView(CGSizeMake(200, 100));
+  UIView *redQuadrant = view.subviews[0];
+  [redQuadrant setValue:@"rn-view-shot-mask:#000000" forKey:@"nativeID"];
+
+  UIImage *image = [self captureView:view options:@{}];
+  NSArray<NSString *> *colors = QuadrantColors(image);
+  NSArray<NSString *> *expected = @[ @"black", @"blue", @"green", @"yellow" ];
+  XCTAssertEqualObjects(colors, expected);
+}
+
+- (void)testMaskView_nestedChildInsideMask_isCoveredByMask
+{
+  UIView *view = QuadrantView(CGSizeMake(200, 100));
+  UIView *redQuadrant = view.subviews[0];
+  [redQuadrant setValue:@"rn-view-shot-mask:#000000" forKey:@"nativeID"];
+
+  UIView *innerChild = [[UIView alloc] initWithFrame:redQuadrant.bounds];
+  innerChild.backgroundColor = UIColor.yellowColor;
+  [redQuadrant addSubview:innerChild];
+
+  UIImage *image = [self captureView:view options:@{}];
+  NSArray<NSString *> *colors = QuadrantColors(image);
+  NSArray<NSString *> *expected = @[ @"black", @"blue", @"green", @"yellow" ];
+  XCTAssertEqualObjects(colors, expected);
+}
+
+- (void)testMaskView_customColor_masksWithSpecifiedColor
+{
+  UIView *view = QuadrantView(CGSizeMake(200, 100));
+  UIView *redQuadrant = view.subviews[0];
+  [redQuadrant setValue:@"rn-view-shot-mask:#00FF00" forKey:@"nativeID"];
+
+  UIImage *image = [self captureView:view options:@{}];
+  NSArray<NSString *> *colors = QuadrantColors(image);
+  NSArray<NSString *> *expected = @[ @"green", @"blue", @"green", @"yellow" ];
+  XCTAssertEqualObjects(colors, expected);
+}
+
+- (void)testMaskView_threeDigitHex_masksWithExpandedColor
+{
+  UIView *view = QuadrantView(CGSizeMake(200, 100));
+  UIView *redQuadrant = view.subviews[0];
+  [redQuadrant setValue:@"rn-view-shot-mask:#0F0" forKey:@"nativeID"];
+
+  UIImage *image = [self captureView:view options:@{}];
+  NSArray<NSString *> *colors = QuadrantColors(image);
+  NSArray<NSString *> *expected = @[ @"green", @"blue", @"green", @"yellow" ];
+  XCTAssertEqualObjects(colors, expected);
 }
 
 @end

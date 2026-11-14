@@ -221,6 +221,57 @@ Returns a Promise of the image URI.
   [#492](https://github.com/gre/react-native-view-shot/issues/492) and
   [#150](https://github.com/gre/react-native-view-shot/issues/150)).
 
+## Masking Sensitive Content (`<MaskView>`)
+
+`<MaskView>` allows you to redact or hide sensitive on-screen content (e.g. credit card details, personal data, or passwords) from captured screenshots. Children of `<MaskView>` render normally on-screen for the user, but in snapshots produced by `captureRef` or `captureScreen`, the masked view is replaced with a solid colored rectangle.
+
+```tsx
+import React, {useRef} from "react";
+import {View, Text, Button} from "react-native";
+import ViewShot, {MaskView, captureRef} from "react-native-view-shot";
+
+export function SensitiveScreen() {
+  const containerRef = useRef<View>(null);
+
+  const takeSnapshot = async () => {
+    const uri = await captureRef(containerRef, {format: "png"});
+    console.log("Captured image with masked credit card:", uri);
+  };
+
+  return (
+    <View ref={containerRef}>
+      <Text>Order Confirmation</Text>
+
+      {/* Renders normally on-screen, but replaced by a solid black box in screenshots */}
+      <MaskView maskColor="#000000">
+        <Text>Card Number: 4111 •••• •••• 1234</Text>
+      </MaskView>
+
+      <Button title="Capture" onPress={takeSnapshot} />
+    </View>
+  );
+}
+```
+
+### Props
+
+- **`maskColor`** _(string)_: The color of the solid rectangle drawn over the view in snapshots. Defaults to `"#000000"`. Supported formats:
+  - 6-digit hex: `"#FF5500"` or `"FF5500"`
+  - 3-digit hex: `"#F50"` or `"F50"`
+  - 8-digit hex (with alpha): `"#80FF5500"`
+  - 4-digit hex (with alpha): `"#8F50"`
+  - Named CSS colors: `"black"`, `"white"`, `"red"`, `"blue"`, `"green"`, `"yellow"`, `"gray"`
+- **`style`**: Style forwarded to the container `View`.
+- **`children`**: Content that will be rendered on-screen, but occluded in captures.
+- All other standard `ViewProps` (except `nativeID`, which is managed internally) are supported.
+
+### Behavior & Limitations
+
+- **Zero UI Flicker**: Masking is executed post-rasterization directly on the offscreen canvas/graphics context before encoding. Live native views are never mutated or hidden.
+- **Hardware Overlay Protection**: Hardware overlays (`TextureView` / `SurfaceView` on Android, video and GPU layers on iOS) descending from a `<MaskView>` are suppressed and covered by the mask.
+- **Transforms & Nested Scroll**: Nested views, rotation/scaling transforms, and scroll containers (`snapshotContentContainer` both `true` and `false`) are automatically tracked and masked at their exact relative positions.
+- **Android `<Modal>` Limitation**: On Android, React Native's `<Modal>` renders into an independent native `Dialog` window rather than the activity decor view. Full-window captures using `captureScreen` target the activity window and do not capture views in separate dialog windows. To capture and mask content inside an Android modal, call `captureRef` on a view within that modal.
+
 ## Examples
 
 ### Native Example (iOS & Android)
