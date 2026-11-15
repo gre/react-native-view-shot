@@ -30,3 +30,17 @@ export const NativeModules = {
 export const StyleSheet = {
   create: (styles: any) => styles,
 };
+
+// React Native's processColor converts color strings to 32-bit ARGB integers
+export const processColor = jest.fn((color?: any) => {
+  if (color === undefined || color === null) return color;
+  if (typeof color === "number") return color;
+  try {
+    const normalizeColor = require("@react-native/normalize-colors");
+    const normalizedColor = normalizeColor(color);
+    if (typeof normalizedColor !== "number") return null;
+    return ((normalizedColor << 24) | (normalizedColor >>> 8)) >>> 0;
+  } catch {
+    return null;
+  }
+});

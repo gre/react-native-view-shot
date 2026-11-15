@@ -12,6 +12,7 @@ export type RootStackParamList = {
   Home: undefined;
   // Basic tests
   BasicTest: undefined;
+  MaskViewTest: undefined;
   FullScreen: undefined;
   Transparency: undefined;
   ScrollView: undefined;
@@ -37,6 +38,7 @@ export type RootStackParamList = {
 // Import all test screens
 import HomeScreen from './src/screens/HomeScreen';
 import BasicTestScreen from './src/screens/BasicTestScreen';
+import MaskViewTestScreen from './src/screens/MaskViewTestScreen';
 import FullScreenTestScreen from './src/screens/FullScreenTestScreen';
 import TransparencyTestScreen from './src/screens/TransparencyTestScreen';
 import VideoTestScreen from './src/screens/VideoTestScreen';
@@ -87,6 +89,11 @@ function App(): React.JSX.Element {
           name="BasicTest"
           component={BasicTestScreen}
           options={{ title: '📸 Basic ViewShot Test' }}
+        />
+        <Stack.Screen
+          name="MaskViewTest"
+          component={MaskViewTestScreen}
+          options={{ title: '🛡️ MaskView Sensitive Data' }}
         />
         <Stack.Screen
           name="FullScreen"

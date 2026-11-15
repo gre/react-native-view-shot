@@ -38,6 +38,14 @@ const testCases: { [category: string]: TestCase[] } = {
       status: 'tested',
     },
     {
+      key: 'MaskViewTest',
+      title: 'MaskView Sensitive Data',
+      description: 'Hide sensitive UI in snapshots with solid color masks',
+      emoji: '🛡️',
+      priority: 'high',
+      status: 'new',
+    },
+    {
       key: 'FullScreen',
       title: 'Full Screen',
       description: 'Capture entire screen with captureScreen()',

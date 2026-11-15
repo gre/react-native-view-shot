@@ -232,7 +232,7 @@ static UIScrollView *HalfScaleScrollView(void)
 {
   UIView *view = QuadrantView(CGSizeMake(200, 100));
   UIView *redQuadrant = view.subviews[0];
-  [redQuadrant setValue:@"rn-view-shot-mask:#000000" forKey:@"nativeID"];
+  [redQuadrant setValue:@"rn-view-shot-mask:ff000000" forKey:@"nativeID"];
 
   UIImage *image = [self captureView:view options:@{}];
   NSArray<NSString *> *colors = QuadrantColors(image);
@@ -244,7 +244,7 @@ static UIScrollView *HalfScaleScrollView(void)
 {
   UIView *view = QuadrantView(CGSizeMake(200, 100));
   UIView *redQuadrant = view.subviews[0];
-  [redQuadrant setValue:@"rn-view-shot-mask:#000000" forKey:@"nativeID"];
+  [redQuadrant setValue:@"rn-view-shot-mask:ff000000" forKey:@"nativeID"];
 
   UIView *innerChild = [[UIView alloc] initWithFrame:redQuadrant.bounds];
   innerChild.backgroundColor = UIColor.yellowColor;
@@ -260,7 +260,7 @@ static UIScrollView *HalfScaleScrollView(void)
 {
   UIView *view = QuadrantView(CGSizeMake(200, 100));
   UIView *redQuadrant = view.subviews[0];
-  [redQuadrant setValue:@"rn-view-shot-mask:#00FF00" forKey:@"nativeID"];
+  [redQuadrant setValue:@"rn-view-shot-mask:ff00ff00" forKey:@"nativeID"];
 
   UIImage *image = [self captureView:view options:@{}];
   NSArray<NSString *> *colors = QuadrantColors(image);
@@ -268,16 +268,42 @@ static UIScrollView *HalfScaleScrollView(void)
   XCTAssertEqualObjects(colors, expected);
 }
 
-- (void)testMaskView_threeDigitHex_masksWithExpandedColor
+- (void)testMaskView_blueColor_masksWithBlue
 {
   UIView *view = QuadrantView(CGSizeMake(200, 100));
   UIView *redQuadrant = view.subviews[0];
-  [redQuadrant setValue:@"rn-view-shot-mask:#0F0" forKey:@"nativeID"];
+  [redQuadrant setValue:@"rn-view-shot-mask:ff0000ff" forKey:@"nativeID"];
 
   UIImage *image = [self captureView:view options:@{}];
   NSArray<NSString *> *colors = QuadrantColors(image);
-  NSArray<NSString *> *expected = @[ @"green", @"blue", @"green", @"yellow" ];
+  NSArray<NSString *> *expected = @[ @"blue", @"blue", @"green", @"yellow" ];
   XCTAssertEqualObjects(colors, expected);
+}
+
+- (void)testMaskView_transparentColor_doesNotOccludeContent
+{
+  UIView *view = QuadrantView(CGSizeMake(200, 100));
+  UIView *redQuadrant = view.subviews[0];
+  [redQuadrant setValue:@"rn-view-shot-mask:00000000" forKey:@"nativeID"];
+
+  UIImage *image = [self captureView:view options:@{}];
+  NSArray<NSString *> *colors = QuadrantColors(image);
+  NSArray<NSString *> *expected = @[ @"red", @"blue", @"green", @"yellow" ];
+  XCTAssertEqualObjects(colors, expected);
+}
+
+- (void)testMaskView_clippedByAncestor_doesNotPaintOutsideAncestorBounds
+{
+  UIView *container = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 200, 100)];
+  container.clipsToBounds = YES;
+  [container addSubview:QuadrantView(CGSizeMake(200, 100))];
+
+  UIView *mask = [[UIView alloc] initWithFrame:CGRectMake(0, 80, 100, 50)];
+  [mask setValue:@"rn-view-shot-mask:ff000000" forKey:@"nativeID"];
+  [container addSubview:mask];
+
+  UIImage *image = [self captureView:container options:@{}];
+  XCTAssertNotNil(image);
 }
 
 @end

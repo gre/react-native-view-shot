@@ -8,6 +8,7 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
@@ -44,6 +45,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -557,18 +559,29 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
 
     @NonNull
     static List<View> getAllChildren(@NonNull final View v) {
+        return getAllChildren(v, Collections.<View>emptySet());
+    }
+
+    @NonNull
+    static List<View> getAllChildren(@NonNull final View v, @NonNull final Set<View> maskedNodes) {
         final ArrayList<View> result = new ArrayList<>();
-        collectChildren(v, result);
+        collectChildren(v, result, maskedNodes);
         return result;
     }
 
-    private static void collectChildren(@NonNull final View v, @NonNull final List<View> result) {
+    private static void collectChildren(
+            @NonNull final View v,
+            @NonNull final List<View> result,
+            @NonNull final Set<View> maskedNodes) {
+        if (maskedNodes.contains(v)) {
+            return;
+        }
         if (!(v instanceof ViewGroup)) {
             result.add(v);
         } else {
             final ViewGroup group = (ViewGroup) v;
             for (int i = 0; i < group.getChildCount(); i++) {
-                collectChildren(group.getChildAt(i), result);
+                collectChildren(group.getChildAt(i), result, maskedNodes);
             }
         }
     }
@@ -751,7 +764,7 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
                                 forceExactLayout(scrollView, viewWidth, captureHeight);
                             }
                             final List<MaskInfo> maskInfos = new ArrayList<>();
-                            final Set<View> maskedNodes = Collections.newSetFromMap(new WeakHashMap<View, Boolean>());
+                            final Set<View> maskedNodes = new HashSet<>();
                             collectMaskViews(view, view, maskInfos, maskedNodes);
                             maskInfosRef.set(maskInfos);
                             maskedNodesRef.set(maskedNodes);
@@ -808,13 +821,10 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
             final int h = resolution.y;
 
             //after view is drawn, go through children
-            final List<View> childrenList = getAllChildren(view);
             final Set<View> maskedNodes = maskedNodesRef.get();
+            final List<View> childrenList = getAllChildren(view, maskedNodes != null ? maskedNodes : Collections.<View>emptySet());
 
             for (final View child : childrenList) {
-                if (isDescendantOfAny(child, maskedNodes)) {
-                    continue; // Skip any hardware surface inside a mask
-                }
                 // skip any child that we don't know how to process
                 if (child instanceof TextureView) {
                     // skip all invisible to user child views
@@ -976,7 +986,7 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
                 @Override
                 public void run(@NonNull AtomicBoolean cancelled) {
                     if (cancelled.get()) return;
-                    collectMaskViews(contentView, contentView, outMasks, Collections.newSetFromMap(new WeakHashMap<View, Boolean>()));
+                    collectMaskViews(contentView, contentView, outMasks, new HashSet<View>());
                     final int[] location = new int[2];
                     contentView.getLocationInWindow(location);
                     rectRef.set(new Rect(
@@ -988,9 +998,11 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
             }, uiTaskFinished);
             srcRect = rectRef.get();
             if (srcRect == null || srcRect.isEmpty()) {
+                outMasks.clear();
                 return null;
             }
         } catch (final Throwable ex) {
+            outMasks.clear();
             Log.w(TAG, "PixelCopy captureScreen: no content rect, falling back to view.draw", ex);
             return null;
         }
@@ -1001,6 +1013,7 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
         try {
             buffer = getBitmapForScreenshot(srcRect.width(), srcRect.height());
         } catch (final Throwable ex) {
+            outMasks.clear();
             Log.w(TAG, "PixelCopy captureScreen: no bitmap, falling back to view.draw", ex);
             return null;
         }
@@ -1027,6 +1040,7 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
         } catch (final Throwable ex) {
             // IllegalArgumentException (bad window/rect/bitmap) or anything
             // the platform throws synchronously: not ours to retry.
+            outMasks.clear();
             recycleBitmap(buffer);
             Log.w(TAG, "PixelCopy captureScreen: request failed, falling back to view.draw", ex);
             return null;
@@ -1048,6 +1062,7 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
                 if (unused != null) recycleBitmap(unused);
             }
         }
+        outMasks.clear();
         Log.w(TAG, "PixelCopy captureScreen: copy "
                 + (completed.getCount() == 0 ? "failed (" + copyResult.get() + ")" : "timed out")
                 + ", falling back to view.draw");
@@ -1187,18 +1202,7 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
      * Concat all the transformation matrix's from parent to child.
      */
     private void applyTransformations(final Canvas c, @NonNull final View root, @NonNull final View child) {
-        final List<View> ms = walkAncestors(child, root);
-        // apply transformations from parent --> child order
-        for (int i = ms.size() - 1; i >= 0; i--) {
-            final View v = ms.get(i);
-            // apply each view transformations, so each child will be affected by them
-            final float dx = v.getLeft() + ((v != child) ? v.getPaddingLeft() : 0) + v.getTranslationX();
-            final float dy = v.getTop() + ((v != child) ? v.getPaddingTop() : 0) + v.getTranslationY();
-            c.translate(dx, dy);
-            c.rotate(v.getRotation(), v.getPivotX(), v.getPivotY());
-            // scale about the view's pivot, matching how android renders the view
-            c.scale(v.getScaleX(), v.getScaleY(), v.getPivotX(), v.getPivotY());
-        }
+        c.concat(computeRelativeTransform(child, root));
     }
 
     public static final String MASK_TAG_PREFIX = "rn-view-shot-mask:";
@@ -1208,35 +1212,21 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
         final Matrix matrix;
         final int width;
         final int height;
+        @Nullable final RectF clipRect;
 
-        MaskInfo(final int color, @NonNull final Matrix matrix, final int width, final int height) {
+        MaskInfo(final int color, @NonNull final Matrix matrix, final int width, final int height, @Nullable final RectF clipRect) {
             this.color = color;
             this.matrix = matrix;
             this.width = width;
             this.height = height;
+            this.clipRect = clipRect;
         }
     }
 
     static int parseMaskColor(@NonNull final String tag) {
         try {
-            String hex = tag.substring(MASK_TAG_PREFIX.length()).trim();
-            if (hex.startsWith("#")) {
-                hex = hex.substring(1);
-            }
-            if (hex.length() == 3) {
-                hex = "" + hex.charAt(0) + hex.charAt(0)
-                        + hex.charAt(1) + hex.charAt(1)
-                        + hex.charAt(2) + hex.charAt(2);
-            } else if (hex.length() == 4) {
-                hex = "" + hex.charAt(0) + hex.charAt(0)
-                        + hex.charAt(1) + hex.charAt(1)
-                        + hex.charAt(2) + hex.charAt(2)
-                        + hex.charAt(3) + hex.charAt(3);
-            }
-            if (hex.length() == 6 || hex.length() == 8) {
-                return Color.parseColor("#" + hex);
-            }
-            return Color.parseColor(hex);
+            final String hex = tag.substring(MASK_TAG_PREFIX.length()).trim();
+            return (int) Long.parseLong(hex, 16);
         } catch (final Throwable t) {
             return Color.BLACK;
         }
@@ -1249,17 +1239,49 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
             return totalMatrix;
         }
         final List<View> ancestors = walkAncestors(child, root);
-        // ancestors is in leaf-to-root order: [child, parentN, ..., parent1] (not including root)
-        for (final View v : ancestors) {
-            if (!v.getMatrix().isIdentity()) {
-                totalMatrix.postConcat(v.getMatrix());
-            }
+        // ancestors is in leaf-to-root order: [child, parent1, ..., parentN] (not including root)
+        // Concatenate transformations from parent -> child order
+        for (int i = ancestors.size() - 1; i >= 0; i--) {
+            final View v = ancestors.get(i);
             final ViewParent parent = v.getParent();
             final int scrollX = (parent instanceof View) ? ((View) parent).getScrollX() : 0;
             final int scrollY = (parent instanceof View) ? ((View) parent).getScrollY() : 0;
             totalMatrix.postTranslate(v.getLeft() - scrollX, v.getTop() - scrollY);
+            if (!v.getMatrix().isIdentity()) {
+                totalMatrix.postConcat(v.getMatrix());
+            }
         }
         return totalMatrix;
+    }
+
+    @Nullable
+    static RectF computeAncestorClipRect(@NonNull final View child, @NonNull final View root) {
+        final List<View> ancestors = walkAncestors(child, root);
+        RectF clipRect = null;
+        if (root.getWidth() > 0 && root.getHeight() > 0) {
+            clipRect = new RectF(0, 0, root.getWidth(), root.getHeight());
+        }
+        for (int i = 0; i < ancestors.size(); i++) {
+            final View ancestor = ancestors.get(i);
+            if (ancestor == child) continue;
+            boolean clips = false;
+            if (ancestor instanceof ScrollView) {
+                clips = true;
+            } else if (ancestor instanceof ViewGroup && ((ViewGroup) ancestor).getClipChildren()) {
+                clips = true;
+            }
+            if (clips && ancestor.getWidth() > 0 && ancestor.getHeight() > 0) {
+                final Matrix transform = computeRelativeTransform(ancestor, root);
+                final RectF ancestorBounds = new RectF(0, 0, ancestor.getWidth(), ancestor.getHeight());
+                transform.mapRect(ancestorBounds);
+                if (clipRect == null) {
+                    clipRect = ancestorBounds;
+                } else if (!clipRect.intersect(ancestorBounds)) {
+                    clipRect.setEmpty();
+                }
+            }
+        }
+        return clipRect;
     }
 
     static void collectMaskViews(
@@ -1275,7 +1297,8 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
             if (v.getWidth() > 0 && v.getHeight() > 0) {
                 final int color = parseMaskColor((String) tag);
                 final Matrix matrix = computeRelativeTransform(v, root);
-                masks.add(new MaskInfo(color, matrix, v.getWidth(), v.getHeight()));
+                final RectF clipRect = computeAncestorClipRect(v, root);
+                masks.add(new MaskInfo(color, matrix, v.getWidth(), v.getHeight(), clipRect));
             }
             maskedViewNodes.add(v);
             return; // Prune recursion: nested children are covered by this mask
@@ -1307,10 +1330,16 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
         final Paint paint = new Paint();
         paint.setStyle(Paint.Style.FILL);
         for (final MaskInfo mask : masks) {
-            paint.setColor(mask.color);
+            if (mask.clipRect != null && mask.clipRect.isEmpty()) {
+                continue;
+            }
             final int count = c.save();
             try {
+                if (mask.clipRect != null) {
+                    c.clipRect(mask.clipRect);
+                }
                 c.concat(mask.matrix);
+                paint.setColor(mask.color);
                 c.drawRect(0, 0, mask.width, mask.height, paint);
             } finally {
                 c.restoreToCount(count);
