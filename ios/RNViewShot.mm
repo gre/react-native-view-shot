@@ -41,6 +41,28 @@ RCT_EXPORT_MODULE()
 
 @synthesize bridge = _bridge;
 
+// Path of a new "tmpfile" capture. Like Android's File.createTempFile, a
+// `fileName` is a prefix of at least 3 characters, followed by the unique name
+// RCTTempFilePath generates: captures sharing a fileName never overwrite each
+// other, and every capture stays a direct child of tmp/ReactNative, the only
+// place releaseCapture deletes from.
++ (NSString *)tempFilePathWithExtension:(NSString *)extension
+                               fileName:(NSString *)fileName
+                                  error:(NSError **)error
+{
+  if (fileName && (fileName.length < 3 || [fileName containsString:@"/"] || [fileName containsString:@"\0"])) {
+    if (error) {
+      *error = RCTErrorWithMessage([NSString stringWithFormat:@"fileName must be at least 3 characters long and must not contain '/'. Got: %@", fileName]);
+    }
+    return nil;
+  }
+  NSString *path = RCTTempFilePath(extension, error);
+  if (!path || !fileName) {
+    return path;
+  }
+  return [path.stringByDeletingLastPathComponent stringByAppendingPathComponent:[fileName stringByAppendingString:path.lastPathComponent]];
+}
+
 - (dispatch_queue_t)methodQueue
 {
   return RCTGetUIManagerQueue();
@@ -103,6 +125,7 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
     CGSize size = [RCTConvert CGSize:options];
     NSString *format = [RCTConvert NSString:options[@"format"]];
     NSString *result = [RCTConvert NSString:options[@"result"]];
+    NSString *fileName = [RCTConvert NSString:options[@"fileName"]];
     BOOL renderInContext = [RCTConvert BOOL:options[@"useRenderInContext"]];
     BOOL snapshotContentContainer = [RCTConvert BOOL:options[@"snapshotContentContainer"]];
 
@@ -233,7 +256,7 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
       }
       else {
         // Save to a temp file
-        NSString *path = RCTTempFilePath(format, &error);
+        NSString *path = [RNViewShot tempFilePathWithExtension:format fileName:fileName error:&error];
         if (path && !error) {
           if ([data writeToFile:path options:(NSDataWritingOptions)0 error:&error]) {
             res = path;
