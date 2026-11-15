@@ -28,7 +28,8 @@ export interface CaptureOptions {
   /**
    * (Android and iOS) the prefix of the file name when `result` is `"tmpfile"`. A unique suffix and the
    * format extension are appended, so captures never overwrite each other. Must be at least 3 characters
-   * long and must not contain `/`.
+   * long. Characters other than letters, digits, `.`, `_` and `-` are replaced with `_` (with a warning),
+   * so the returned path is safe to use in a `file://` URL.
    */
   fileName?: string;
   /**
@@ -215,6 +216,22 @@ function validateOptions(input?: CaptureOptions): {
         "' is not a valid result: " +
         acceptedResults.join(" | "),
     );
+  }
+  if (typeof options.fileName === "string") {
+    // The tmpfile path is commonly turned into a URL ("file://" + uri), so keep
+    // the prefix to characters that never need escaping: a "#", "?", "%" or
+    // space would otherwise truncate or corrupt that URL.
+    const safeFileName = options.fileName.replace(/[^A-Za-z0-9._-]/g, "_");
+    if (safeFileName !== options.fileName) {
+      errors.push(
+        "option fileName '" +
+          options.fileName +
+          "' contains characters other than letters, digits, '.', '_' and '-'; using '" +
+          safeFileName +
+          "' instead",
+      );
+      options.fileName = safeFileName;
+    }
   }
   if ("sizeUnit" in options) {
     const {sizeUnit} = options;
