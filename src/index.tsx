@@ -1,5 +1,5 @@
 import React, {
-  ReactNode,
+  type ReactNode,
   useRef,
   useCallback,
   useEffect,
@@ -11,9 +11,9 @@ import {
   Platform,
   PixelRatio,
   findNodeHandle,
-  StyleProp,
-  ViewStyle,
-  LayoutChangeEvent,
+  type StyleProp,
+  type ViewStyle,
+  type LayoutChangeEvent,
 } from "react-native";
 import RNViewShot from "./RNViewShot";
 
