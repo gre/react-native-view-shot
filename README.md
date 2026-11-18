@@ -414,6 +414,12 @@ captureRef(viewRef)
 
 ---
 
+## Contributing
+
+If your pull request changes the published library (a fix, feature or breaking change), add a changeset with `npm run changeset`: pick the bump (patch, minor or major), write a one-line summary for the changelog, and commit the generated `.changeset/*.md` file. Changes to docs, CI or the example apps don't need one.
+
+Releases are automated: merging to `master` opens or updates a "Version Packages" pull request, and merging that pull request publishes to npm.
+
 ## Thanks
 
 - To initial iOS work done by @jsierles in https://github.com/jsierles/react-native-view-snapshot

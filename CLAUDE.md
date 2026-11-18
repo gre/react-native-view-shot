@@ -20,6 +20,7 @@ npm run lint:ci        # ESLint (zero warnings allowed)
 npm run format         # Prettier format
 npm run format:check   # Check formatting
 npm test               # Jest unit tests (src/__tests__)
+npm run changeset      # Record a changeset (version bump + changelog entry)
 ```
 
 Native unit tests (run in CI):
@@ -109,7 +110,12 @@ A React Native Windows example app (see `example-windows/README.md`).
 
 - `ci.yml` — lint/format/type-check/build/Jest, Android JUnit (old architecture) + APK build (new architecture, arm64-v8a only), iOS SwiftPM build, one `ios` job (podspec lint, a single arm64 build with the JS bundle embedded (`FORCE_BUNDLING`, no Metro), then Detox and XCTest on that build; Detox uses the iPhone 16 Pro on the pinned `IOS_SIMULATOR_OS` runtime, which the references come from), Windows build + dotnet tests, web build + Playwright. On pull requests a `changes` job (dorny/paths-filter) skips the platforms a PR doesn't touch; pushes to master run everything. Gradle/NuGet/ccache caches are written from master only (10 GB repo cache quota). Android Detox is not run (native library conflicts in Detox's test APK).
 - `build-apk.yml` — release APK artifact (all ABIs), on master pushes, manual runs and pull requests touching Android, the example or the library.
+- `release.yml` — Changesets release on master pushes (see Releases).
 - `rn-compat.yml` — weekly build of a fresh app at the `latest`/`next` react-native release; opens an "RN compat" issue only when a check fails or the library's native code has compiler warnings (a clean pass only goes to the job summary).
+
+## Releases
+
+Releases are managed by [changesets](https://github.com/changesets/changesets). Every user-facing change to the published library should include a changeset (`npm run changeset`); docs, CI and example-only changes don't. On push to master, the Release workflow (`.github/workflows/release.yml`) opens/updates a "Version Packages" PR (version bump + `CHANGELOG.md` via `@changesets/changelog-github`); merging that PR publishes to npm via trusted publishing (OIDC, with provenance) and pushes the `vX.Y.Z` tag + GitHub release. lib/ is built in a read-only job, no dependency lifecycle scripts run, and actions are pinned to SHAs. The npm-side trusted publisher config is bound to the `release.yml` filename: do not rename it. Never bump `version` in `package.json` by hand.
 
 ## Key Behaviors
 
