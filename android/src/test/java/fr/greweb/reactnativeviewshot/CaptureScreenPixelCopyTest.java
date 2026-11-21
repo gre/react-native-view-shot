@@ -24,6 +24,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.PixelCopy;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 
 import com.facebook.react.bridge.Promise;
