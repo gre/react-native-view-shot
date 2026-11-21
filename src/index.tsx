@@ -138,13 +138,13 @@ const acceptedResults = ["tmpfile", "base64", "data-uri"].concat(
   Platform.OS === "android" ? ["zip-base64"] : [],
 );
 
-const defaultOptions: CaptureOptions = {
+const defaultOptions = {
   format: "png",
   quality: 1,
   result: "tmpfile",
   snapshotContentContainer: false,
   handleGLSurfaceViewOnAndroid: false,
-};
+} satisfies CaptureOptions;
 
 // validate and coerce options
 function validateOptions(input?: CaptureOptions): {
