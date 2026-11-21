@@ -194,6 +194,8 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
 
     UIGraphicsImageRendererFormat *rendererFormat = [UIGraphicsImageRendererFormat preferredFormat];
     rendererFormat.opaque = NO;
+    // On wide color displays, preferredFormat is extended range, which encodes PNGs at 16 bits per channel.
+    rendererFormat.preferredRange = UIGraphicsImageRendererFormatRangeStandard;
     rendererFormat.scale = 0; // 0 means "use device scale" (matches old UIGraphicsBeginImageContextWithOptions behaviour)
 
     UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithSize:size format:rendererFormat];
