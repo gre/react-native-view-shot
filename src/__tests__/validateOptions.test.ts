@@ -120,6 +120,28 @@ describe("validateOptions (via captureRef)", () => {
     warnSpy.mockRestore();
   });
 
+  it("passes a URL-safe fileName through without warning", async () => {
+    const warnSpy = jest.spyOn(console, "warn").mockImplementation();
+    await captureRef(42, {fileName: "My-receipt_1.v2"});
+    expect(mockCaptureRef).toHaveBeenCalledWith(
+      42,
+      expect.objectContaining({fileName: "My-receipt_1.v2"}),
+    );
+    expect(warnSpy).not.toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+
+  it("replaces URL-unsafe fileName characters with '_' and warns", async () => {
+    const warnSpy = jest.spyOn(console, "warn").mockImplementation();
+    await captureRef(42, {fileName: "My receipt #1?a=%20/é"});
+    expect(mockCaptureRef).toHaveBeenCalledWith(
+      42,
+      expect.objectContaining({fileName: "My_receipt__1_a__20__"}),
+    );
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("fileName"));
+    warnSpy.mockRestore();
+  });
+
   it("accepts data-uri result", async () => {
     await captureRef(42, {result: "data-uri"});
     expect(mockCaptureRef).toHaveBeenCalledWith(
