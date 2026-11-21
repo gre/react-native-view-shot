@@ -17,6 +17,6 @@ export interface Spec extends TurboModule {
 // In bridgeless mode (RN 0.79+) __turboModuleProxy is not set; use
 // TurboModuleRegistry as primary and fall back to legacy NativeModules.
 const RNViewShotModule =
-  TurboModuleRegistry.get<Spec>("RNViewShot") ?? NativeModules.RNViewShot;
+  TurboModuleRegistry.get<Spec>("RNViewShot") ?? NativeModules["RNViewShot"];
 
 export default RNViewShotModule as Spec;
