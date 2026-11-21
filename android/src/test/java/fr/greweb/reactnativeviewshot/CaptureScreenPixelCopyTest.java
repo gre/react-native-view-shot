@@ -17,12 +17,14 @@ import static org.mockito.Mockito.when;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.PixelCopy;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 
 import com.facebook.react.bridge.Promise;
@@ -270,5 +272,36 @@ public class CaptureScreenPixelCopyTest {
             any(PixelCopy.OnPixelCopyFinishedListener.class), any(Handler.class)),
             never());
         verify(view).draw(any(Canvas.class));
+    }
+
+    @Test
+    public void captureScreenWithPixelCopyAndMaskViewAppliesMasks() {
+        final ViewGroup contentView = mock(ViewGroup.class);
+        when(contentView.getWidth()).thenReturn(1080);
+        when(contentView.getHeight()).thenReturn(1920);
+        when(contentView.getVisibility()).thenReturn(View.VISIBLE);
+        when(contentView.getAlpha()).thenReturn(1.0f);
+
+        final View maskView = mock(View.class);
+        when(maskView.getWidth()).thenReturn(200);
+        when(maskView.getHeight()).thenReturn(100);
+        when(maskView.getVisibility()).thenReturn(View.VISIBLE);
+        when(maskView.getAlpha()).thenReturn(1.0f);
+        when(maskView.getParent()).thenReturn(contentView);
+        when(maskView.getTag(com.facebook.react.R.id.view_tag_native_id))
+            .thenReturn(ViewShot.MASK_TAG_PREFIX + "ff000000");
+
+        final Matrix identity = mock(Matrix.class);
+        when(identity.isIdentity()).thenReturn(true);
+        when(maskView.getMatrix()).thenReturn(identity);
+
+        when(contentView.getChildCount()).thenReturn(1);
+        when(contentView.getChildAt(0)).thenReturn(maskView);
+
+        final Promise promise = mock(Promise.class);
+        captureScreen(activityShowing(contentView), promise);
+
+        assertResolved(promise);
+        verify(contentView, never()).draw(any(Canvas.class));
     }
 }

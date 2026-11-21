@@ -542,3 +542,6 @@ ViewShot.captureRef = captureRef;
 ViewShot.releaseCapture = releaseCapture;
 
 export default ViewShot;
+
+export {default as MaskView} from "./MaskView";
+export type {MaskViewProps} from "./MaskView";

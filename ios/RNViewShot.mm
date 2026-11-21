@@ -35,6 +35,74 @@ static UIWindow *RNViewShotScreenWindow(void)
   return nil;
 }
 
+static NSString *const kRNViewShotMaskPrefix = @"rn-view-shot-mask:";
+
+static NSString *RNViewShotGetNativeId(UIView *view)
+{
+  if ([view respondsToSelector:@selector(nativeId)]) {
+    id val = [view valueForKey:@"nativeId"];
+    if ([val isKindOfClass:[NSString class]]) {
+      return (NSString *)val;
+    }
+  }
+  if ([view respondsToSelector:@selector(nativeID)]) {
+    id val = [view valueForKey:@"nativeID"];
+    if ([val isKindOfClass:[NSString class]]) {
+      return (NSString *)val;
+    }
+  }
+  return nil;
+}
+
+static void RNViewShotCollectMaskViews(UIView *view, NSMutableArray<UIView *> *masks)
+{
+  if (view.hidden || view.alpha < 0.01) {
+    return;
+  }
+  NSString *nativeId = RNViewShotGetNativeId(view);
+  if ([nativeId hasPrefix:kRNViewShotMaskPrefix]) {
+    if (view.bounds.size.width > 0 && view.bounds.size.height > 0) {
+      [masks addObject:view];
+    }
+    return; // Prune recursion: inner children are already covered by this mask
+  }
+  for (UIView *subview in view.subviews) {
+    RNViewShotCollectMaskViews(subview, masks);
+  }
+}
+
+static UIColor *RNViewShotParseMaskColor(NSString *nativeId)
+{
+  @try {
+    NSString *hex = [nativeId substringFromIndex:kRNViewShotMaskPrefix.length];
+    unsigned long long val = 0;
+    NSScanner *scanner = [NSScanner scannerWithString:hex];
+    if ([scanner scanHexLongLong:&val]) {
+      CGFloat a = ((val >> 24) & 0xFF) / 255.0;
+      CGFloat r = ((val >> 16) & 0xFF) / 255.0;
+      CGFloat g = ((val >> 8) & 0xFF) / 255.0;
+      CGFloat b = (val & 0xFF) / 255.0;
+      return [UIColor colorWithRed:r green:g blue:b alpha:a];
+    }
+  } @catch (id ex) {
+  }
+  return [UIColor blackColor];
+}
+
+static CGRect RNViewShotComputeAncestorClipRect(UIView *view, UIView *root)
+{
+  CGRect clip = [root convertRect:root.bounds toView:root];
+  UIView *current = view.superview;
+  while (current != nil && current != root) {
+    if (current.clipsToBounds || [current isKindOfClass:[UIScrollView class]]) {
+      CGRect ancestorRect = [current convertRect:current.bounds toView:root];
+      clip = CGRectIntersection(clip, ancestorRect);
+    }
+    current = current.superview;
+  }
+  return clip;
+}
+
 @implementation RNViewShot
 
 RCT_EXPORT_MODULE()
@@ -211,6 +279,33 @@ RCT_EXPORT_METHOD(captureRef:(nonnull NSNumber *)target
       else {
         // this doesn't work for large views and reports incorrect success even though the image is blank
         success = [rendered drawViewHierarchyInRect:(CGRect){CGPointZero, size} afterScreenUpdates:YES];
+      }
+
+      if (success) {
+        NSMutableArray<UIView *> *maskViews = [NSMutableArray array];
+        RNViewShotCollectMaskViews(rendered, maskViews);
+        if (maskViews.count > 0) {
+          CGContextRef ctx = rendererContext.CGContext;
+          BOOL needsScale = !renderInContext && !CGSizeEqualToSize(size, naturalSize) && naturalSize.width > 0 && naturalSize.height > 0;
+          CGFloat sx = needsScale ? size.width / naturalSize.width : 1.0;
+          CGFloat sy = needsScale ? size.height / naturalSize.height : 1.0;
+
+          for (UIView *mask in maskViews) {
+            CGRect maskRect = [mask convertRect:mask.bounds toView:rendered];
+            CGRect clipRect = RNViewShotComputeAncestorClipRect(mask, rendered);
+            CGRect finalRect = CGRectIntersection(maskRect, clipRect);
+            if (CGRectIsNull(finalRect) || CGRectIsEmpty(finalRect)) {
+              continue;
+            }
+            if (needsScale) {
+              finalRect = CGRectMake(finalRect.origin.x * sx, finalRect.origin.y * sy, finalRect.size.width * sx, finalRect.size.height * sy);
+            }
+            CGContextSaveGState(ctx);
+            CGContextSetFillColorWithColor(ctx, RNViewShotParseMaskColor(RNViewShotGetNativeId(mask)).CGColor);
+            CGContextFillRect(ctx, finalRect);
+            CGContextRestoreGState(ctx);
+          }
+        }
       }
     }];
 
