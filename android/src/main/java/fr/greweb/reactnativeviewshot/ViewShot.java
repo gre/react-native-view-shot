@@ -33,7 +33,9 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.common.annotations.UnstableReactNativeAPI;
 import com.facebook.react.fabric.interop.UIBlockViewResolver;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
+import com.facebook.react.uimanager.ReactOverflowView;
 import com.facebook.react.uimanager.UIBlock;
+import com.facebook.react.uimanager.ViewProps;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -1232,52 +1234,75 @@ public class ViewShot implements UIBlock, com.facebook.react.fabric.interop.UIBl
         }
     }
 
+    /**
+     * Matrix mapping {@code child}'s coordinates to the canvas {@code root} is
+     * drawn on. Same composition as {@code View.draw(canvas, parent, time)}:
+     * each view, from root to child, pre-concats its offset then its matrix.
+     */
     @NonNull
     static Matrix computeRelativeTransform(@NonNull final View child, @NonNull final View root) {
         final Matrix totalMatrix = new Matrix();
-        if (child == root) {
-            return totalMatrix;
-        }
         final List<View> ancestors = walkAncestors(child, root);
-        // ancestors is in leaf-to-root order: [child, parent1, ..., parentN] (not including root)
-        // Concatenate transformations from parent -> child order
         for (int i = ancestors.size() - 1; i >= 0; i--) {
             final View v = ancestors.get(i);
-            final ViewParent parent = v.getParent();
-            final int scrollX = (parent instanceof View) ? ((View) parent).getScrollX() : 0;
-            final int scrollY = (parent instanceof View) ? ((View) parent).getScrollY() : 0;
-            totalMatrix.postTranslate(v.getLeft() - scrollX, v.getTop() - scrollY);
+            // root.draw(canvas) doesn't apply root's own scroll: that is done by
+            // its parent when it draws it.
+            final View parent = getParentView(v);
+            final boolean scrolls = parent != null && parent != root;
+            final int scrollX = scrolls ? parent.getScrollX() : 0;
+            final int scrollY = scrolls ? parent.getScrollY() : 0;
+            totalMatrix.preTranslate(v.getLeft() - scrollX, v.getTop() - scrollY);
             if (!v.getMatrix().isIdentity()) {
-                totalMatrix.postConcat(v.getMatrix());
+                totalMatrix.preConcat(v.getMatrix());
             }
         }
         return totalMatrix;
     }
 
     @Nullable
+    private static View getParentView(@NonNull final View v) {
+        final ViewParent parent = v.getParent();
+        return (parent instanceof View) ? (View) parent : null;
+    }
+
+    /**
+     * Whether what {@code view} contains is clipped to its bounds, either:
+     * <ul>
+     *   <li>by itself: React Native views disable clipChildren and implement
+     *       `overflow` when drawing their children, or</li>
+     *   <li>by its parent: clipChildren clips each child to the child's own
+     *       bounds (not to the bounds of the view it is set on).</li>
+     * </ul>
+     * Must not return true for a view that doesn't clip: the mask would be
+     * clipped while the content it hides is not.
+     */
+    private static boolean clipsToBounds(@NonNull final View view) {
+        if (view instanceof ReactOverflowView) {
+            final String overflow = ((ReactOverflowView) view).getOverflow();
+            if (ViewProps.HIDDEN.equals(overflow) || ViewProps.SCROLL.equals(overflow)) {
+                return true;
+            }
+        }
+        final View parent = getParentView(view);
+        return parent instanceof ViewGroup && ((ViewGroup) parent).getClipChildren();
+    }
+
+    @Nullable
     static RectF computeAncestorClipRect(@NonNull final View child, @NonNull final View root) {
-        final List<View> ancestors = walkAncestors(child, root);
         RectF clipRect = null;
         if (root.getWidth() > 0 && root.getHeight() > 0) {
             clipRect = new RectF(0, 0, root.getWidth(), root.getHeight());
         }
-        for (int i = 0; i < ancestors.size(); i++) {
-            final View ancestor = ancestors.get(i);
-            if (ancestor == child) continue;
-            boolean clips = false;
-            if (ancestor instanceof ScrollView) {
-                clips = true;
-            } else if (ancestor instanceof ViewGroup && ((ViewGroup) ancestor).getClipChildren()) {
-                clips = true;
-            }
-            if (clips && ancestor.getWidth() > 0 && ancestor.getHeight() > 0) {
-                final Matrix transform = computeRelativeTransform(ancestor, root);
+        for (final View ancestor : walkAncestors(child, root)) {
+            if (ancestor == child || !clipsToBounds(ancestor)) continue;
+            if (ancestor.getWidth() > 0 && ancestor.getHeight() > 0) {
                 final RectF ancestorBounds = new RectF(0, 0, ancestor.getWidth(), ancestor.getHeight());
-                transform.mapRect(ancestorBounds);
+                computeRelativeTransform(ancestor, root).mapRect(ancestorBounds);
                 if (clipRect == null) {
                     clipRect = ancestorBounds;
                 } else if (!clipRect.intersect(ancestorBounds)) {
                     clipRect.setEmpty();
+                    return clipRect;
                 }
             }
         }

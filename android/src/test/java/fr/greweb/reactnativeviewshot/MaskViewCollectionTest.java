@@ -2,12 +2,10 @@ package fr.greweb.reactnativeviewshot;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyFloat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.never;
@@ -22,12 +20,10 @@ import android.graphics.RectF;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ScrollView;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.InOrder;
 import org.mockito.MockedConstruction;
 
 import java.util.ArrayList;
@@ -38,15 +34,15 @@ import java.util.Set;
 
 /**
  * Tests for MaskView support routines in {@link ViewShot}:
- * - {@link ViewShot#computeRelativeTransform(View, View)} matrix concatenation order (parent -> child)
  * - {@link ViewShot#parseMaskColor(String)} hex parsing and fallback without Color.parseColor
- * - {@link ViewShot#computeAncestorClipRect(View, View)} clipping bounds
  * - {@link ViewShot#getAllChildren(View, Set)} pruning masked subtrees
  * - {@link ViewShot#isDescendantOfAny(View, Set)} hierarchy checking
  * - {@link ViewShot#collectMaskViews(View, View, List, Set)} collection and pruning
  * - {@link ViewShot#drawMasks(Canvas, List)} canvas painting with clipping
+ *
+ * Transforms and clipping are covered by {@link MaskViewGeometryTest}.
  */
-public class MaskViewRelativeTransformTest {
+public class MaskViewCollectionTest {
 
     private MockedConstruction<Matrix> matrixConstruction;
 
@@ -60,90 +56,6 @@ public class MaskViewRelativeTransformTest {
         if (matrixConstruction != null) {
             matrixConstruction.close();
         }
-    }
-
-    @Test
-    public void computeRelativeTransform_returnsEmptyMatrixWhenChildIsRoot() {
-        View root = mock(View.class);
-
-        Matrix result = ViewShot.computeRelativeTransform(root, root);
-
-        assertNotNull(result);
-        assertEquals(1, matrixConstruction.constructed().size());
-        Matrix mockMatrix = matrixConstruction.constructed().get(0);
-        verify(mockMatrix, never()).postConcat(any(Matrix.class));
-        verify(mockMatrix, never()).postTranslate(anyFloat(), anyFloat());
-    }
-
-    @Test
-    public void computeRelativeTransform_appliesTranslationAndParentScrollForDirectChild() {
-        ViewGroup root = mock(ViewGroup.class);
-        when(root.getScrollX()).thenReturn(15);
-        when(root.getScrollY()).thenReturn(25);
-
-        View child = mock(View.class);
-        when(child.getParent()).thenReturn(root);
-        when(child.getLeft()).thenReturn(100);
-        when(child.getTop()).thenReturn(200);
-
-        Matrix childMatrix = mock(Matrix.class);
-        when(childMatrix.isIdentity()).thenReturn(true);
-        when(child.getMatrix()).thenReturn(childMatrix);
-
-        Matrix result = ViewShot.computeRelativeTransform(child, root);
-
-        assertNotNull(result);
-        assertEquals(1, matrixConstruction.constructed().size());
-        Matrix mockMatrix = matrixConstruction.constructed().get(0);
-
-        // child.getLeft() - root.getScrollX() = 100 - 15 = 85
-        // child.getTop() - root.getScrollY() = 200 - 25 = 175
-        verify(mockMatrix).postTranslate(85f, 175f);
-        verify(mockMatrix, never()).postConcat(any(Matrix.class));
-    }
-
-    @Test
-    public void computeRelativeTransform_concatsTransformsInParentToChildOrder() {
-        ViewGroup root = mock(ViewGroup.class);
-        when(root.getScrollX()).thenReturn(0);
-        when(root.getScrollY()).thenReturn(0);
-
-        ViewGroup parent = mock(ViewGroup.class);
-        when(parent.getParent()).thenReturn(root);
-        when(parent.getLeft()).thenReturn(50);
-        when(parent.getTop()).thenReturn(60);
-        when(parent.getScrollX()).thenReturn(10);
-        when(parent.getScrollY()).thenReturn(20);
-
-        Matrix parentMatrix = mock(Matrix.class);
-        when(parentMatrix.isIdentity()).thenReturn(false);
-        when(parent.getMatrix()).thenReturn(parentMatrix);
-
-        View child = mock(View.class);
-        when(child.getParent()).thenReturn(parent);
-        when(child.getLeft()).thenReturn(15);
-        when(child.getTop()).thenReturn(25);
-
-        Matrix childMatrix = mock(Matrix.class);
-        when(childMatrix.isIdentity()).thenReturn(false);
-        when(child.getMatrix()).thenReturn(childMatrix);
-
-        Matrix result = ViewShot.computeRelativeTransform(child, root);
-
-        assertNotNull(result);
-        assertEquals(1, matrixConstruction.constructed().size());
-        Matrix mockMatrix = matrixConstruction.constructed().get(0);
-
-        // Order of operations must be parent-to-child:
-        // 1. parent translation relative to root scroll: dx = 50 - 0 = 50, dy = 60 - 0 = 60
-        // 2. parentMatrix.postConcat
-        // 3. child translation relative to parent scroll: dx = 15 - 10 = 5, dy = 25 - 20 = 5
-        // 4. childMatrix.postConcat
-        InOrder order = inOrder(mockMatrix);
-        order.verify(mockMatrix).postTranslate(50f, 60f);
-        order.verify(mockMatrix).postConcat(parentMatrix);
-        order.verify(mockMatrix).postTranslate(5f, 5f);
-        order.verify(mockMatrix).postConcat(childMatrix);
     }
 
     @Test
@@ -330,33 +242,5 @@ public class MaskViewRelativeTransformTest {
         verify(mockCanvas, never()).save();
         verify(mockCanvas, never()).concat(any(Matrix.class));
         verify(mockCanvas, never()).drawRect(anyFloat(), anyFloat(), anyFloat(), anyFloat(), any(Paint.class));
-    }
-
-    @Test
-    public void computeAncestorClipRect_returnsIntersectionWithClippingParent() {
-        ViewGroup root = mock(ViewGroup.class);
-        when(root.getWidth()).thenReturn(500);
-        when(root.getHeight()).thenReturn(500);
-
-        ViewGroup clippingParent = mock(ViewGroup.class);
-        when(clippingParent.getParent()).thenReturn(root);
-        when(clippingParent.getWidth()).thenReturn(200);
-        when(clippingParent.getHeight()).thenReturn(200);
-        when(clippingParent.getClipChildren()).thenReturn(true);
-        when(clippingParent.getLeft()).thenReturn(20);
-        when(clippingParent.getTop()).thenReturn(20);
-
-        Matrix identity = mock(Matrix.class);
-        when(identity.isIdentity()).thenReturn(true);
-        when(clippingParent.getMatrix()).thenReturn(identity);
-
-        View child = mock(View.class);
-        when(child.getParent()).thenReturn(clippingParent);
-        when(child.getWidth()).thenReturn(100);
-        when(child.getHeight()).thenReturn(100);
-
-        RectF clip = ViewShot.computeAncestorClipRect(child, root);
-
-        assertNotNull(clip);
     }
 }
