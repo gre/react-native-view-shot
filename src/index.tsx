@@ -1,5 +1,5 @@
 import React, {
-  ReactNode,
+  type ReactNode,
   useRef,
   useCallback,
   useEffect,
@@ -11,9 +11,9 @@ import {
   Platform,
   PixelRatio,
   findNodeHandle,
-  StyleProp,
-  ViewStyle,
-  LayoutChangeEvent,
+  type StyleProp,
+  type ViewStyle,
+  type LayoutChangeEvent,
 } from "react-native";
 import RNViewShot from "./RNViewShot";
 
@@ -26,7 +26,10 @@ const neverEndingPromise = new Promise(() => {});
 
 export interface CaptureOptions {
   /**
-   * (Android only) the file name of the file. Must be at least 3 characters long.
+   * (Android and iOS) the prefix of the file name when `result` is `"tmpfile"`. A unique suffix and the
+   * format extension are appended, so captures never overwrite each other. Must be at least 3 characters
+   * long. Characters other than letters, digits, `.`, `_` and `-` are replaced with `_` (with a warning),
+   * so the returned path is safe to use in a `file://` URL.
    */
   fileName?: string;
   /**
@@ -136,13 +139,13 @@ const acceptedResults = ["tmpfile", "base64", "data-uri"].concat(
   Platform.OS === "android" ? ["zip-base64"] : [],
 );
 
-const defaultOptions: CaptureOptions = {
+const defaultOptions = {
   format: "png",
   quality: 1,
   result: "tmpfile",
   snapshotContentContainer: false,
   handleGLSurfaceViewOnAndroid: false,
-};
+} satisfies CaptureOptions;
 
 // validate and coerce options
 function validateOptions(input?: CaptureOptions): {
@@ -213,6 +216,22 @@ function validateOptions(input?: CaptureOptions): {
         "' is not a valid result: " +
         acceptedResults.join(" | "),
     );
+  }
+  if (typeof options.fileName === "string") {
+    // The tmpfile path is commonly turned into a URL ("file://" + uri), so keep
+    // the prefix to characters that never need escaping: a "#", "?", "%" or
+    // space would otherwise truncate or corrupt that URL.
+    const safeFileName = options.fileName.replace(/[^A-Za-z0-9._-]/g, "_");
+    if (safeFileName !== options.fileName) {
+      errors.push(
+        "option fileName '" +
+          options.fileName +
+          "' contains characters other than letters, digits, '.', '_' and '-'; using '" +
+          safeFileName +
+          "' instead",
+      );
+      options.fileName = safeFileName;
+    }
   }
   if ("sizeUnit" in options) {
     const {sizeUnit} = options;

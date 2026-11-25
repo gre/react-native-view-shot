@@ -5,7 +5,7 @@
 //   - JPEG NSData            (via UIImageJPEGRepresentation, with quality)
 //   - base64 raw string      ([data base64EncodedStringWithOptions:0])
 //   - data-uri base64 string ("data:image/{png|jpeg};base64,<...>")
-//   - file path (RCTTempFilePath + writeToFile:)
+//   - file path (RCTTempFilePath + writeToFile:, and the `fileName` prefix)
 //
 // Per the proposal, we DO NOT assert pixel content — `drawViewHierarchyInRect`
 // returns blank images for views not attached to a UIWindow on the simulator,
@@ -23,6 +23,16 @@
 #import <XCTest/XCTest.h>
 #import <UIKit/UIKit.h>
 #import <React/RCTUtils.h>
+#import "RNViewShot.h"
+
+// The tmpfile path helper is private to RNViewShot.mm; declare it here so the
+// `fileName` handling can be tested without an RCTBridge (same approach as
+// RNViewShotReleaseCaptureTests).
+@interface RNViewShot (EncodingTestingOnly)
++ (NSString *)tempFilePathWithExtension:(NSString *)extension
+                               fileName:(NSString *)fileName
+                                  error:(NSError **)error;
+@end
 
 @interface RNViewShotEncodingTests : XCTestCase
 @property (nonatomic, strong) UIImage *fixtureImage;
@@ -192,6 +202,61 @@
   XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:path]);
 
   [[NSFileManager defaultManager] removeItemAtPath:path error:NULL];
+}
+
+#pragma mark - File path / fileName option
+
+- (void)testTempFilePathWithoutFileName_matchesRCTTempFilePath
+{
+  NSError *error = nil;
+  NSString *path = [RNViewShot tempFilePathWithExtension:@"png" fileName:nil error:&error];
+  NSString *reference = RCTTempFilePath(@"png", &error);
+  XCTAssertNotNil(path);
+  XCTAssertNil(error, @"tempFilePath should not error: %@", error);
+  XCTAssertEqualObjects(path.stringByDeletingLastPathComponent,
+                        reference.stringByDeletingLastPathComponent);
+  // A bare "<UUID>.png", exactly like RCTTempFilePath.
+  XCTAssertNotNil([[NSUUID alloc] initWithUUIDString:path.lastPathComponent.stringByDeletingPathExtension],
+                  @"%@ should be a UUID file name", path.lastPathComponent);
+  XCTAssertTrue([path hasSuffix:@".png"], @"path %@ should end with .png", path);
+}
+
+- (void)testTempFilePathWithFileName_usesItAsAUniquePrefix
+{
+  NSError *error = nil;
+  NSString *first = [RNViewShot tempFilePathWithExtension:@"jpg" fileName:@"receipt" error:&error];
+  NSString *second = [RNViewShot tempFilePathWithExtension:@"jpg" fileName:@"receipt" error:&error];
+  NSString *reference = RCTTempFilePath(@"jpg", &error);
+  XCTAssertNotNil(first);
+  XCTAssertNotNil(second);
+  XCTAssertNil(error, @"tempFilePath should not error: %@", error);
+
+  // Same directory as every other capture, so releaseCapture can delete it.
+  XCTAssertEqualObjects(first.stringByDeletingLastPathComponent,
+                        reference.stringByDeletingLastPathComponent);
+  XCTAssertTrue([first.lastPathComponent hasPrefix:@"receipt"], @"got %@", first);
+  XCTAssertTrue([first hasSuffix:@".jpg"], @"path %@ should end with .jpg", first);
+  // Like Android's File.createTempFile, a unique suffix keeps two captures
+  // with the same fileName from overwriting each other.
+  XCTAssertGreaterThan(first.lastPathComponent.length, @"receipt.jpg".length);
+  XCTAssertNotEqualObjects(first, second);
+
+  NSData *data = UIImageJPEGRepresentation(self.fixtureImage, 0.9);
+  XCTAssertTrue([data writeToFile:first options:(NSDataWritingOptions)0 error:&error],
+                @"writeToFile failed: %@", error);
+  XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:first]);
+  [[NSFileManager defaultManager] removeItemAtPath:first error:NULL];
+}
+
+- (void)testTempFilePathWithFileName_rejectsInvalidNames
+{
+  NSArray<NSString *> *invalid = @[ @"", @"ab", @"../escape", @"dir/name", @"nul\0byte" ];
+  for (NSString *fileName in invalid) {
+    NSError *error = nil;
+    NSString *path = [RNViewShot tempFilePathWithExtension:@"png" fileName:fileName error:&error];
+    XCTAssertNil(path, @"fileName %@ should be rejected, got %@", fileName, path);
+    XCTAssertNotNil(error, @"fileName %@ should report an error", fileName);
+  }
 }
 
 @end

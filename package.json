@@ -1,6 +1,6 @@
 {
   "name": "react-native-view-shot",
-  "version": "6.2.1",
+  "version": "6.3.0",
   "description": "Capture a React Native view to an image",
   "type": "module",
   "main": "lib/index.js",
@@ -59,7 +59,10 @@
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "type-check": "tsc --noEmit",
     "build": "tsc -p tsconfig.build.json",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "changeset": "changeset",
+    "version-packages": "changeset version && npm install --package-lock-only --legacy-peer-deps",
+    "release": "changeset publish"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
@@ -79,6 +82,8 @@
     "@babel/preset-env": "^8.0.6",
     "@babel/preset-react": "^8.0.1",
     "@babel/preset-typescript": "^8.0.1",
+    "@changesets/changelog-github": "^1.0.1",
+    "@changesets/cli": "^3.0.3",
     "@eslint/js": "^10",
     "@types/jest": "^30.0.0",
     "@types/react": "^19.3.0",

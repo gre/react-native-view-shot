@@ -306,4 +306,11 @@ static UIScrollView *HalfScaleScrollView(void)
   XCTAssertNotNil(image);
 }
 
+- (void)testPng_isEncodedAt8BitsPerChannel
+{
+  UIImage *image = [self captureView:QuadrantView(CGSizeMake(200, 100)) options:@{}];
+
+  XCTAssertEqual(CGImageGetBitsPerComponent(image.CGImage), (size_t)8);
+}
+
 @end

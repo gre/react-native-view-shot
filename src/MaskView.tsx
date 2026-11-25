@@ -1,10 +1,10 @@
-import React, {forwardRef, ReactNode} from "react";
+import React, {forwardRef, type ReactNode} from "react";
 import {
   View,
-  ViewProps,
-  StyleProp,
-  ViewStyle,
-  ColorValue,
+  type ViewProps,
+  type StyleProp,
+  type ViewStyle,
+  type ColorValue,
   Platform,
   processColor,
 } from "react-native";
