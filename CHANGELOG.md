@@ -1,5 +1,13 @@
 # react-native-view-shot
 
+## 6.3.1
+
+### Patch Changes
+
+- [#768](https://github.com/gre/react-native-view-shot/pull/768) [`1007408`](https://github.com/gre/react-native-view-shot/commit/1007408b90ed76998173b007d5731e8dfb25dbc2) Thanks [@L65FREAD](https://github.com/L65FREAD)! - iOS: captures are rendered with `UIGraphicsImageRendererFormatRangeStandard`, so PNGs are written at 8 bits per channel instead of 16 on wide color devices and simulators. Visible change: JPG captures of views with transparent areas now get a white background there instead of black (JPEG has no alpha channel), matching what non wide color devices already produced.
+
+- [#777](https://github.com/gre/react-native-view-shot/pull/777) [`5e09059`](https://github.com/gre/react-native-view-shot/commit/5e090591b7b73cc65a2c6201a16abc66b17ffa70) Thanks [@m-bert](https://github.com/m-bert)! - iOS: declare the SwiftPM name (`swiftpmConfig.name`) in `package.json`. Since React Native 0.88, SwiftPM autolinking names a library after its podspec when CocoaPods can read it, so the library was linked as `react-native-view-shot` and the build failed with `product 'react-native-view-shot' ... not found in package 'react-native-view-shot'`, because `Package.swift` calls the product `ReactNativeViewShot`. CocoaPods builds are unaffected.
+
 ## 6.3.0
 
 ### Minor Changes
