@@ -206,12 +206,19 @@ jobs:
           path: example/android/app/build/outputs/apk/debug/app-debug.apk
 
   build-ios-spm:
-    name: Build iOS App (SwiftPM)
+    name: Build iOS App (SwiftPM, RN ${{ matrix.rn }})
     runs-on: macos-15
     needs: [lint-and-type-check, changes]
     if: needs.changes.outputs.ios == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        # 0.87 is the first RN with SwiftPM autolinking. From 0.88 the library
+        # is named after its podspec unless package.json sets
+        # swiftpmConfig.name, so both versions are built.
+        rn: ['0.87.1', '0.88.1']
     env:
-      RN_VERSION: '0.87.1'  # first RN with SwiftPM autolinking
+      RN_VERSION: ${{ matrix.rn }}
       RN_CLI_VERSION: '20.2.0'
 
     steps:
@@ -244,6 +251,7 @@ jobs:
       - name: Switch test app to SwiftPM
         working-directory: ${{ runner.temp }}/SpmTest
         run: |
+          set -o pipefail # so a failing spm add isn't masked by tee
           npx react-native spm add --deintegrate --yes | tee spm.log
           # Must use the manifest we ship, not a scaffolded one
           grep -q 'Self-managed: ReactNativeViewShot' spm.log
