@@ -2,12 +2,13 @@
 #
 # Weekly, checks the `latest` and `next` react-native releases on npm. For each
 # version not yet known to be compatible, builds a fresh app at that version
-# with the packed library (type-check, release bundle, Android and iOS builds,
-# new architecture). It opens an issue only when there is something to act on:
-# a failed check, or compiler warnings in the library's native code (a heads-up
-# on what needs adapting before it breaks). A clean pass only goes to the job
-# summary and leaves an `rn-compat-clean-<version>` artifact (kept 90 days) so
-# that version isn't rebuilt every week.
+# with the packed library (type-check, release bundle, Android build, iOS
+# builds with CocoaPods and with SwiftPM autolinking, new architecture). It
+# opens an issue only when there is something to act on: a failed check, or
+# compiler warnings in the library's native code (a heads-up on what needs
+# adapting before it breaks). A clean pass only goes to the job summary and
+# leaves an `rn-compat-clean-<version>` artifact (kept 90 days) so that version
+# isn't rebuilt every week.
 #
 # Run it by hand with a specific version (e.g. a nightly) via workflow_dispatch;
 # `force` re-tests a version already known to be compatible (and comments on
@@ -319,9 +320,124 @@ jobs:
           name: rn-compat-ios-${{ matrix.version }}
           path: result/
 
+  ios-spm:
+    name: iOS SwiftPM (RN ${{ matrix.version }})
+    needs: resolve
+    if: needs.resolve.outputs.versions != '[]'
+    runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ${{ fromJSON(needs.resolve.outputs.versions) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      # Not used to build: React Native reads the podspec with it to name the
+      # SwiftPM target (since 0.88), as on a typical developer machine.
+      - name: Setup CocoaPods
+        uses: maxim-lobanov/setup-cocoapods@v1
+        with:
+          version: latest
+
+      # SwiftPM autolinking starts with React Native 0.87.
+      - name: Check SwiftPM support
+        id: supported
+        env:
+          VERSION: ${{ matrix.version }}
+        run: |
+          if [ "$(printf '0.87.0\n%s\n' "${VERSION%%-*}" | sort -V | head -1)" = "0.87.0" ]; then
+            echo "value=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "react-native@$VERSION has no SwiftPM autolinking, skipping"
+            echo "value=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Pack library and create app
+        id: setup
+        if: steps.supported.outputs.value == 'true'
+        continue-on-error: true
+        env:
+          VERSION: ${{ matrix.version }}
+        run: |
+          {
+            npm install --legacy-peer-deps --no-audit --no-fund # builds lib/ (prepare)
+            npm pack --ignore-scripts
+            .github/scripts/rn-compat-app.sh "$VERSION" react-native-view-shot-*.tgz "$RUNNER_TEMP/app"
+          } 2>&1 | tee "$RUNNER_TEMP/setup.log"
+
+      - name: Switch app to SwiftPM
+        id: spm
+        if: steps.setup.outcome == 'success'
+        continue-on-error: true
+        working-directory: ${{ runner.temp }}/app
+        run: |
+          npx react-native spm add --deintegrate --yes 2>&1 | tee "$RUNNER_TEMP/spm.log"
+          # The library must be linked through the Package.swift it ships,
+          # under its product name (not a scaffolded manifest).
+          if ! grep -q 'Self-managed: ReactNativeViewShot' "$RUNNER_TEMP/spm.log"; then
+            echo "error: react-native-view-shot was not linked as the self-managed package ReactNativeViewShot" | tee -a "$RUNNER_TEMP/spm.log"
+            exit 1
+          fi
+
+      - name: Build iOS
+        id: build
+        continue-on-error: true
+        if: steps.spm.outcome == 'success'
+        working-directory: ${{ runner.temp }}/app/ios
+        run: |
+          xcodebuild -project RNCompat.xcodeproj -scheme RNCompat \
+            -configuration Debug -destination 'generic/platform=iOS Simulator' \
+            build CODE_SIGNING_ALLOWED=NO ARCHS=arm64 2>&1 | tee "$RUNNER_TEMP/build.log"
+
+      - name: Collect result
+        if: always()
+        env:
+          VERSION: ${{ matrix.version }}
+          SUPPORTED: ${{ steps.supported.outputs.value }}
+          SETUP: ${{ steps.setup.outcome }}
+          SPM: ${{ steps.spm.outcome }}
+          BUILD: ${{ steps.build.outcome }}
+        run: |
+          mkdir -p result
+          if [ "$SUPPORTED" = "false" ]; then
+            jq -n --arg version "$VERSION" \
+              '{platform: "ios-spm", version: $version, steps: {spm: "n/a"}}' > result/result.json
+            cat result/result.json
+            exit 0
+          fi
+          # The sources may be reported through node_modules or through the
+          # autolinking copy (build/generated/autolinking/libs/ReactNativeViewShot).
+          grep -hE '(react-native-view-shot|libs/ReactNativeViewShot)/ios/.*warning:' \
+            "$RUNNER_TEMP"/build.log 2>/dev/null \
+            | sed -E 's#^.*(node_modules|autolinking/libs)/##' | sort -u > result/warnings.txt || true
+          tail -n 80 "$RUNNER_TEMP/setup.log" > result/setup.log 2>/dev/null || true
+          tail -n 60 "$RUNNER_TEMP/spm.log" > result/spm.log 2>/dev/null || true
+          if [ -f "$RUNNER_TEMP/build.log" ]; then
+            grep -E 'error:|\*\* BUILD' "$RUNNER_TEMP/build.log" | tail -n 40 > result/build.log || true
+            [ -s result/build.log ] || tail -n 60 "$RUNNER_TEMP/build.log" > result/build.log
+          fi
+          jq -n --arg platform ios-spm --arg version "$VERSION" \
+            --arg setup "$SETUP" --arg spm "$SPM" --arg build "$BUILD" \
+            '{platform: $platform, version: $version, steps: {setup: $setup, spm: $spm, build: $build}}' \
+            > result/result.json
+          cat result/result.json
+
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: rn-compat-ios-spm-${{ matrix.version }}
+          path: result/
+
   report:
     name: Report
-    needs: [resolve, android, ios]
+    needs: [resolve, android, ios, ios-spm]
     # Not always(): a cancelled run must not be reported as a failure.
     if: ${{ !cancelled() && needs.resolve.result == 'success' && needs.resolve.outputs.versions != '[]' }}
     runs-on: ubuntu-latest
@@ -364,11 +480,11 @@ jobs:
             ok=true
             failed=()
             {
-              echo "Automated check of \`react-native-view-shot@$(jq -r .version package.json)\` (\`${GITHUB_SHA::7}\`) in a fresh \`react-native@$v\` app (new architecture). [Workflow run]($RUN_URL)"
+              echo "Automated check of \`react-native-view-shot@$(jq -r .version package.json)\` (\`${GITHUB_SHA::7}\`) in a fresh \`react-native@$v\` app (new architecture; iOS with CocoaPods and with SwiftPM). [Workflow run]($RUN_URL)"
               echo
               echo "| Platform | Step | Result |"
               echo "|---|---|---|"
-              for platform in android ios; do
+              for platform in android ios ios-spm; do
                 f="results/rn-compat-$platform-$v/result.json"
                 if [ ! -f "$f" ]; then
                   echo "| $platform | (job) | ❌ no result |"
@@ -382,6 +498,7 @@ jobs:
                   case "$outcome" in
                     success) icon='✅' ;;
                     skipped) icon='⏭️'; ok=false ;;
+                    n/a) icon='➖' ;; # e.g. no SwiftPM before RN 0.87
                     *) icon='❌'; ok=false; failed+=("$platform $step") ;;
                   esac
                   echo "| $platform | $step | $icon $outcome |"
@@ -403,7 +520,7 @@ jobs:
               fi
               echo
 
-              for platform in android ios; do
+              for platform in android ios ios-spm; do
                 for log in results/rn-compat-$platform-"$v"/*.log; do
                   [ -s "$log" ] || continue
                   step=$(basename "$log" .log)
