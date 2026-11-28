@@ -106,6 +106,9 @@
     "node": ">=20.19.4",
     "npm": ">=10"
   },
+  "swiftpmConfig": {
+    "name": "ReactNativeViewShot"
+  },
   "codegenConfig": {
     "name": "rnviewshot",
     "type": "modules",
